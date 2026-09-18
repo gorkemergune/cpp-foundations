@@ -1,6 +1,6 @@
 # C++ Foundations
 
-> An open notebook for learning C++ from scratch — lecture notes, code examples, labs, and projects, kept public for the students who come after.
+> An open notebook for learning C++ from scratch — lecture notes, code examples, labs, and projects from CSE 211 at Yeditepe University, kept public for the students who come after.
 
 ## Overview
 
@@ -14,10 +14,10 @@ The repository is at an early stage. Right now it collects the weekly lecture no
 
 This repository is the second step in a broader undergraduate learning path focused on low-level and systems programming.
 
-| Course               | Institution         | Status      | Repository                                                     |
-| -------------------- | ------------------- | ----------- | -------------------------------------------------------------- |
+| Course               | Institution         | Status      | Repository                                                    |
+| -------------------- | ------------------- | ----------- | ------------------------------------------------------------- |
 | Programming with C   | Yeditepe University | Completed   | [c-foundations](https://github.com/gorkemergune/c-foundations) |
-| Programming with C++ | Yeditepe University | In progress | this repository                                                |
+| Programming with C++ | Yeditepe University | In progress | this repository                                               |
 
 ---
 

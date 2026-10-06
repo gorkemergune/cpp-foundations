@@ -44,6 +44,46 @@ void reverse_array(int *arr, int size) {
 
 
 
+bool isPalindrome(const string &str) {
+    int left = 0;
+    int right = str.length() - 1;
+
+    while (left < right) {
+        if (str[left] != str[right]) {
+            return false;
+        }
+        left++;
+        right--;
+    }
+
+    return true;
+}
+
+
+
+double average(const vector<int> &arr) {
+    if (arr.empty()) {
+        return 0.0;
+    }
+
+    double sum = 0.0;
+    for (int num : arr) {
+        sum += num;
+    }
+
+    return sum / arr.size();
+}
+
+
+vector<int> removeDuplicates(const vector <int> &arr) {
+    vector<int> uniqueArr;
+    for (int num : arr) {
+        if (find(uniqueArr.begin(), uniqueArr.end(), num) == uniqueArr.end()) {
+            uniqueArr.push_back(num);
+        }
+    }
+    return uniqueArr;
+}
 
 
 
@@ -66,7 +106,18 @@ int main() {
     int myArr[10] = {1, 2, 5, 0, -1, 10, 20, 30, 40, 50};
     reverse_array(myArr, size);
 
-    
+    string myString = "racecar";
+    cout << "\nIs the string \"" << myString << "\" a palindrome? " << (isPalindrome(myString) ? "Yes" : "No") << endl;
+
+    double avg = average(ARRAY);
+    cout << "Average of the array: " << avg << endl;
+    cout << "Elements greater than the average: "; 
+    for (int num : ARRAY) {
+        if (num > avg) {
+            cout << num << " ";
+        }
+    } cout << endl;
+
 
 
     return 0;

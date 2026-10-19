@@ -6,8 +6,13 @@ struct Node {
     Node* next;
 };
 
-void printOddPosElements(Node* head) {
-    
+void printOddPosElements(Node *head) {
+    int temp = 0;
+    while (head != NULL) {
+        if (temp % 2 == 0) cout << head->data << " ";
+        head = head->next;
+        temp++;
+    }
 }
 
 void pushBack(Node*& head, int value) {
@@ -24,7 +29,7 @@ void pushBack(Node*& head, int value) {
 }
 
 void freeList(Node*& head) {
-    while (head != nullptr) {
+    while (head != NULL) {
         Node* temp = head;
         head = head->next;
         delete temp;

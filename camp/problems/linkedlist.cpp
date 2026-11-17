@@ -26,7 +26,15 @@ int LinkedList::count() const
 // Example: 4 → 2 → 4 → 4, v = 4  ⇒  3
 int LinkedList::countValue(int v) const
 {
-    TODO();
+    int count = 0;
+    Node *p = head;
+    while (p != NULL)
+    {
+        if (p->item == v)
+            count++;
+        p = p->next;
+    }
+    return count;
 }
 
 // LL-3 · Easy · Index of the maximum
@@ -34,7 +42,23 @@ int LinkedList::countValue(int v) const
 // Example: 3 → 9 → 2 → 9  ⇒  1
 int LinkedList::indexOfMax() const
 {
-    TODO();
+    Node *p = head;
+    if (p == NULL)
+        return -1;
+
+    int max = -100, index = 0, maxIndex = 0;
+
+    while (p != NULL)
+    {
+        if (p->item > max)
+        {
+            max = p->item;
+            maxIndex = index;
+        }
+        index++;
+        p = p->next;
+    }
+    return maxIndex;
 }
 
 // LL-4 · Easy · Insert at end
@@ -42,7 +66,23 @@ int LinkedList::indexOfMax() const
 // Example: 1 → 2, v = 7  ⇒  1 → 2 → 7
 void LinkedList::insertAtEnd(int v)
 {
-    TODO();
+    Node *p = head;
+
+    if (head == NULL)
+    {
+        head = new Node;
+        head->item = v;
+        head->next = NULL;
+        return;
+    }
+
+    while (p->next != NULL)
+    {
+        p = p->next;
+    }
+    p->next = new Node;
+    p->next->item = v;
+    p->next->next = NULL;
 }
 
 // LL-5 · Medium · Remove first occurrence
@@ -50,7 +90,25 @@ void LinkedList::insertAtEnd(int v)
 // Example: 1 → 4 → 3 → 4, v = 4  ⇒  1 → 3 → 4  (returns true)
 bool LinkedList::removeFirst(int v)
 {
-    TODO();
+    Node *p = head;
+    Node *prev = NULL;
+
+    while (p != NULL)
+    {
+        if (p->item == v)
+        {
+            if (prev == NULL)
+                head = p->next; // v değeri ilk kez gelince sil
+            else
+                prev->next = p->next; // aynı v değeri tekrar gelirse atla
+            delete p;
+            return true;
+        }
+
+        prev = p;
+        p = p->next;
+    }
+    return false;
 }
 
 // LL-6 · Medium · Reverse the list

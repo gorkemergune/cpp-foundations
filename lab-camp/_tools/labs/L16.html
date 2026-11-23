@@ -1,0 +1,84 @@
+{{ header(4, 4, "Timed Lab: Reverse, Remove, Find the Middle", "<b>50 minutes</b>, closed notes · Part A 15 · Part B 15 · Part C 10 · final test 10",
+  "three-pointer reversal, removal with a predecessor, slow/fast pointers",
+  related=lc(206, "reverse-linked-list", "Reverse Linked List") + " (A) · " + lc(876, "middle-of-the-linked-list", "Middle of the Linked List") + " (C) · " + lc(234, "palindrome-linked-list", "Palindrome Linked List") + " (L16-X)",
+  slides="<code>materials/slides/08-linked-lists.ppt</code> slides 4–14",
+  archive="Practice Lab 2 questions 3 and 5 (<code>findMiddle</code>, <code>reverseList</code>) · old midterm camp LL-5, LL-6", timed=True, one="A") }}
+<div class="box warn"><span class="t">Exam conditions</span><p>50-minute timer, only <code>lab16.cpp</code>, paper allowed and recommended. Draw each part before you type.</p></div>
+
+<h2>1. Problem statement</h2>
+<ol><li><b>Part A — <code>reverseList</code></b> (LeetCode 206): reverse the list by turning every arrow around. Do not create nodes and do not copy values: the test checks that the returned list consists of the very same node objects in reverse order.</li>
+<li><b>Part B — <code>removeFirst</code></b>: remove and <code>delete</code> the first node holding <code>v</code>; return whether one was removed. The head may change.</li>
+<li><b>Part C — <code>middleNode</code></b> (LeetCode 876): return a pointer to the middle node in <b>one pass</b>, without counting first. For an even length return the second of the two middle nodes (index <code>n/2</code>).</li></ol>
+{{ code("lab:lab16.h", title="lab16.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_REV", ["list", "after reverseList"], [
+    ([1, 2, 3, 4, 5], [5, 4, 3, 2, 1], "LeetCode example 1"),
+    ([1, 2], [2, 1], "LeetCode example 2"),
+    ([], [], "LeetCode example 3: empty -> nullptr"),
+    ([7], [7], "single node"),
+], widths=["30%", "30%", "35%"]) }}
+{{ cases("PDF_RF", ["list", "v", "return", "after"], [
+    ([1, 4, 3, 4], 4, True, [1, 3, 4], "first of two"),
+    ([4, 1], 4, True, [1], "the head"),
+    ([1, 2], 2, True, [1], "the last node"),
+    ([5], 5, True, [], "only node"),
+    ([1, 2], 9, False, [1, 2], "not found"),
+    ([], 1, False, [], "empty"),
+], widths=["22%", "8%", "11%", "18%", "36%"]) }}
+{{ cases("PDF_MID", ["list", "index of the expected node"], [
+    ([1, 2, 3, 4, 5], 2, "LeetCode example 1: odd length"),
+    ([1, 2, 3, 4, 5, 6], 3, "LeetCode example 2: second middle"),
+    ([9], 0, "single node"),
+    ([1, 2], 1, "two nodes: the second"),
+    ([], -1, "empty: nullptr"),
+], widths=["35%", "20%", "40%"]) }}
+<p>Every part also runs 200 random lists. Self-grading: A 35 · B 30 · C 25 · clean compile 10.</p>
+<p><span class="tag opt">L16-X</span> <code>bool isPalindrome(Node* head)</code> (LeetCode 234) in <code>O(1)</code> extra memory; the list must look unchanged afterwards.</p>
+{{ cases("PDF_PAL", ["list", "return"], [
+    ([1, 2, 2, 1], True, "LeetCode example 1"),
+    ([1, 2], False, "LeetCode example 2"),
+    ([1, 2, 1], True, "odd length"),
+    ([], True, "empty"),
+], widths=["35%", "15%", "45%"]) }}
+
+{{ banner("süre bitmeden bu sayfaya geçme") }}
+<h2>Soru ne istiyor?</h2>
+<p>Üçü de linked list’in klasik hareketleri ve vizenin en sık sorduğu işlemler. A’da her oku ters çeviriyorsun ama listenin geri kalanını kaybetmemek için önce <code>next</code>’i saklıyorsun. B, Lab 14’teki <code>removeAt</code>’in değere göre çalışan hâli. C’de iki pointer farklı hızlarda yürüyor. Hızlı olan sona vardığında yavaş olan ortadadır.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>A’da her adımda kaç pointer gerekiyor? Hangisini kaydetmezsen listenin kalanı kaybolur?</li><li>C’de döngü koşulu <code>fast-&gt;next != nullptr</code> mı olmalı, <code>fast != nullptr &amp;&amp; fast-&gt;next != nullptr</code> mı? Çift uzunlukta hangisi ikinci ortayı verir?</li></ol></div>
+<div class="avoid"><h3>Görsel iz: <code>reverseList(1 → 2 → 3)</code></h3>
+{{ steps([
+  ("başlangıç", ll([1, 2, 3], labels={0: ["head", "cur"]}), "prev = nullptr"),
+  ("1. tur", ll([1, 2, 3], labels={0: "prev", 1: "cur"}, cut={0}), "next = 2’yi sakla. 1’in oku prev’e (nullptr) döner. prev = 1, cur = 2."),
+  ("2. tur", ll([1, 2, 3], labels={1: "prev", 2: "cur"}, cut={0, 1}), "2’nin oku 1’e döner. prev = 2, cur = 3."),
+  ("son", ll([3, 2, 1], labels={0: "prev (yeni head)"}), "3’ün oku 2’ye döner. cur = nullptr, döngü biter. prev’i döndür."),
+]) }}</div>
+<div class="avoid"><h3>Görsel iz: <code>middleNode</code> (1 … 6)</h3>
+{{ steps([
+  ("başlangıç", ll([1, 2, 3, 4, 5, 6], labels={0: ["slow", "fast"]}), ""),
+  ("3 tur sonra", ll([1, 2, 3, 4, 5, 6], labels={3: "slow"}, hl={3: "green"}), "fast: 1 → 3 → 5 → nullptr (6’nın next’i). slow: 1 → 2 → 3 → 4 = ikinci orta."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab16.cpp", "reverseList", title="Part A — reverseList") }}
+{{ code("sol:lab16.cpp", "removeFirst", title="Part B — removeFirst") }}
+{{ code("sol:lab16.cpp", "middleNode", title="Part C — middleNode") }}
+<ul><li><b>A.</b> Üç pointer: <code>prev</code>, <code>cur</code>, <code>next</code>. Sıra önemli: önce sakla, sonra çevir, sonra ilerle. Boş liste ve tek düğüm ayrı kod gerektirmiyor.</li>
+<li><b>C.</b> Döngü koşulundaki iki kontrol tek ve çift uzunluğu birlikte çözüyor. Ders slaytlarındaki <code>findMiddle</code> da (Practice Lab 2) aynı şekilde ikinci ortayı döndürüyor.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Üçü de <code>O(n)</code> zaman, <code>O(1)</code> ek bellek. A’da yeni düğüm yok. Test düğüm adreslerini karşılaştırıyor.</li></ul>
+<h3>Alternatifler ve hangi kuralı bozdukları</h3>
+<ul><li>A’yı değerleri bir vektöre kopyalayıp ters sırayla geri yazarak çözmek: sonuç aynı görünür, ama “düğümleri değil değerleri değiştirmek” ve <code>O(n)</code> ek bellek, <b>“in place, relink” kuralını ihlal eder</b>. 2021 Assignment 1’in arşiv çözümündeki <code>swap_nodes</code> tam olarak bu hatayı yapıyor.</li>
+<li>A’nın recursive hâli (<code>Node* rest = reverseList(head-&gt;next); head-&gt;next-&gt;next = head; head-&gt;next = nullptr;</code>) doğru, ama <code>O(n)</code> çağrı yığını kullanır.</li>
+<li>C’yi “önce say, sonra n/2 yürü” diye yapmak doğru ama iki geçiş, yani <b>“one pass” kuralını ihlal eder</b>.</li></ul>
+{{ code("sol:lab16.cpp", "isPalindrome", title="L16-X — isPalindrome (reverse the second half, then restore)") }}
+
+<h2>Ezberden varyant · L16-V</h2>
+<div class="box tip"><span class="t">3 dakikada yaz</span><p><span class="tag opt">L16-V</span> <code>int countValue(const Node* head, int v)</code>. Kısa ama sınavda ısınma sorusu olarak sık geliyor (eski kampta LL-2).</p></div>
+<h2>4. haftanın kontrol listesi</h2>
+<div class="box"><ul><li>Bir pointer programını kutu-ok çizerek satır satır izleyebiliyor musun? Dangling pointer ve sızıntıyı çizimde gösterebiliyor musun?</li>
+<li><code>Node*</code>, <code>Node*&amp;</code> ve “head’i döndür” stilleri arasındaki farkı açıklayabiliyor musun?</li>
+<li><code>IntSLList</code>’in bütün fonksiyonlarını <code>tail</code>’i bozmadan yazabiliyor musun?</li>
+<li>Ters çevirme ve orta düğümü bulmayı ezberden yazabiliyor musun?</li></ul>
+<p>Sonra <b>C04</b> soru setine ve 5. haftaya (doubly ve circular list) geç. Bu haftanın arşiv ödevleri: Labwork 1, 2021 Assignment 1, 2017 Assignment 1 (<code>materials/README.md</code>).</p></div>

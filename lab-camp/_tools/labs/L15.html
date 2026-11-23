@@ -1,0 +1,67 @@
+{{ header(4, 3, "The Course Class IntSLList", "50 minutes · A 8 · B 12 · M1 15 · M2 5 · testing 10",
+  "a list class with <code>head</code> <b>and</b> <code>tail</code>, keeping both correct after every operation, preconditions (<code>isEmpty()</code> before <code>delete…</code>), destructor, <code>const</code> member functions",
+  related=lc(203, "remove-linked-list-elements", "Remove Linked List Elements") + " (L15-X, on IntSLList)",
+  slides="<code>materials/slides/08-linked-lists.ppt</code> slides 15–28 (pointer-based ADT list: constructors, destructor, insert, remove)",
+  archive="<code>materials/labworks/lw1-singly-linked-list</code> (the same header; Labwork 1 adds <code>remove_even</code>, <code>duplicate_fives</code>) · <code>materials/assignments/2021-fall/a1-sll-sort-swap</code> · <code>2017-spring/as1-grades-linked-list</code>", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>Labwork 1, Assignment 1 (both terms) and Assignment 5 all start from the same class: <code>IntSLList</code>, a singly linked list of <code>int</code> with a <code>head</code> and a <code>tail</code> pointer. In the labs it is given ready; in the exam you are expected to know every line of it. Write the whole <code>intSLList.cpp</code> yourself.</p>
+<p>The invariant that every function must keep: <b>either the list is empty and <code>head == tail == 0</code>, or <code>head</code> is the first node and <code>tail</code> is the last node (<code>tail-&gt;next == 0</code>).</b> Most course bugs (see the archive notes in <code>materials/README.md</code>) are a <code>tail</code> that was forgotten.</p>
+{{ code("lab:intSLList.h", title="intSLList.h — given (course header + lab camp test helpers)") }}
+<div class="box rule"><span class="t">Course contracts to respect</span><ul>
+<li><code>deleteFromHead()</code> / <code>deleteFromTail()</code> return the removed value. Their precondition is “not empty”: the course code does not check, so the <b>caller</b> must test <code>isEmpty()</code> first.</li>
+<li><code>isEmpty()</code> returns <code>int</code> in the course file (0 or 1). In conditions it behaves like a <code>bool</code>.</li>
+<li><code>deleteNode(el)</code> removes only the <b>first</b> node holding <code>el</code>; nothing happens if <code>el</code> is not in the list.</li>
+<li>The destructor must delete every node and must not throw.</li></ul></div>
+<h3>Complexity targets</h3>
+<table class="grid"><tr><th>function</th><th>time</th><th>why</th></tr>
+<tr><td><code>addToHead</code>, <code>addToTail</code>, <code>deleteFromHead</code></td><td><code>O(1)</code></td><td>head/tail point at both ends</td></tr>
+<tr><td><code>deleteFromTail</code></td><td><code>O(n)</code></td><td>the new tail is the node <i>before</i> tail, and there is no <code>prev</code></td></tr>
+<tr><td><code>deleteNode</code>, <code>isInList</code></td><td><code>O(n)</code></td><td>search</td></tr></table>
+
+<h2>2. Tests</h2>
+<p>A: <code>addToTail</code> 2, 3 then <code>addToHead</code> 1 → <code>1 2 3</code>; <code>addToHead</code> on an empty list must set <code>tail</code> too. B: deleting from both ends down to empty and adding again. M2: four nodes inside a block, zero leaked after it.</p>
+{{ cases("PDF_DEL", ["list", "el", "list after deleteNode(el)"], [
+    ([1, 2, 3, 2], 2, [1, 3, 2], "first occurrence only"),
+    ([2, 1], 2, [1], "the head"),
+    ([1, 2, 3], 3, [1, 2], "the tail: tail moves back"),
+    ([7], 7, [], "the only node"),
+    ([1, 2], 5, [1, 2], "not in the list"),
+    ([], 1, [], "empty list"),
+], widths=["22%", "8%", "25%", "40%"]) }}
+<p>After every row the test checks <code>tailOk()</code>, the number of deleted nodes, and that <code>addToTail(100)</code> still appends at the end.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Lab 14’teki serbest fonksiyonların sınıf hâlini yazıyorsun. Fark şu: artık bir <code>tail</code> pointer’ı da var ve her işlemden sonra doğru olmak zorunda. <code>tail</code> sona eklemeyi <code>O(1)</code> yapıyor, ama silmede sorumluluk getiriyor. Son düğüm silinince <code>tail</code> geri çekilmeli, liste boşalınca <code>head</code> ile birlikte 0 olmalı.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li>Hangi fonksiyonlar boş listeyi ayrıca ele almak zorunda? Hangileri “tek düğüm” durumunu?</li>
+<li><code>deleteFromTail</code>’de yeni <code>tail</code>’i nasıl bulurum? Bu neden <code>O(n)</code>? Doubly linked list bunu nasıl çözer? (Lab 17)</li>
+<li><code>deleteNode</code> son düğümü silerse hangi üye değişkeni güncellemeliyim?</li></ol></div>
+<div class="avoid"><h3>Görsel: <code>tail</code>’in hayatı</h3>
+{{ steps([
+  ("addToHead(5) boşta", ll([5], labels={0: ["head", "tail"]}), "Tek düğüm hem baş hem son."),
+  ("addToTail(6)", ll([5, 6], labels={0: "head", 1: "tail"}, hl={1: "green"}), "<code>tail-&gt;next = yeni; tail = yeni;</code>"),
+  ("deleteFromTail()", ll([5, 6], labels={0: ["head", "tmp"], 1: "tail"}, faded={1}, cut={0}), "tmp, <code>tmp-&gt;next == tail</code> olana kadar yürür. Sonra <code>tail = tmp; tail-&gt;next = 0;</code>"),
+  ("deleteNode(5)", ll([], labels={}), "Son düğüm de silindi: <code>head = tail = 0</code>."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:intSLList.cpp", "addToHead", title="A — addToHead") }}
+{{ code("sol:intSLList.cpp", "addToTail", title="A — addToTail") }}
+{{ code("sol:intSLList.cpp", "deleteFromTail", title="B — deleteFromTail") }}
+{{ code("sol:intSLList.cpp", "deleteNode", title="M1 — deleteNode") }}
+{{ code("sol:intSLList.cpp", "~IntSLList", title="M2 — destructor") }}
+<ul><li><b>Baş için tekrar yazma.</b> <code>deleteNode</code> baş düğümü silerken <code>deleteFromHead()</code>’i çağırıyor. Tek düğüm durumundaki <code>tail = 0</code> güncellemesi orada zaten yapılıyor.</li>
+<li><b><code>pred</code> / <code>tmp</code> çifti.</b> Tek yönlü listede silinecek düğümün öncesini ayrı bir pointer ile taşımak gerekiyor.</li>
+<li><b>Destructor.</b> Lab 13’teki <code>freeList</code>’in aynısı. Nesne kapsam dışına çıktığında otomatik çalışıyor.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Bu kod ders arşivindeki <code>intSLList.cpp</code> ile aynı mantıkta. Yalnızca <code>for(;;)</code> kalıpları okunaklı <code>while</code> döngülerine çevrildi. Sınavda verilen dosyayı okuyabilmen için yapı değiştirilmedi.</li>
+<li>Bütün “değiştiren” fonksiyonlar değişmezi koruyor. Testlerdeki <code>tailOk()</code> bunu her adımda kontrol ediyor.</li></ul>
+<h3>Alternatif</h3>
+<p><code>std::list&lt;int&gt;</code> aynı işlemleri <code>push_front</code>, <code>push_back</code>, <code>pop_front</code>, <code>pop_back</code> ve <code>remove</code> ile hazır sunar. <code>pop_back</code> doubly linked olduğu için <code>O(1)</code>, ama <code>pop_*</code> değer döndürmez (<code>void</code>). Değeri önce <code>front()</code>/<code>back()</code> ile okumak gerekir. Bu lab dersin sınıfını yazmayı istediği için <b>STL kullanmak kuralı ihlal eder</b>. 2017 Assignment 4’teki <code>calendar</code> sınıfı ise açıkça <code>std::list</code> istiyordu.</p>
+{{ code("sol:intSLList.cpp", "removeAll", title="L15-X — removeAll") }}
+
+<h2>Ezberden varyant · L15-V</h2>
+<div class="box tip"><span class="t">7 dakikada yaz</span><p><span class="tag opt">L15-V</span> <code>void IntSLList::insertSorted(int el)</code>: artan sıradaki listeye <code>el</code>’i sırayı bozmadan ekle. Başa, ortaya ve sona ekleme durumlarında <code>tail</code>’i doğru tut. (Practice Lab 2, soru 4’ün sınıf hâli.)</p></div>

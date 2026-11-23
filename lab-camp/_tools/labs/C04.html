@@ -1,0 +1,55 @@
+{{ header(4, 0, "Thinking Problems on Linked Lists", "60–90 minutes in total",
+  "dummy (sentinel) head node, carry propagation, a gap of n between two pointers, split + reverse + merge",
+  related=lc(2, "add-two-numbers", "Add Two Numbers") + " · " + lc(19, "remove-nth-node-from-end-of-list", "Remove Nth Node From End of List") + " · " + lc(143, "reorder-list", "Reorder List"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 4 · Challenge set (after Lab 16)", one="A") }}
+<p>The node type is LeetCode's <code>ListNode</code> (<code>val</code>, <code>next</code>), so the bodies can be submitted on the site unchanged. A live-node counter checks leaks and “no new nodes”.</p>
+{{ code("lab:challenge04.h", title="challenge04.h — given") }}
+
+<h2>C04-A · Add Two Numbers (medium)</h2>
+<p>Two non-negative numbers are stored digit by digit in reverse order (the head is the ones digit). Return a <b>new</b> list with their sum in the same format; do not change the input lists.</p>
+{{ cases("PDF_ADD", ["l1", "l2", "sum"], [
+    ([2, 4, 3], [5, 6, 4], [7, 0, 8], "LeetCode example 1: 342 + 465 = 807"),
+    ([0], [0], [0], "LeetCode example 2"),
+    ([9, 9, 9, 9, 9, 9, 9], [9, 9, 9, 9], [8, 9, 9, 9, 0, 0, 0, 1], "LeetCode example 3: different lengths, final carry"),
+    ([5], [5], [0, 1], "a carry creates a new last digit"),
+], widths=["22%", "17%", "22%", "34%"]) }}
+
+<h2>C04-B · Remove Nth Node From End (medium)</h2>
+<p>Remove the <code>n</code>-th node counted from the end (1 = last) and <code>delete</code> it, in <b>one pass</b> — without computing the length first.</p>
+{{ cases("PDF_NTH", ["list", "n", "after"], [
+    ([1, 2, 3, 4, 5], 2, [1, 2, 3, 5], "LeetCode example 1"),
+    ([1], 1, [], "LeetCode example 2: the only node"),
+    ([1, 2], 1, [1], "LeetCode example 3: the last node"),
+    ([1, 2], 2, [2], "n == length: the head"),
+], widths=["28%", "8%", "22%", "37%"]) }}
+
+<h2>C04-C · Reorder List (medium)</h2>
+<p>Change <code>L0 → L1 → … → Ln</code> into <code>L0 → Ln → L1 → Ln−1 → L2 → …</code> by relinking; no new nodes, no copying values, <code>O(1)</code> extra memory.</p>
+{{ cases("PDF_REORDER", ["list", "after"], [
+    ([1, 2, 3, 4], [1, 4, 2, 3], "LeetCode example 1"),
+    ([1, 2, 3, 4, 5], [1, 5, 2, 4, 3], "LeetCode example 2"),
+    ([1], [1], "single node"),
+    ([], [], "empty"),
+], widths=["30%", "30%", "35%"]) }}
+
+{{ banner("önce her soruyla en az 20 dakika uğraş") }}
+<h2>İpuçları</h2>
+<div class="box q"><span class="t">Ortak teknik: sahte baş düğüm (dummy)</span><p>Listenin başına yığında duran sahte bir düğüm koyarsan “baş düğüm değişiyor mu?” sorusu ortadan kalkar. Her gerçek düğümün bir öncülü olur. A’da ilk rakamı, B’de baş düğümün silinmesini ayrı ele almak gerekmez.</p></div>
+<div class="box q"><span class="t">C04-A</span><ol><li>Elle toplama yapar gibi: hangi listede rakam kaldıysa onu ekle, eldeyi taşı. Döngü ne zaman biter? İki liste bittiğinde elde 1 ise ne olur?</li></ol></div>
+<div class="box q"><span class="t">C04-B</span><ol><li>İki pointer arasında <code>n</code> düğüm fark olsun. Öndeki sona vardığında arkadaki nerede olur?</li></ol></div>
+<div class="box q"><span class="t">C04-C</span><ol><li>Bu soru L16’nın üç parçasının birleşimi: ortayı bul, ikinci yarıyı ters çevir, iki yarıyı sırayla ör.</li></ol></div>
+<div class="avoid"><h3>Görsel: C04-C</h3>
+{{ steps([
+  ("1) böl", row(ll([1, 2, 3], name="ilk"), ll([4, 5], name="ikinci")), "slow 3’te durur. <code>slow-&gt;next = nullptr</code> ile liste ikiye ayrılır."),
+  ("2) ters çevir", row(ll([1, 2, 3], name="a"), ll([5, 4], name="b")), "L16 Part A"),
+  ("3) ör", ll([1, 5, 2, 4, 3]), "a’dan bir, b’den bir. b bitince dur, a’nın kalanı zaten bağlı."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+{{ code("sol:challenge04.cpp", "addTwoNumbers", title="C04-A") }}
+<p><code>ListNode dummy(0)</code> yığında duran gerçek bir nesne, <code>new</code> ile oluşturulmadı. Bu yüzden silinmesine gerek yok. Sonucun başı <code>dummy.next</code>. Döngü koşulundaki <code>carry != 0</code>, 5 + 5 = 10 durumunda fazladan bir basamak üretiyor. Süre <code>O(max(m, n))</code>.</p>
+{{ code("sol:challenge04.cpp", "removeNthFromEnd", title="C04-B") }}
+<p><code>fast</code> önce <code>n</code> adım ilerliyor. Sonra ikisi birlikte yürüyor ve <code>fast</code> son düğümdeyken <code>slow</code> silinecek düğümün öncülü oluyor. Dummy sayesinde baş düğümü silmek (<code>n == length</code>) ayrı bir durum gerektirmiyor. Tek geçiş, <code>O(1)</code> bellek. İki geçişli “önce uzunluğu say” çözümü doğru, ama sorunun “one pass” follow-up’ını karşılamıyor.</p>
+{{ code("sol:challenge04.cpp", "reorderList", title="C04-C") }}
+<p>Ortayı bulma döngüsü burada <i>birinci</i> ortada duruyor (<code>fast-&gt;next-&gt;next</code> kontrolü), böylece ilk yarı ikinciden bir uzun ya da eşit oluyor. Alternatif: düğüm pointer’larını bir <code>vector&lt;ListNode*&gt;</code>’e koyup iki uçtan bağlamak. Daha kolay ama <code>O(n)</code> ek bellek kullandığı için <b><code>O(1)</code> bellek hedefini ihlal eder</b>.</p>

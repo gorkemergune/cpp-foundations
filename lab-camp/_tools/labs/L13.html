@@ -1,0 +1,83 @@
+{{ header(4, 1, "Paper Lab: Tracing Nodes and Arrows", "40 minutes · paper trace 20 · exercises A–B 6 · main problem 8 · testing 6",
+  "<code>struct Node</code> with a constructor, <code>new</code> / <code>delete</code>, <code>nullptr</code>, <code>-&gt;</code>, walking a list, reading <code>next</code> before <code>delete</code>, <code>Node*&amp;</code> to change the caller's head",
+  related=lc(1290, "convert-binary-number-in-a-linked-list-to-integer", "Convert Binary Number in a Linked List to Integer") + " (L13-X)",
+  slides="<code>materials/slides/07-pointers.ppt</code> slides 6–30 (pointer basics, passing by pointer) · <code>08-linked-lists.ppt</code> slides 2–10 (preliminaries, pointer-based lists, display, delete)",
+  archive="<code>materials/practice-labs/pl2-linked-list</code> (Practice Lab 2) · lecture code <code>materials/lecture-code/week03</code>", one="M1") }}
+
+<h2>1. Why a paper lab</h2>
+<p>Every linked-structure question in this course — list, stack, queue, tree, graph adjacency list — is about which arrow points where after each line. Most crashes in timed labs come from one wrong arrow. Professional programmers draw these diagrams too. This lab trains the habit: <b>draw first, code second</b>.</p>
+<p>Draw every node as a box with two parts <code>[value | next]</code>, and every pointer variable (<code>head</code>, <code>p</code>, <code>q</code>) as a name with an arrow to the box it points to. <code>nullptr</code> is an arrow to nothing. When a node is deleted, cross it out — any arrow still pointing at it is now a <b>dangling pointer</b>.</p>
+
+<h2>2. The trace (20 min, no computer)</h2>
+{{ code("lab:warmup.cpp", title="warmup.cpp — draw the list after lines 1, 2, 3, 4, 6, 7, 9 and 10") }}
+<table class="grid"><tr><th style="width:10%">after line</th><th>draw this</th><th style="width:22%">print line</th></tr>
+<tr><td>1–3</td><td>every node and <code>head</code></td><td>1) 2) 3)</td></tr>
+<tr><td>4</td><td>the new node and both arrows that changed</td><td>4)</td></tr>
+<tr><td>5–6</td><td><code>p</code> too — which arrow skips the 2?</td><td>6)</td></tr>
+<tr><td>7</td><td>cross out the deleted node; where does <code>p</code> point now?</td><td>—</td></tr>
+<tr><td>8–9</td><td><code>q</code> walking; the appended 4</td><td>9)</td></tr>
+<tr><td>10</td><td>how many <code>delete</code> calls? what is <code>head</code> at the end?</td><td>10)</td></tr></table>
+<p>Questions to answer in writing: (a) In line 4, why must the new node get <code>head-&gt;next</code> <i>before</i> <code>head-&gt;next</code> is overwritten? (b) After line 6, is the node holding 2 still in memory? (c) Why does line 10 save <code>head-&gt;next</code> in a variable before <code>delete</code>?</p>
+
+<h2>3. Problem statement</h2>
+<p>Turn the trace into functions on the given <code>Node</code>. <code>Node::alive</code> counts nodes that exist; the tests use it to find leaks (a <code>new</code> without <code>delete</code>) and double deletes.</p>
+{{ code("lab:lab13.h", title="lab13.h — given") }}
+<div class="box sig"><span class="t">Functions you complete (main problem)</span>
+{{ snippet('''
+void freeList(Node*& head);        // L13-M1: delete everything, head becomes nullptr
+int countNodes(const Node* head);  // L13-M2
+''') }}
+<p class="small"><code>Node*&amp; head</code> is a reference to the caller's pointer variable: setting <code>head = nullptr</code> inside changes the caller's <code>head</code>. With a plain <code>Node* head</code> the caller would keep a dangling pointer.</p></div>
+<h3>Tests</h3>
+<p>Every question runs these lists (A also checks that exactly <code>n</code> nodes were created, M1 that exactly <code>n</code> were deleted and the caller's head is <code>nullptr</code>):</p>
+{{ cases("PDF_MAKE", ["values"], [
+    ([3, 1, 2], "normal"),
+    ([], "empty list: head is nullptr"),
+    ([7], "single node"),
+    ([5, 5, 5, 5], "repeated values"),
+], widths=["50%", "45%"]) }}
+<p><span class="tag opt">L13-X</span> <code>getDecimalValue</code> (LeetCode 1290):</p>
+{{ cases("PDF_BIN", ["bits", "return"], [
+    ([1, 0, 1], 5, "LeetCode example 1"),
+    ([0], 0, "LeetCode example 2"),
+    ([1, 1, 1, 1], 15, "all ones"),
+], widths=["35%", "15%", "45%"]) }}
+
+{{ banner("önce kâğıttaki çizimi bitir") }}
+<h2>Kâğıt izinin cevabı</h2>
+{{ run("lab:warmup.cpp") }}
+{{ steps([
+  ("2", ll([3], labels={0: "head"}), "<code>new Node(3)</code>: next varsayılan olarak <code>nullptr</code>."),
+  ("3", ll([1, 3], labels={0: "head"}), "Yeni düğüm eski head’i gösteriyor, sonra head yeni düğüme alınıyor. Başa ekleme <code>O(1)</code>."),
+  ("4", ll([1, 2, 3], labels={0: "head"}, hl={1: "green"}), "<code>new Node(2, head-&gt;next)</code> önce 3’ü gösterir, sonra <code>head-&gt;next</code> yeni düğüme bağlanır. Sıra ters olsaydı 3’e giden ok kaybolurdu."),
+  ("6", ll([1, 2, 3], labels={0: "head", 1: "p"}, cut={0}, relink=[(0, 2, "accent")]), "<code>head-&gt;next = p-&gt;next</code>: 1 artık 3’ü gösteriyor. 2 hâlâ bellekte, yalnızca listeden çıktı."),
+  ("7", ll([1, 3], labels={0: "head"}), "<code>delete p</code> sonrası p sallanan (dangling) bir pointer. Bu yüzden <code>p = nullptr</code> yapıldı."),
+  ("9", ll([1, 3, 4], labels={0: "head", 1: "q"}, hl={2: "green"}), "q son düğümde durdu (<code>q-&gt;next == nullptr</code>). Sona ekleme <code>O(n)</code>, çünkü son düğümü bulmak için yürümek gerekiyor."),
+  ("10", ll([], labels={}), "Üç <code>delete</code> yapıldı. <code>head</code> nullptr."),
+]) }}
+<div class="box q"><span class="t">Cevaplar</span><ol type="a">
+<li>Yeni düğümün <code>next</code>’i eski <code>head-&gt;next</code>’i almalı. Önce <code>head-&gt;next</code>’i değiştirseydin 3’ün adresini hiçbir değişken tutmazdı. Düğüm erişilemez olur ve bellek sızardı.</li>
+<li>Evet. Listeden çıkarmak (unlink) ile silmek (delete) ayrı işlemler. Labwork ve vize sorularında ikisi de istenir.</li>
+<li><code>delete head</code> sonrasında <code>head-&gt;next</code>’i okumak silinmiş belleğe erişmektir. Program çoğu zaman çalışır gibi görünür, ama bu tanımsız davranış.</li></ol></div>
+
+<h2>Soru ne istiyor?</h2>
+<p>Kâğıtta yaptığın işlemleri fonksiyonlara dönüştüreceksin: listeyi kur (A), oku (B), say (M2), sil (M1). Testler düğüm sayacına bakıyor. Her <code>new</code> için tam bir <code>delete</code> olmalı.</p>
+<div class="box q"><span class="t">Kendine sor</span><ol><li><code>makeList</code>’te sona eklemeyi her seferinde baştan yürümeden nasıl yaparım? (Kâğıtta <code>tail</code> diye bir ok daha çiz.)</li><li><code>freeList</code> parametresi <code>Node*</code> olsaydı çağıranın <code>head</code>’i ne gösterirdi?</li></ol></div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab13.cpp", "makeList", title="makeList") }}
+<p><code>tail</code> son eklenen düğümü gösterdiği için her ekleme <code>O(1)</code>. Toplam <code>O(n)</code>. <code>tail</code> olmadan her eklemede sona yürümek <code>O(n<sup>2</sup>)</code> olurdu.</p>
+{{ code("sol:lab13.cpp", "freeList", title="M1 — freeList") }}
+{{ code("sol:lab13.cpp", "countNodes", title="M2 — countNodes") }}
+<ul><li><b><code>Node* next = head-&gt;next;</code></b> silmeden önce okunuyor. İzdeki 10. satırın aynısı.</li>
+<li><b><code>countNodes</code>’ta <code>head</code> parametresini ilerletmek</b> güvenli, çünkü değerle gelen bir pointer kopyası. Çağıranın <code>head</code>’i değişmiyor.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Her fonksiyon listeyi bir kez geziyor: <code>O(n)</code> zaman, <code>O(1)</code> ek bellek.</li>
+<li><code>const Node*</code> okuyan fonksiyonlarda düğümleri değiştirmeyi derleyici seviyesinde engelliyor.</li></ul>
+<h3>Alternatif: recursive</h3>
+{{ code("sol:alternatives.cpp", "rec", title="alternatives.cpp — recursive") }}
+<p>Kısa ve doğru. Her düğüm için bir fonksiyon çağrısı yığına eklenir, yani <code>O(n)</code> ek bellek. Çok uzun listelerde (yüz binlerce düğüm) stack taşabilir. Practice Lab 2’nin 2. sorusu tam olarak bu iki sürümü istiyor (<code>materials/practice-labs/pl2-linked-list/solution/q2.cpp</code>).</p>
+
+<h2>Ezberden varyant · L13-V</h2>
+<div class="box tip"><span class="t">6 dakikada yaz</span><p><span class="tag opt">L13-V</span> <code>Node* copyList(const Node* head)</code>: yeni düğümlerle aynı değerleri aynı sırada içeren bir kopya döndür. Kopyayı değiştirmek orijinali etkilememeli (“deep copy”). Bu, 2021 Assignment 1’in <code>sort_list</code> ve kopya kurucu konusunun temeli.</p></div>

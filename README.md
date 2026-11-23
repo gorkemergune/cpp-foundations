@@ -2,7 +2,23 @@
 
 > An open notebook for learning C++ from scratch — lecture notes, code examples, labs, and projects from CSE 211 at Yeditepe University, kept public for the students who come after.
 
-**CSE 211 tekrarına başla:** [12 haftalık lab kampı (46 lab, 11 soru seti, 6 proje, hepsi PDF + test)](lab-camp/README.md) · [Ders materyalleri ve arşiv çözümleri](materials/README.md) · [Vize kampı](practice/midterm-camp/README.md)
+## Start Here
+
+| | What it is | Open |
+| --- | --- | --- |
+| 🧪 **Lab Camp** | 12 weeks of CSE 211: 46 PDF labs, 11 challenge sets, 6 small projects — each with starter files, tests and step-by-step solutions | [lab-camp/README.md](lab-camp/README.md) · [first lab (PDF)](lab-camp/week01/L01-vector-first-steps/L01-vector-first-steps.pdf) |
+| 📦 **Course materials** | the CSE 211 slides with a topic/slide index, labworks, assignments, practice labs, lecture code and midterm notes — every question with a compiled, tested solution | [materials/README.md](materials/README.md) · [slide index](materials/slides/README.md) |
+| 🎯 **Midterm camp** | 30 questions on linked lists, stacks and queues with the same test runner | [practice/midterm-camp/README.md](practice/midterm-camp/README.md) |
+
+<details>
+<summary><b>How do I start? (click)</b></summary>
+
+1. Install a C++ compiler (see [Getting Started](#getting-started)).
+2. Open the [Lab Camp index](lab-camp/README.md) and expand **Week 1**.
+3. Read the first PDF, write your code in `lab01.cpp`, then run the tests from the `lab-camp` folder: `.\run.ps1 L01` (PowerShell) or `./run.sh L01` (Git Bash).
+4. When a topic needs the original course files (a slide, a labwork, an assignment), every PDF links to them under `materials/`.
+
+</details>
 
 ## Overview
 
@@ -27,15 +43,14 @@ This repository is the second step in a broader undergraduate learning path focu
 
 ```
 cpp-foundations/
-├── lab-camp/          # 12 haftalık lab kampı: haftalık PDF'ler, başlangıç dosyaları, testler, çözümler
-│   ├── week01 … week12/   # L01–L46 lablar, 11 soru seti (C01–C12), P01–P06 projeler
-│   ├── solutions/         # referans çözümler
-│   └── run.ps1, run.sh    # ./run.ps1 L01 ile derle ve test et
-un.ps1 L01  ile derle ve test et
-├── materials/         # CSE 211 slaytları (konu/sayfa dizini), labwork'ler, ödevler, pratik lablar,
-│                      # ders kodları, vize notları, C++ okuma notları; her soru için test edilen çözüm
+├── lab-camp/          # 12-week lab camp: weekly PDFs, starter files, tests, solutions
+│   ├── week01 … week12/   # labs L01–L46, 11 challenge sets (C01–C12), projects P01–P06
+│   ├── solutions/         # reference solutions
+│   └── run.ps1, run.sh    # compile and test:  ./run.ps1 L01
+├── materials/         # CSE 211 slides (with a topic/slide index), labworks, assignments, practice labs,
+│                      # lecture code, midterm notes, C++ reading notes; a tested solution for every question
 ├── practice/
-│   └── midterm-camp/  # 30 soruluk vize kampı (linked list, stack, queue) ve testleri
+│   └── midterm-camp/  # 30-question midterm camp (linked list, stack, queue) with tests
 └── README.md
 ```
 

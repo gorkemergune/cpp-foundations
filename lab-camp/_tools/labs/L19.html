@@ -1,0 +1,61 @@
+{{ header(5, 3, "A Circular List Kept by last", "45 minutes · A–B 12 · main problem (two parts) 20 · testing 13",
+  "circular lists, keeping only <code>last</code>, <code>do … while</code> for one full round, the one-node circle (<code>last-&gt;next == last</code>), <code>Node*&amp; last</code>",
+  slides="<code>materials/slides/08-linked-lists.ppt</code> slides 34–36 (circular linked lists)",
+  archive="midterm note: “circular bir node’da last diye atanan node’u silip tekrar bağlama” (M1) · Practice Lab 2 question 6 (<code>isCircular</code>)", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>In a circular singly linked list the last node does not point to <code>nullptr</code> but back to the first node. The slides keep such a list through <b>one</b> pointer, <code>last</code>: the last node is <code>last</code>, the first is <code>last-&gt;next</code>, so both ends are reachable in <code>O(1)</code>. An empty list is <code>last == nullptr</code>; a single node points to itself.</p>
+<p><b>M1 (midterm)</b>: delete the node that <code>last</code> points to and reconnect the circle; the node before it becomes the new <code>last</code>. <b>M2</b>: delete the first node. Both must handle the empty list (<code>false</code>) and the one-node circle (it disappears, <code>last = nullptr</code>).</p>
+<p><b>Example.</b> Circle <code>1 → 2 → 3 → 4 → (1)</code> with <code>last</code> at 4. After <code>deleteLast(last)</code>: <code>1 → 2 → 3 → (1)</code> and <code>last</code> at 3.</p>
+{{ code("lab:lab19.h", title="lab19.h — given") }}
+<div class="box rule"><span class="t">Assumptions added for this lab</span><p class="small">The midterm note only says “delete the node called last and link again”. Fixed here: the list is singly linked, <code>last</code> is passed by reference and must move to the predecessor, the deleted node is freed, and a circle of one node becomes empty. The tests check that the circle is closed after every operation.</p></div>
+<h3>Complexity</h3>
+<p><code>insertAtEnd</code>, <code>deleteFirst</code>: <code>O(1)</code>. <code>deleteLast</code>: <code>O(n)</code> — the predecessor of <code>last</code> is only reachable by walking around the circle.</p>
+
+<h2>2. Tests</h2>
+{{ cases("PDF_DL", ["circle (first … last)", "return", "after deleteLast"], [
+    ([1, 2, 3, 4], True, [1, 2, 3], "midterm case: last moves to 3"),
+    ([1, 2], True, [1], "two nodes: the survivor points to itself"),
+    ([9], True, [], "one node: last becomes nullptr"),
+    ([], False, [], "empty"),
+    ([5, 5, 5], True, [5, 5], "equal values: delete the NODE last, not a value"),
+], widths=["28%", "10%", "22%", "35%"]) }}
+{{ cases("PDF_DF", ["circle", "return", "after deleteFirst"], [
+    ([1, 2, 3], True, [2, 3], "last stays the same node"),
+    ([1, 2], True, [2], "two nodes"),
+    ([9], True, [], "one node"),
+    ([], False, [], "empty"),
+], widths=["28%", "10%", "22%", "35%"]) }}
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Vizedeki soru: tek yönlü dairesel listede <code>last</code> diye tutulan düğümü sil ve çemberi yeniden kapat. Tek yönlü olduğu için <code>last</code>’ın öncülünü bulmak üzere çemberin etrafında yürümen gerekiyor. Yürüyüşün sonu <code>nullptr</code> değil. “Başa döndüm mü?” ya da “bir sonraki <code>last</code> mı?” diye kontrol ediyorsun.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li>Tek düğümlü çemberde <code>last-&gt;next</code> neyi gösterir? Bu durumu nasıl anlarım?</li>
+<li><code>last</code>’ın öncülünü bulan döngünün koşulu ne olmalı?</li>
+<li>Silmeden sonra hem çemberin kapanması hem çağıranın <code>last</code>’ının yeni son düğümü göstermesi gerekiyor. Hangi sırayla?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("başlangıç", ll([1, 2, 3, 4], labels={3: "last"}, circular=True), "Alttaki yay: 4 → 1."),
+  ("öncülü bul", ll([1, 2, 3, 4], labels={2: "prev", 3: "last"}, circular=True), "prev = last->next (1), sonra <code>prev-&gt;next != last</code> iken ilerle: 3’te durur."),
+  ("kapat ve sil", ll([1, 2, 3], labels={2: ["prev", "last"]}, circular=True), "<code>prev-&gt;next = last-&gt;next</code> (3 → 1), <code>delete last</code>, <code>last = prev</code>."),
+  ("tek düğüm", ll([9], labels={0: "last"}, circular=True), "<code>last-&gt;next == last</code> → sil, <code>last = nullptr</code>."),
+]) }}</div>
+<p>Dikkat: aynı değerleri taşıyan listede (<code>5 5 5</code>) “değeri 5 olanı sil” ile “last düğümünü sil” farklı şeyler. Öncülü değere bakarak değil <b>adrese</b> bakarak (<code>prev-&gt;next != last</code>) bulmak bu yüzden önemli.</p>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab19.cpp", "insertAtEnd", title="A — insertAtEnd") }}
+{{ code("sol:lab19.cpp", "toVector", title="B — toVector (do … while)") }}
+<p><code>do … while</code> gövdeyi koşuldan önce bir kez çalıştırır. Çemberde başlangıç ile bitiş aynı düğüm olduğu için normal bir <code>while (p != first)</code> döngüsü hiç girmezdi.</p>
+{{ code("sol:lab19.cpp", "deleteLast", title="M1 — deleteLast (midterm)") }}
+{{ code("sol:lab19.cpp", "deleteFirst", title="M2 — deleteFirst") }}
+<ul><li><b>M1</b> <code>O(n)</code>: öncülü yürüyerek buluyoruz. <b>M2</b> <code>O(1)</code>: ilk düğümün öncülü zaten <code>last</code>. Çembersel listede yalnızca <code>last</code>’ı tutmanın avantajı tam da bu: iki uca da sabit zamanda erişiliyor.</li>
+<li>Her iki fonksiyonda tek düğüm durumu ayrı ele alınıyor. Aksi hâlde <code>last</code> silinmiş düğümü göstermeye devam ederdi.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Bir ok değişiyor, bir düğüm siliniyor, <code>last</code> güncelleniyor. Ek bellek <code>O(1)</code>.</li></ul>
+<h3>Alternatif</h3>
+<p>Doubly circular bir listede (<code>prev</code> ile) <code>deleteLast</code> da <code>O(1)</code> olurdu: <code>last-&gt;prev</code> öncülü doğrudan verir. Bu vizenin “tek yönlü” varsayımını değiştirdiği için <b>soru sözleşmesini ihlal eder</b>, ama veri yapısı tasarımı sorusunda doğru cevap olabilir. Bir başka hile: <code>last</code>’ın değerini önceki düğüme kopyalayıp onu silmek. Değer kopyalama “düğümü sil” sorusunda genellikle kabul edilmez. Sınav yönergesini oku.</p>
+{{ code("sol:lab19.cpp", "deleteValue", title="L19-X — deleteValue") }}
+
+<h2>Ezberden varyant · L19-V</h2>
+<div class="box tip"><span class="t">3 dakikada yaz</span><p><span class="tag opt">L19-V</span> <code>int countNodes(const Node* last)</code>: çemberde düğüm sayısı. Durma koşulunu doğru seç, aksi hâlde döngü hiç bitmez.</p></div>

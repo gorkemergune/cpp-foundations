@@ -1,0 +1,63 @@
+{{ header(5, 4, "Timed Lab: Merging and Cleaning Lists", "<b>50 minutes</b>, closed notes · Part A 12 · Part B 18 · Part C 10 · final test 10",
+  "deleting in place without moving forward, merging by relinking with a dummy node, Floyd's cycle detection",
+  related=lc(83, "remove-duplicates-from-sorted-list", "Remove Duplicates from Sorted List") + " (A) · " + lc(21, "merge-two-sorted-lists", "Merge Two Sorted Lists") + " (B) · " + lc(141, "linked-list-cycle", "Linked List Cycle") + " (C)",
+  slides="<code>materials/slides/08-linked-lists.ppt</code> slides 4–14, 34–37",
+  archive="Labwork 2 quiz (<code>remove_sequential_duplicates</code>, the four errors) — Part A is its corrected version · Practice Lab 2 Q6 (<code>isCircular</code>)", timed=True, one="B") }}
+<div class="box warn"><span class="t">Exam conditions</span><p>50-minute timer, only <code>lab20.cpp</code>, paper for diagrams.</p></div>
+<h2>1. Problem statement</h2>
+<ol><li><b>Part A</b> (LeetCode 83): the list is sorted; delete every node whose value equals its predecessor's, so each value remains once. The deleted nodes must be freed. This is the function of the Labwork 2 quiz — written correctly.</li>
+<li><b>Part B</b> (LeetCode 21): merge two sorted lists into one sorted list using the <b>existing nodes</b> (no new nodes, no copying values).</li>
+<li><b>Part C</b> (LeetCode 141): return whether following <code>next</code> from <code>head</code> ever loops. <code>O(1)</code> extra memory — no set of visited nodes.</li></ol>
+{{ code("lab:lab20.h", title="lab20.h — given") }}
+<h2>2. Tests</h2>
+{{ cases("PDF_DD", ["list", "after"], [
+    ([1, 1, 2], [1, 2], "LeetCode example 1"),
+    ([1, 1, 2, 3, 3], [1, 2, 3], "LeetCode example 2"),
+    ([5, 5, 5, 5], [5], "three duplicates in a row (the quiz bug)"),
+    ([], [], "empty"),
+], widths=["30%", "25%", "40%"]) }}
+{{ cases("PDF_MERGE", ["a", "b", "merged"], [
+    ([1, 2, 4], [1, 3, 4], [1, 1, 2, 3, 4, 4], "LeetCode example 1"),
+    ([], [], [], "LeetCode example 2"),
+    ([], [0], [0], "LeetCode example 3"),
+    ([5, 6], [1, 2], [1, 2, 5, 6], "all of b first"),
+], widths=["18%", "18%", "28%", "31%"]) }}
+{{ cases("PDF_CYCLE", ["list", "pos (tail links to)", "hasCycle"], [
+    ([3, 2, 0, -4], 1, True, "LeetCode example 1"),
+    ([1, 2], 0, True, "LeetCode example 2"),
+    ([1], -1, False, "LeetCode example 3: no cycle"),
+    ([1], 0, True, "a node pointing to itself"),
+    ([], -1, False, "empty"),
+], widths=["25%", "20%", "13%", "37%"]) }}
+<p>Plus 200 random cases per part. Self-grading: A 30 · B 35 · C 25 · clean compile 10.</p>
+
+{{ banner("süre bitmeden bu sayfaya geçme") }}
+<h2>Soru ne istiyor?</h2>
+<p>A, Labwork 2 quiz’indeki hatalı kodun düzeltilmiş hâli. O koddaki dört hata şunlardı: gereksiz <code>new</code>, boş listede çökme, silmeden sonra ilerleyip üçlü tekrarı kaçırma ve <code>tail</code>’i güncellememe. Testteki <code>5 5 5 5</code> satırı üçüncüsünü yakalıyor. B’de yeni düğüm oluşturmadan mevcut okları yeniden bağlıyorsun. C’de iki pointer farklı hızlarda yürüyor: döngü varsa hızlı olan yavaşı arkadan yakalar.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li>A’da bir tekrarı sildikten sonra <code>cur</code>’u ilerletmeli miyim?</li>
+<li>B’de sonucun ilk düğümünü ayrı ele almadan nasıl başlarım? (C04’teki dummy)</li>
+<li>C’de döngü yoksa hangi koşulda dururum? Döngü varsa iki pointer’ın buluşacağından nasıl eminim?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("A: 5 5 5", ll([5, 5, 5], labels={0: "cur"}, cut={0}, relink=[(0, 2, "accent")], faded={1}), "Tekrarı atla ve sil. cur yerinde kalır, çünkü bir sonraki de tekrar olabilir."),
+  ("B", row(ll([1, 2, 4], name="a"), ll([1, 3, 4], name="b")), "tail = dummy. Her adımda küçük olan düğümü <code>tail-&gt;next</code>’e bağla."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab20.cpp", "deleteDuplicates", title="Part A — deleteDuplicates") }}
+{{ code("sol:lab20.cpp", "mergeTwoLists", title="Part B — mergeTwoLists") }}
+{{ code("sol:lab20.cpp", "hasCycle", title="Part C — hasCycle (Floyd)") }}
+<ul><li><b>A.</b> <code>else</code> dalında ilerliyoruz. Silme yapıldığında <code>cur</code> aynı düğümde kalıyor ve yeni komşusuyla tekrar karşılaştırılıyor.</li>
+<li><b>B.</b> Biri bittiğinde öbürünün kalanı tek bir atamayla bağlanıyor (<code>tail-&gt;next = a ? a : b</code>). Kopya yok, <code>O(m + n)</code>.</li>
+<li><b>C.</b> Döngü varsa, ikisi de döngüye girdikten sonra aradaki mesafe her adımda bir azalır. Bu yüzden atlamadan buluşurlar. Döngü yoksa <code>fast</code> <code>nullptr</code>’a ulaşır.</li></ul>
+<h3>Alternatifler</h3>
+<ul><li>C’yi <code>std::set&lt;ListNode*&gt;</code> ile ziyaret edilenleri tutarak çözmek doğru ama <code>O(n)</code> ek bellek kullanır, yani <b>“O(1) memory” kuralını ihlal eder</b>. Practice Lab 2’nin <code>isCircular</code>’ı farklı bir soru: orada yalnızca baş düğüme dönülüp dönülmediği kontrol ediliyor. Döngü ortadan başlıyorsa o yöntem sonsuz döngüye girer.</li>
+<li>B’nin recursive hâli kısa ama derin listelerde yığını taşırabilir.</li></ul>
+{{ code("sol:lab20.cpp", "getIntersectionNode", title="L20-X — getIntersectionNode") }}
+<p>İki pointer da <code>a + b</code> adım yürüdüğü için ortak düğüme aynı anda varır. Ortak düğüm yoksa ikisi aynı anda <code>nullptr</code> olur.</p>
+<h2>Ezberden varyant · L20-V</h2>
+<div class="box tip"><span class="t">5 dakikada yaz</span><p><span class="tag opt">L20-V</span> <code>ListNode* removeElements(ListNode* head, int val)</code> (LeetCode 203): değeri <code>val</code> olan bütün düğümleri sil. Dummy düğümle baş düğüm için ayrı kod gerekmez.</p></div>
+<h2>5. haftanın kontrol listesi</h2>
+<div class="box"><ul><li>Doubly listede bir düğümü silerken değişen dört oku sayabiliyor musun?</li><li>Ortadaki düğümü tek geçişte silebiliyor musun? Çift uzunlukta hangi ortayı sildiğini söyleyebiliyor musun?</li><li>Circular listede <code>last</code>’ı silip çemberi kapatabiliyor musun?</li><li>Dummy düğüm tekniğini kullanabiliyor musun?</li></ul>
+<p>Sonra <b>C05</b> soru setine ve <b>P02</b> mini projesine geç. Arşiv: Labwork 2 (append, split, quiz).</p></div>

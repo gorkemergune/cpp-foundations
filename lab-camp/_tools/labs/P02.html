@@ -1,0 +1,50 @@
+{{ header(5, 0, "Playlist on a Doubly Linked List", "90–120 minutes (about 90 lines of your own code)",
+  "a doubly linked list hidden inside a class, a third pointer (<code>cur</code>) that must stay valid, relinking two neighbours, formatting time",
+  slides="<code>materials/slides/08-linked-lists.ppt</code> slides 38–41",
+  archive="<code>materials/labworks/lw2-doubly-linked-list</code> · term project (text editor, <code>materials/assignments/2021-fall/term-project-text-editor</code>) uses the same “list + current position” idea",
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 5 · Mini project (after Lab 20)", one="A") }}
+
+<h2>1. What you build</h2>
+<p>A music player keeps a playlist and a “now playing” song. You can step forwards and backwards, remove songs and move a song one place up. A doubly linked list fits: stepping back is <code>O(1)</code> through <code>prev</code>, and moving a song only relinks nodes — no song data is copied.</p>
+{{ snippet('''
+> add 65 Intro
+1. *Intro (1:05)
+> add 185 Song
+1. *Intro (1:05)
+2. Song (3:05)
+> next
+1. Intro (1:05)
+2. *Song (3:05)
+> up Song
+1. *Song (3:05)
+2. Intro (1:05)
+''', title="main_demo.cpp after your tests pass (total lines omitted)", lang="text") }}
+{{ code("lab:playlist.h", title="playlist.h — given") }}
+
+<h2>2. Requirements and tests</h2>
+<table class="grid"><tr><th style="width:10%">Part</th><th>What the tests check</th></tr>
+<tr><td>A</td><td>empty playlist: size 0, current <code>""</code>; after adding Intro 65 s, Song 185 s, Outro 59 s: size 3, total 309, current Intro; the <code>prev</code> links read <code>Outro Song Intro</code>.</td></tr>
+<tr><td>B</td><td><code>prev()</code> at the first song and <code>next()</code> at the last return <code>false</code>; removing the current last song makes the previous one current; removing the current first song makes the next one current; removing everything leaves no current song; adding afterwards works.</td></tr>
+<tr><td>C</td><td>exact <code>listing()</code> text (<code>"2. *Song (3:05)\n"</code>); <code>moveUp</code> swaps by relinking (prev links checked), works up to the front, refuses the first song and unknown titles; <code>cur</code> still points at the same song.</td></tr></table>
+<div class="box rule"><span class="t">Invariants</span><ul><li><code>head</code>, <code>tail</code>, every <code>next</code>/<code>prev</code> consistent; <code>count</code> equals the number of nodes.</li><li><code>cur</code> is <code>nullptr</code> exactly when the playlist is empty; it never points at a deleted node.</li></ul></div>
+<h3>Suggested order</h3>
+<ol><li>Constructor, destructor, <code>add</code>, <code>size</code>, <code>current</code> → P02-A partly green.</li><li><code>totalSeconds</code>, <code>next</code>, <code>prev</code>.</li><li><code>remove</code>: draw the four cases (middle, first, last, only).</li><li><code>listing</code>, then <code>moveUp</code> (draw it!).</li><li>Build <code>main_demo.cpp</code> and play with it.</li></ol>
+
+{{ banner("önce kendi tasarımını dene") }}
+<h2>Tasarım notları</h2>
+<ul><li><b>Düğüm sınıfın içinde.</b> <code>struct Node</code> private olduğu için kullanıcı yalnızca başlıkları görüyor. Liste yapısı dışarı sızmıyor. Lab 17’deki şablon sınıftan farkı bu: orada liste kullanıcıya açık bir araçtı, burada bir uygulamanın iç detayı.</li>
+<li><b>Üçüncü pointer.</b> <code>cur</code>, silmede en kolay unutulan pointer. Silinecek düğüm <code>cur</code> ise önce <code>cur</code>’u taşı, sonra bağlantıları kopar, en son <code>delete</code> yap.</li>
+<li><b><code>moveUp</code>’ta dört komşu.</b> <code>x ↔ a ↔ b ↔ y</code> dizilimi <code>x ↔ b ↔ a ↔ y</code> olacak. Altı ok değişiyor, <code>x</code> veya <code>y</code> yoksa <code>head</code>/<code>tail</code> güncelleniyor. Değerleri (title, seconds) takas etmek daha kolay olurdu ama <code>cur</code> başka bir şarkıyı göstermeye başlardı. Test bunu yakalıyor.</li></ul>
+<div class="avoid">{{ steps([
+  ("moveUp(b) önce", ll(["x", "a", "b", "y"], double=True, labels={2: "cur"}), ""),
+  ("sonra", ll(["x", "b", "a", "y"], double=True, labels={1: "cur"}), "Düğümler aynı. Yalnızca oklar değişti ve cur hâlâ b’yi gösteriyor."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:playlist.cpp", "add", title="add") }}
+{{ code("sol:playlist.cpp", "remove", title="remove") }}
+{{ code("sol:playlist.cpp", "moveUp", title="moveUp") }}
+{{ code("sol:playlist.cpp", "listing", title="listing") }}
+<h3>Genişletme fikirleri</h3>
+<ul><li><code>shuffle(seed)</code>: düğümleri yeniden bağlayarak rastgele sırala (değer kopyalamadan).</li><li>Tekrar modu: <code>next()</code> son şarkıdan ilkine dönsün. Bu durumda listeyi Lab 19’daki gibi dairesel yapmayı düşün.</li><li>Undo: her işlemi bir stack’e kaydet (6. hafta, dönem projesindeki <code>Action</code> fikri).</li></ul>

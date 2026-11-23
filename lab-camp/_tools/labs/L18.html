@@ -1,0 +1,59 @@
+{{ header(5, 2, "Delete the Middle Node", "40 minutes · A–B 12 · main problem 15 · testing 13",
+  "slow/fast pointers with an offset, stopping one node <b>before</b> a target, unlink + <code>delete</code>, the 0-, 1- and 2-node edge cases",
+  related=lc(2095, "delete-the-middle-node-of-a-linked-list", "Delete the Middle Node of a Linked List") + " (M and L18-X)",
+  slides="<code>materials/slides/08-linked-lists.ppt</code> slides 9–10 (deleting a specified node)",
+  archive="midterm note: “stringdeki ortanca elementi node’dan silip yeni queue’de yazdırma” (the deletion part; the queue part is Lab 28)", one="M") }}
+
+<h2>1. Problem statement</h2>
+<p>The midterm asked to delete the middle node of a singly linked list (and then print the remaining values through a queue — that half comes in Lab 28). The note did not say which node is “the middle” for an even length; this camp fixes it as LeetCode 2095 does: <b>the node at 0-based index <code>n / 2</code></b>. For <code>1 → 2 → 3 → 4</code> that is the 3.</p>
+<p>To unlink a node you need its <b>predecessor</b>, so the real task is to find the node at index <code>n/2 − 1</code> in one pass. Write <code>beforeMiddle</code> (B) and use it in <code>deleteMiddle</code> (M). The middle node must be <code>delete</code>d.</p>
+{{ code("lab:lab18.h", title="lab18.h — given") }}
+<div class="box rule"><span class="t">Rules</span><ul><li>B, M, X and V make <b>one pass</b>: no call to <code>length()</code> and no counting loop inside them.</li><li>Exactly one node is deleted (leak counter). One node: delete it, <code>head = nullptr</code>. Empty: <code>false</code>.</li></ul></div>
+
+<h2>2. Worked example</h2>
+<p><code>1 → 3 → 4 → 7 → 1 → 2 → 6</code> (n = 7, middle index 3, the 7). <code>slow</code> starts at the head, <code>fast</code> two nodes ahead:</p>
+<table class="grid"><tr><th>step</th><th>slow</th><th>fast</th></tr>
+<tr><td>start</td><td>index 0 (1)</td><td>index 2 (4)</td></tr>
+<tr><td>1</td><td>index 1 (3)</td><td>index 4 (1)</td></tr>
+<tr><td>2</td><td>index 2 (4)</td><td>index 6 (6) — <code>fast-&gt;next</code> is null: stop</td></tr></table>
+<p><code>slow</code> is at index 2 = <code>n/2 − 1</code>. <code>slow-&gt;next</code> is the 7: unlink and delete it → <code>1 → 3 → 4 → 1 → 2 → 6</code>.</p>
+
+<h2>3. Tests</h2>
+{{ cases("PDF_DM", ["list", "return", "after deleteMiddle"], [
+    ([1, 3, 4, 7, 1, 2, 6], True, [1, 3, 4, 1, 2, 6], "LeetCode example 1"),
+    ([1, 2, 3, 4], True, [1, 2, 4], "LeetCode example 2: even, index 2"),
+    ([2, 1], True, [2], "LeetCode example 3: two nodes, the second goes"),
+    ([5], True, [], "one node: head becomes nullptr"),
+    ([], False, [], "empty"),
+], widths=["30%", "11%", "25%", "29%"]) }}
+<p>Further: <code>beforeMiddle</code> and <code>deleteMiddle</code> on every length 0 … 12.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Vize notunda “ortadaki elemanı düğümden sil” deniyordu ama çift uzunlukta hangi düğümün silineceği yazmıyordu. Bu kampta <code>n / 2</code> indeksli düğüm, yani LeetCode 2095’in tanımı kullanılıyor. Sınavda soruyu okurken bu varsayımı mutlaka kâğıda yaz. Varyant (V) diğer seçimi, yani ilk ortayı çalıştırıyor.</p>
+<p>Silmek için silinecek düğümün <b>öncülü</b> gerekiyor. L16’daki <code>middleNode</code> doğrudan ortayı buluyordu. Burada <code>fast</code>’i iki adım önden başlatarak <code>slow</code>’un bir adım geride kalmasını sağlıyoruz.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li><code>n = 2</code> iken orta düğüm hangisi? Öncülü var mı?</li>
+<li><code>fast</code>’i <code>head-&gt;next-&gt;next</code>’ten başlatmak <code>n = 2</code> için güvenli mi?</li>
+<li>Tek düğümlü listede hangi değişken değişmeli? Parametre neden <code>Node*&amp;</code>?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("n = 4", ll([1, 2, 3, 4], labels={1: "prev", 2: "mid"}, hl={2: "red"}), "beforeMiddle → 2 (indeks 1), mid = 3 (indeks 2)."),
+  ("bağla", ll([1, 2, 3, 4], labels={1: "prev"}, cut={1}, relink=[(1, 3, "accent")], faded={2}), "<code>prev-&gt;next = mid-&gt;next</code>, sonra <code>delete mid</code>."),
+  ("sonuç", ll([1, 2, 4]), "1 → 2 → 4"),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab18.cpp", "beforeMiddle", title="B — beforeMiddle") }}
+{{ code("sol:lab18.cpp", "deleteMiddle", title="M — deleteMiddle") }}
+<ul><li><b>Neden <code>fast = head-&gt;next-&gt;next</code>?</b> L16’da <code>slow</code> ve <code>fast</code> baştan başlıyordu ve <code>slow</code> <code>n/2</code>’de duruyordu. <code>fast</code>’i iki düğüm ileriden başlatmak, döngünün bir tur önce bitmesini sağlıyor. <code>slow</code> <code>n/2 − 1</code>’de kalıyor. <code>n ≥ 2</code> garanti olduğu için <code>head-&gt;next-&gt;next</code> güvenli. Sonucu null olabilir ama bu bir sorun değil.</li>
+<li><b>Tek düğüm</b> ayrı ele alınıyor, çünkü öncülü yok ve değişmesi gereken çağıranın <code>head</code>’i.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Tek geçiş, <code>O(n)</code> zaman, <code>O(1)</code> ek bellek. Yalnızca bir ok değişiyor ve bir düğüm siliniyor.</li></ul>
+<h3>Alternatifler</h3>
+<ul><li><b>İki geçiş:</b> önce uzunluğu say, sonra <code>n/2 − 1</code> adım yürü. Doğru ve okunaklı, sınavda tamamen kabul edilir. Bu labın <b>“one pass” kuralını ihlal eder</b>.</li>
+<li><b>Dummy düğüm:</b> başa sahte bir düğüm koyup <code>slow</code>’u ondan başlatırsan tek düğüm durumu da genel koda düşer (C04-B’deki teknik).</li></ul>
+{{ code("sol:lab18.cpp", "deleteMiddleLC", title="L18-X — LeetCode signature") }}
+
+<h2>Ezberden varyant · L18-V</h2>
+<div class="box tip"><span class="t">6 dakikada yaz</span><p><span class="tag opt">L18-V</span> <code>bool deleteLeftMiddle(Node*&amp; head)</code>: çift uzunlukta <b>ilk</b> ortayı (indeks <code>n/2 − 1</code>) sil, tek uzunlukta yine tam ortayı. Kenar durumlar değişiyor: <code>n = 2</code>’de silinecek olan baş düğüm. Sınavda “ortanca” kelimesini hangi anlamda kullandığını yazmanın neden önemli olduğu burada görülüyor.</p></div>

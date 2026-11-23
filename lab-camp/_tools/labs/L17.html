@@ -1,0 +1,67 @@
+{{ header(5, 1, "The Doubly Linked List Template", "50 minutes · A 8 · B 12 · M1 12 · M2 8 · testing 10",
+  "class templates (<code>template &lt;class T&gt;</code> before every member definition), <code>prev</code> and <code>next</code> kept consistent, <code>O(1)</code> removal at both ends, unlinking a node from the middle, in-place reversal",
+  related=lc(707, "design-linked-list", "Design Linked List") + " (same operations, as practice on the site)",
+  slides="<code>materials/slides/08-linked-lists.ppt</code> slides 38–41 (doubly linked lists), 37 (dummy head nodes)",
+  archive="<code>materials/labworks/lw2-doubly-linked-list</code> (append, split, quiz) · <code>lw3-stack-palindrome</code> (a stack on top of this class) · <code>lw5-priority-queue</code> · 2021 A3 <code>dll.h</code>", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>Labworks 2, 3 and 5 and 2021 Assignment 3 are all built on the course's <code>DoublyLinkedList&lt;T&gt;</code>. Each node has <code>next</code> <b>and</b> <code>prev</code>. Removing from the tail becomes <code>O(1)</code>, and a node can be unlinked without searching for its predecessor. The price: every operation must update twice as many arrows.</p>
+<p>The whole class is a template, so everything lives in <code>genDLList.h</code>, which is <b>your</b> file this time. Implement the members marked L17-A … L17-M2. <b>M1</b> <code>removeValue(el)</code> unlinks and deletes the first node holding <code>el</code>. <b>M2</b> <code>reverse()</code> reverses the list in place by swapping each node's <code>next</code> and <code>prev</code> and then swapping <code>head</code> and <code>tail</code>.</p>
+{{ code("sol:genDLList.h", "classes", title="genDLList.h — the class part (given inside your file)") }}
+<div class="box sig"><span class="t">Members you write (all in genDLList.h, after the class)</span>
+{{ snippet('''
+template <class T> void DoublyLinkedList<T>::addToDLLHead(const T& el) { ... }   // A
+template <class T> void DoublyLinkedList<T>::addToDLLTail(const T& el) { ... }   // A
+template <class T> T DoublyLinkedList<T>::deleteFromDLLHead() { ... }            // B
+template <class T> T DoublyLinkedList<T>::deleteFromDLLTail() { ... }            // B
+template <class T> void DoublyLinkedList<T>::clear() { ... }                     // B
+template <class T> bool DoublyLinkedList<T>::removeValue(const T& el) { ... }    // M1
+template <class T> void DoublyLinkedList<T>::reverse() { ... }                   // M2
+''') }}
+<p class="small">Each definition outside the class repeats <code>template &lt;class T&gt;</code> and names the class as <code>DoublyLinkedList&lt;T&gt;::</code>. Inside the class body you may write just <code>DLLNode&lt;T&gt;</code>.</p></div>
+<h3>The node and the invariants</h3>
+<p><code>DLLNode&lt;T&gt;(el, n, p)</code> creates a node with <code>next = n</code>, <code>prev = p</code>. After every operation: empty ⇔ <code>head == tail == 0</code>; otherwise <code>head-&gt;prev == 0</code>, <code>tail-&gt;next == 0</code>, and for every node <code>p-&gt;next-&gt;prev == p</code>. The tests walk the list forwards with <code>next</code> and backwards with <code>prev</code>; both must give the same sequence.</p>
+
+<h2>2. Tests</h2>
+<p>A: tail 2, tail 3, head 1 → <code>1 2 3</code> both ways; also with <code>T = std::string</code>. B: delete from both ends down to empty, reuse, <code>clear</code>, and the destructor (leak counter). M2: 200 random lists reversed, then <code>addToDLLTail(99)</code> must land at the end.</p>
+{{ cases("PDF_RM", ["list", "el", "return", "after"], [
+    ([1, 2, 3, 2], 2, True, [1, 3, 2], "middle, first occurrence"),
+    ([1, 2, 3], 1, True, [2, 3], "head: head->prev must become 0"),
+    ([1, 2, 3], 3, True, [1, 2], "tail: tail moves back"),
+    ([4], 4, True, [], "only node"),
+    ([1, 2], 9, False, [1, 2], "not found"),
+    ([], 1, False, [], "empty"),
+], widths=["20%", "7%", "10%", "17%", "41%"]) }}
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Lab 15’teki <code>IntSLList</code>’in iki yönlü ve şablon hâli. Her düğüm için iki ok var. Ekleme ve silmede “sağdaki komşu bana geri bakıyor mu?” sorusunu da cevaplaman gerekiyor. Labwork 2 (append, split) ve Labwork 3 (stack ile palindrom) bu sınıfın üstüne kuruldu. Arşiv çözümlerindeki hatalar da çoğunlukla <code>prev</code> güncellemesinin unutulmasından kaynaklanıyor.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li>Ortadaki bir <code>p</code> düğümünü silerken hangi iki ok değişir? <code>p</code> baş ya da son düğümse bu oklardan hangisi yoktur, onun yerine ne güncellenir?</li>
+<li><code>deleteFromDLLTail</code> neden artık <code>O(1)</code>? <code>IntSLList</code>’te neden <code>O(n)</code> idi?</li>
+<li><code>reverse</code>’de next ile prev’i takas ettikten sonra bir sonraki düğüme hangi pointer üzerinden geçerim?</li></ol></div>
+<div class="avoid"><h3>Görsel iz</h3>
+{{ steps([
+  ("başlangıç", ll([1, 2, 3], labels={0: "head", 2: "tail"}, double=True), "Üst oklar next, alt oklar prev."),
+  ("removeValue(2)", ll([1, 2, 3], labels={1: "p"}, double=True, cut={0, 1}, relink=[(0, 2, "accent")]), "<code>p-&gt;prev-&gt;next = p-&gt;next</code> ve <code>p-&gt;next-&gt;prev = p-&gt;prev</code>, sonra <code>delete p</code>."),
+  ("sonuç", ll([1, 3], labels={0: "head", 1: "tail"}, double=True), "İki yönde de 1 ↔ 3."),
+  ("reverse()", ll([3, 1], labels={0: "head", 1: "tail"}, double=True), "Her düğümde next ↔ prev, sonra head ↔ tail. Yeni düğüm oluşturulmadı."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:genDLList.h", "addToDLLHead", title="A — addToDLLHead") }}
+{{ code("sol:genDLList.h", "deleteFromDLLTail", title="B — deleteFromDLLTail") }}
+{{ code("sol:genDLList.h", "removeValue", title="M1 — removeValue") }}
+{{ code("sol:genDLList.h", "reverse", title="M2 — reverse") }}
+<ul><li><b>M1 iki taraflı.</b> Sol komşu varsa onun <code>next</code>’i, yoksa <code>head</code> değişiyor. Sağ komşu varsa onun <code>prev</code>’i, yoksa <code>tail</code> değişiyor. Dört durum (orta, baş, son, tek düğüm) bu iki <code>if</code> ile çözülüyor.</li>
+<li><b>M2’de döngü <code>p = p-&gt;prev</code> ile ilerliyor.</b> Takastan sonra eski <code>next</code> artık <code>prev</code> alanında. Bu satır ilk bakışta yanlış görünür. Kâğıtta çizerek doğrula.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Ders dosyasındaki fonksiyonlarla aynı imzalar ve aynı mantık. <code>addToDLLHead</code>/<code>Tail</code> ve <code>deleteFromDLL…</code> arşivdeki <code>genDLList.h</code>’den alındı.</li>
+<li>Maliyet: uçlarda her işlem <code>O(1)</code>, <code>removeValue</code> arama nedeniyle <code>O(n)</code>, <code>reverse</code> <code>O(n)</code>. Ek bellek <code>O(1)</code>.</li></ul>
+<h3>Alternatif</h3>
+<p><code>std::list&lt;T&gt;</code> zaten bir doubly linked list. <code>remove(el)</code> eşleşen <b>bütün</b> düğümleri siler (yalnızca ilkini değil) ve <code>reverse()</code> hazır gelir. Sözleşme farklı olduğu ve bu lab sınıfı yazmayı istediği için <b>kuralı ihlal eder</b>. Bir başka alternatif <code>reverse</code>’i değerleri iki uçtan takas ederek yazmak. Doğru görünür ama <code>T</code> büyük bir nesneyse pahalıdır ve dışarıdan tutulan <code>T*</code> pointer’larının (<code>find</code>’ın sonucu) gösterdiği değeri değiştirir.</p>
+{{ code("sol:genDLList.h", "append", title="L17-X — append (Labwork 2 Q1)") }}
+
+<h2>Ezberden varyant · L17-V</h2>
+<div class="box tip"><span class="t">4 dakikada yaz</span><p><span class="tag opt">L17-V</span> <code>T* find(const T&amp; el) const</code>: ilk eşleşmenin <code>info</code> alanına pointer, yoksa 0 döndür. Ders dosyasındaki imza bu. Çağıran sonucu kullanmadan önce mutlaka null kontrolü yapmalı.</p></div>

@@ -186,7 +186,9 @@ class Ctx:
 def show(v) -> str:
     if isinstance(v, bool):
         return "true" if v else "false"
-    if isinstance(v, (list, tuple)):
+    if isinstance(v, tuple):                      # tuples are pairs (edges): (u, v)
+        return "(" + ", ".join(show(x) for x in v) + ")"
+    if isinstance(v, list):
         return "{" + ", ".join(show(x) for x in v) + "}"
     if isinstance(v, str):
         return '"' + v.replace(chr(10), "\\n").replace(chr(9), "\\t") + '"'

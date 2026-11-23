@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include "todo.h"
@@ -34,6 +35,14 @@ inline std::string show(bool b) { return b ? "true" : "false"; }
 inline std::string show(char c) { return std::string("'") + c + "'"; }
 inline std::string show(const std::string& s) { return "\"" + s + "\""; }
 inline std::string show(const char* s) { return show(std::string(s)); }
+template <class A, class B>
+std::string show(const std::pair<A, B>& p);
+template <class T>
+std::string show(const std::vector<T>& v);
+template <class A, class B>
+std::string show(const std::pair<A, B>& p) {
+    return "(" + show(p.first) + ", " + show(p.second) + ")";
+}
 template <class T>
 std::string show(const std::vector<T>& v) {
     std::string r = "{";

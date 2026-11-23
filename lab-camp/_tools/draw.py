@@ -146,7 +146,8 @@ def row(*svgs) -> str:
 
 # --------------------------------------------------------------------------- graph
 
-def graph(nodes, edges, directed=False, pos=None, hl=None, labels=None, edge_hl=None, size=220, r=15, weights=None):
+def graph(nodes, edges, directed=False, pos=None, hl=None, labels=None, edge_hl=None, size=220, r=15, weights=None,
+          width=None, font_size=None):
     """nodes: list of names; edges: list of (a, b); pos: {node: (x, y)} in 0..1 (default circle)
     hl: {node: color}; labels: {node: "small text under the node"}; edge_hl: set of (a,b) drawn in accent"""
     hl, labels, edge_hl, weights = hl or {}, labels or {}, set(edge_hl or []), weights or {}
@@ -155,8 +156,11 @@ def graph(nodes, edges, directed=False, pos=None, hl=None, labels=None, edge_hl=
     if pos is None:
         pos = {v: (0.5 + 0.42 * math.cos(2 * math.pi * i / n - math.pi / 2),
                    0.5 + 0.42 * math.sin(2 * math.pi * i / n - math.pi / 2)) for i, v in enumerate(nodes)}
-    W, Hh = size + 40, size + 34
-    P = {v: (20 + pos[v][0] * size, 14 + pos[v][1] * size) for v in nodes}
+    width = width or size                     # width: a wide drawing (long names)
+    px, top, bottom = max(20, r + 6), max(14, r + 6), max(20, r + 8)
+    W, Hh = width + 2 * px, size + top + bottom
+    P = {v: (px + pos[v][0] * width, top + pos[v][1] * size) for v in nodes}
+    fs = f' font-size="{font_size}"' if font_size else ""
     s = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{Hh}" viewBox="0 0 {W} {Hh}" {FONT}>', _defs(u)]
     for e in edges:
         a, b = e[0], e[1]
@@ -177,7 +181,7 @@ def graph(nodes, edges, directed=False, pos=None, hl=None, labels=None, edge_hl=
         x, y = P[v]
         fill = PAL[hl[v]] if v in hl else PAL["cell"]
         s.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{r}" fill="{fill}" stroke="{PAL["line"]}" stroke-width="1.4"/>')
-        s.append(f'<text x="{x:.1f}" y="{y + 4.5:.1f}" text-anchor="middle" font-weight="bold">{esc(v)}</text>')
+        s.append(f'<text x="{x:.1f}" y="{y + 4.5:.1f}" text-anchor="middle" font-weight="bold"{fs}>{esc(v)}</text>')
         if v in labels:
             s.append(f'<text x="{x:.1f}" y="{y + r + 12:.1f}" text-anchor="middle" font-size="10" fill="{PAL["accent"]}">{esc(labels[v])}</text>')
     s.append("</svg>")

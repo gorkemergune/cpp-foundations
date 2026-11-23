@@ -306,7 +306,8 @@ def make_starter(sol_file: Path) -> str:
             i += 1
             continue
         if st.startswith("// @begin"):
-            empty = st.endswith(" empty")
+            parts = st.split()               # "//", "@begin", NAME, optional "empty"
+            empty = len(parts) == 4 and parts[3] == "empty"
             i += 1
             sig = []
             while True:                      # signature lines up to the opening brace

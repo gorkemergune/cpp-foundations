@@ -1,0 +1,50 @@
+{{ header(7, 4, "Delete the Middle, Build a Queue", "45 minutes · A–B 8 · M1 15 · M2 10 · testing 12",
+  "combining two structures: a linked list of <code>char</code> and the slides' <code>Queue</code>; middle deletion (Lab 18) + FIFO output; freeing everything at the end",
+  related=lc(2095, "delete-the-middle-node-of-a-linked-list", "Delete the Middle Node of a Linked List") + " · " + gfg("implement-queue-using-linked-list/1", "Queue using Linked List") + " (L28-X)",
+  slides="<code>materials/slides/08-linked-lists.ppt</code> slides 9–10 · <code>10-queues.ppt</code> slides 15–22",
+  archive="midterm note: “stringdeki ortanca elementi node’dan silip yeni queue’de yazdırma” · Lab 18 (the deletion alone)", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>The full midterm question: a string is stored in a singly linked list, one character per node. Delete the middle node (and free it), then put the remaining characters, in order, into a <b>new queue</b>, and print the queue by dequeuing it.</p>
+<p><b>Example.</b> <code>"ABCDE"</code> → list <code>A → B → C → D → E</code>; the middle (index 5/2 = 2) is <code>C</code>; the queue receives <code>A B D E</code>; printing gives <code>"ABDE"</code>. For <code>"ABCD"</code> the middle is index 2, the <code>C</code> → <code>"ABD"</code>.</p>
+<div class="box rule"><span class="t">Assumptions added for this lab</span><p class="small">“Middle” = index <code>n/2</code> (Lab 18, LeetCode 2095). The queue is the slides' <code>Queue</code>; its items are <code>int</code>, so a <code>char</code> is stored as its code and converted back with <code>(char)x</code> when printing. “Print” means: build the returned string while dequeuing with <code>dequeue(item&amp;)</code>. M2 must free every node it created.</p></div>
+{{ code("lab:lab28.h", title="lab28.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_TASK", ["s", "printed (= list after M1)"], [
+    ("ABCDE", "ABDE", "midterm case, odd length"),
+    ("ABCD", "ABD", "even length: index 2"),
+    ("AB", "A", "two nodes: the second goes"),
+    ("A", "", "one node: list and queue become empty"),
+    ("", "", "empty string: M1 returns false"),
+    ("AAAA", "AAA", "equal characters: delete one NODE"),
+], widths=["25%", "30%", "40%"]) }}
+<p>M1 also checks the return value, the number of deleted nodes and the queue's contents; M2 checks that no node is left alive.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Vize notunun iki ayrı parçası bu labda birleşiyor. Ortadaki düğümü silmeyi Lab 18’de yaptın. Kuyruğu doldurup <code>dequeue(out)</code> ile boşaltmayı Lab 25’te yaptın. Burada önemli olan sıra: önce sil, sonra kalan düğümleri baştan sona dolaşıp kuyruğa ekle, en son kuyruğu boşaltarak yazdır. Ödevde ayrıca istenmese de testler sızıntıyı kontrol ettiği için listeyi en sonda serbest bırakmak gerekiyor.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>Kuyruk <code>int</code> tutuyor. <code>'A'</code>’yı eklediğimde ne saklanır? Geri yazdırırken ne yapmalıyım?</li><li>Tek düğümlü listede kuyruk ne içermeli?</li><li>Yazdırma için hangi <code>dequeue</code>’yu seçmeliyim? <code>dequeue()</code> neden işe yaramaz?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("liste", ll(list("ABCDE"), labels={1: "slow", 2: "mid"}, hl={2: "red"}), "Lab 18: slow, ortanın bir öncesinde durur."),
+  ("sil", ll(list("ABDE"), labels={0: "head"}), "<code>slow-&gt;next = mid-&gt;next; delete mid;</code>"),
+  ("kuyruk", vec(list("ABDE"), name="out", ptr={"front": 0, "rear": 3}, show_size=False), "Baştan sona enqueue. dequeue(x) ile okununca \"ABDE\"."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab28.cpp", "deleteMiddleToQueue", title="M1 — deleteMiddleToQueue") }}
+{{ code("sol:lab28.cpp", "midtermTask", title="M2 — midtermTask") }}
+{{ code("sol:lab28.cpp", "drainToString", title="B — drainToString") }}
+<ul><li><b>M1</b>, Lab 18’deki <code>beforeMiddle</code> mantığını içeride kullanıyor. Kuyruğa yalnızca kalan düğümler giriyor.</li>
+<li><b>M2</b>, her parçayı bir kez çağırıyor ve sonunda listeyi serbest bırakıyor. Kuyruğun kendi düğümlerini <code>drainToString</code> zaten boşaltıyor, ders sınıfının yıkıcısı da gerisini temizler.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Liste tek geçişte bulunup siliniyor, kuyruk tek geçişte dolduruluyor: toplam <code>O(n)</code>. Kuyruk <code>n − 1</code> eleman tutuyor.</li></ul>
+<h3>Alternatif</h3>
+<p>Önce bütün karakterleri kuyruğa koyup, sonra kuyruğu <code>n</code> kez döndürürken <code>n/2</code>. elemanı atlamak (Lab 27’deki döndürme kalıbı) aynı çıktıyı verir. Ancak bu yöntem listeden düğüm silmediği için sorudaki “düğümden sil” şartını <b>ihlal eder</b>.</p>
+{{ code("sol:lab28.cpp", "pop", title="L28-X — LinkedQueue::pop (GfG)") }}
+<h2>Ezberden varyant · L28-V</h2>
+<div class="box tip"><span class="t">6 dakikada yaz</span><p><span class="tag opt">L28-V</span> <code>void interleaveHalves(std::queue&lt;int&gt;&amp; q)</code>: <code>1 2 3 4 5 6</code> → <code>1 4 2 5 3 6</code>. İlk yarıyı yardımcı kuyruğa al, sonra sırayla birer birer arkaya ekle (eski kampta QU-9).</p></div>
+<h2>7. haftanın kontrol listesi</h2>
+<div class="box"><ul><li><code>dequeue()</code>, <code>dequeue(x)</code>, <code>getFront(x)</code> ve kamp sürümündeki değer döndüren <code>dequeue()</code> arasındaki farkı söyleyebiliyor musun?</li><li>Son eleman çıkınca <code>rear</code>’ı sıfırlamayı unutmuyor musun? Dairesel dizide <code>%</code> ile başa sarmayı yazabiliyor musun?</li><li>Döndürme kalıbıyla queue + stack sorularını çözebiliyor musun?</li></ul>
+<p>Sonra <b>C07</b>, ardından 8. haftanın vize provaları ve <b>P03</b>. Arşiv: 2021 A3’ün kuyruğu, Labwork 5.</p></div>

@@ -1,0 +1,40 @@
+{{ header(7, 0, "Thinking Problems on Queues and Deques", "60–100 minutes in total",
+  "simulating rounds with two queues, a circular array with insertions at both ends, a monotonic deque",
+  related=lc(649, "dota2-senate", "Dota2 Senate") + " · " + lc(641, "design-circular-deque", "Design Circular Deque") + " · " + lc(239, "sliding-window-maximum", "Sliding Window Maximum"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 7 · Challenge set (after Lab 28)", one="A") }}
+{{ code("lab:challenge07.h", title="challenge07.h — given") }}
+<h2>C07-A · Dota2 Senate (medium)</h2>
+<p>Senators of two parties, <code>R</code> and <code>D</code>, act in the order of the string, round after round. When it is a senator's turn (and they are not banned), they ban one senator of the other party — the best choice is the next enemy who would act. The game ends when only one party is left. Simulate with two queues of turn indexes.</p>
+{{ cases("PDF_SEN", ["senate", "winner"], [
+    ("RD", "Radiant", "LeetCode example 1"),
+    ("RDD", "Dire", "LeetCode example 2"),
+    ("DDRRR", "Dire", "D acts first twice"),
+    ("R", "Radiant", "one senator"),
+], widths=["30%", "20%", "45%"]) }}
+<p>200 random senates are compared with a slow, literal round-by-round simulation.</p>
+<h2>C07-B · Design Circular Deque (medium)</h2>
+<p>Insert and delete at <b>both</b> ends of a fixed-capacity circular array (Lab 26 had only one insertion end). Track the front index and the count; the back index follows from them.</p>
+<h2>C07-C · Sliding Window Maximum (hard)</h2>
+<p>Return the maximum of every window of <code>k</code> consecutive elements in <code>O(n)</code> — recomputing each window costs <code>O(n·k)</code>.</p>
+{{ cases("PDF_WIN", ["nums", "k", "maxima"], [
+    ([1, 3, -1, -3, 5, 3, 6, 7], 3, [3, 3, 5, 5, 6, 7], "LeetCode example 1"),
+    ([1], 1, [1], "LeetCode example 2"),
+    ([9, 8, 7, 6], 2, [9, 8, 7], "decreasing values"),
+    ([4, 4, 4], 2, [4, 4], "equal values"),
+], widths=["35%", "8%", "25%", "27%"]) }}
+
+{{ banner("önce her soruyla en az 25 dakika uğraş") }}
+<h2>İpuçları</h2>
+<div class="box q"><span class="t">C07-A</span><ol><li>İki kuyrukta her partinin sıradaki senatörlerinin indeksleri var. Önlerdeki iki senatörden hangisi önce oynar? Kazanan bir sonraki turda tekrar oynayacak. Onu kuyruğa hangi indeksle geri koymalısın?</li></ol></div>
+<div class="box q"><span class="t">C07-B</span><ol><li>Öne eklerken baş indeks bir geri gider. <code>-1</code> olunca ne olmalı? <code>(head − 1 + k) % k</code> ifadesi neden <code>+ k</code> içeriyor?</li></ol></div>
+<div class="box q"><span class="t">C07-C</span><ol><li>Pencerede kendisinden sonra gelen daha büyük bir değer varsa bir eleman hiç maksimum olabilir mi? Böyle elemanları tutmaya gerek var mı?</li></ol></div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+{{ code("sol:challenge07.cpp", "predictPartyVictory", title="C07-A") }}
+<p>İndeksi küçük olan önce oynar ve rakibini yasaklar. Kendisi bir sonraki tura <code>index + n</code> ile geri döner. Böylece kuyruktaki sıra turlar boyunca korunur. Her yasaklama bir senatörü kalıcı olarak eler: toplam <code>O(n)</code>.</p>
+{{ code("sol:challenge07.cpp", "insertFront", title="C07-B — insertFront") }}
+{{ code("sol:challenge07.cpp", "getRear", title="C07-B — getRear") }}
+<p><code>(head − 1 + k) % k</code>: C++’ta <code>-1 % k</code> sonucu −1’dir, bu yüzden <code>+ k</code> gerekiyor. Son elemanın indeksi <code>(head + count − 1) % k</code>. Ayrı bir <code>back</code> değişkeni tutmak da mümkün, ama tek doğruluk kaynağı (count) daha az hata üretir.</p>
+{{ code("sol:challenge07.cpp", "maxSlidingWindow", title="C07-C — monotonic deque") }}
+<p>Deque’deki indekslerin değerleri önden arkaya azalıyor. Ön her zaman pencerenin maksimumu. Arkadan eklenen yeni bir değer, kendisinden küçük ya da eşit olanları atar: bunlar artık asla maksimum olamaz. Her indeks bir kez girip bir kez çıktığı için süre <code>O(n)</code>. <code>std::priority_queue</code> ile çözüm <code>O(n log n)</code> sürer ve pencereden çıkan elemanları geç silmeyi gerektirir. 12. haftada tekrar bakacağız.</p>

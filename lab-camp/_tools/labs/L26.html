@@ -1,0 +1,53 @@
+{{ header(7, 2, "LLQueue&lt;T&gt; and the Circular Array Queue", "50 minutes · A 8 · B 12 · M1 5 · M2 15 · testing 10",
+  "two ends of a linked list (<code>front</code>, <code>rear</code>), resetting <code>rear</code> when the queue empties, a value-returning <code>dequeue()</code>, an array whose indexes wrap around with <code>%</code>, telling “full” from “empty” with a counter",
+  related=lc(622, "design-circular-queue", "Design Circular Queue") + " (M2) · " + lc(2073, "time-needed-to-buy-tickets", "Time Needed to Buy Tickets") + " (L26-X)",
+  slides="<code>materials/slides/10-queues.ppt</code> slides 11–22 (pointer-based), 23–29 (array-based circular: <code>front</code>, <code>back</code>, <code>count</code>), 45–46 (comparing implementations)",
+  archive="2021 Assignment 3 <code>queue&lt;T&gt;</code> (<code>enqueue</code>, <code>T dequeue()</code>, <code>firstElement()</code>) · old camp <code>LLQueue</code> (QU-1 … QU-10) · Labwork 5 (a priority queue on the doubly linked list)", one="M2") }}
+
+<h2>1. Problem statement</h2>
+<p>Two implementations of the same queue, both from the slides:</p>
+<ul><li><b>A, B, M1 — <code>LLQueue&lt;T&gt;</code></b> (file <code>llqueue.h</code>, a template you write completely). A linked list with <code>front</code> and <code>rear</code>: <code>enqueue</code> appends at <code>rear</code>, <code>dequeue</code> removes at <code>front</code>, both <code>O(1)</code>. As in the old camp and in 2021 Assignment 3, <code>dequeue()</code> <b>returns the value</b> and throws <code>std::runtime_error</code> on an empty queue. The detail everybody forgets: when the last element leaves, <code>rear</code> must become <code>nullptr</code> too.</li>
+<li><b>M2 — <code>MyCircularQueue</code></b> (LeetCode 622): the slides' array version. A fixed array of capacity <code>k</code>; <code>front</code> and <code>back</code> move forwards and wrap around with <code>% k</code>; a <code>count</code> tells full from empty. As in the slides, <code>back</code> starts at <code>k − 1</code>, so the first element lands at index 0.</li></ul>
+{{ code("sol:llqueue.h", "classes", title="llqueue.h — the class part (given inside your file)") }}
+{{ code("lab:circularqueue.h", title="circularqueue.h — given (you write circularqueue.cpp)") }}
+
+<h2>2. Tests</h2>
+<table class="grid"><tr><th>Question</th><th>What is checked</th></tr>
+<tr><td>A</td><td>enqueue 1, 2, 3 → front first <code>1 2 3</code>, size 3, <code>rear</code> is the last node</td></tr>
+<tr><td>B</td><td><code>{0, 2, 3}</code>: front 0, rear 3, dequeue returns 0, 2, 3; then front and rear null; enqueue after emptying works; exceptions on an empty queue; 200 random sequences vs <code>std::deque</code> (size and rear checked after every step)</td></tr>
+<tr><td>M1</td><td>destructor frees all nodes; <code>clear()</code> then reuse</td></tr>
+<tr><td>M2</td><td>the LeetCode sequence for <code>k = 3</code>; empty queue gives <code>-1</code>/<code>false</code>; 200 random sequences with capacity 1–4 vs <code>std::deque</code></td></tr></table>
+<p><span class="tag opt">L26-X</span> <code>timeRequiredToBuy</code> (LeetCode 2073):</p>
+{{ cases("PDF_TICKET", ["tickets", "k", "seconds"], [
+    ([2, 3, 2], 2, 6, "LeetCode example 1"),
+    ([5, 1, 1, 1], 0, 8, "LeetCode example 2"),
+    ([1], 0, 1, "one person"),
+], widths=["30%", "8%", "12%", "45%"]) }}
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Queue’nun iki klasik gerçeklemesini yazıyorsun. Linked list’te iki uç pointer var. Ekleme hep <code>rear</code>’dan, çıkarma hep <code>front</code>’tan yapılıyor. Dizide ise elemanlar kaymıyor, onun yerine indeksler ilerliyor ve dizinin sonuna gelince <code>%</code> ile başa dönüyor. Slaytlardaki dizi sürümü sayaç (<code>count</code>) kullanıyor, çünkü yalnızca <code>front</code> ve <code>back</code>’e bakarak dolu ile boş durumu ayırt etmek mümkün değil. İki durumda da <code>back</code>, <code>front</code>’un bir gerisinde kalıyor.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li><code>dequeue</code> son elemanı çıkardığında <code>rear</code> neyi gösterir? Bu durumda sonraki <code>enqueue</code> ne yapar?</li><li>Kapasite 3 iken <code>back = 2</code>. Bir sonraki eleman hangi indekse yazılır?</li><li>Dizi sürümünde <code>deQueue</code> elemanı silmek için bir şey yazmalı mı?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("k = 3, 1 2 3", vec([1, 2, 3], name="items", ptr={"front": 0, "back": 2}, show_size=False), "count = 3: dolu. enQueue(4) false döner."),
+  ("deQueue", vec([1, 2, 3], name="items", ptr={"front": 1, "back": 2}, faded={0}, show_size=False), "front = (0+1) % 3 = 1. 1 hâlâ dizide ama artık kuyrukta değil."),
+  ("enQueue(4)", vec([4, 2, 3], name="items", ptr={"back": 0, "front": 1}, hl={0: "green"}, show_size=False), "back = (2+1) % 3 = 0: başa sarıldı. Kuyruk sırası 2, 3, 4."),
+  ("LLQueue son dequeue", ll([3], labels={0: ["front", "rear"]}, faded={0}), "front = next = nullptr olunca <b>rear = nullptr</b>. Yoksa rear silinmiş düğümü gösterir."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:llqueue.h", "enqueue", title="A — enqueue") }}
+{{ code("sol:llqueue.h", "dequeue", title="B — dequeue") }}
+{{ code("sol:circularqueue.cpp", "MyCircularQueue", title="M2 — constructor") }}
+{{ code("sol:circularqueue.cpp", "enQueue", title="M2 — enQueue") }}
+{{ code("sol:circularqueue.cpp", "deQueue", title="M2 — deQueue") }}
+<ul><li><b>B.</b> <code>if (front == nullptr) rear = nullptr;</code> satırı unutulursa testteki “enqueue after emptying” adımı silinmiş düğüme yazar. Eski kampın notu da bunu kontrol ediyordu.</li>
+<li><b>M2.</b> <code>(back + 1) % size</code> sona gelince 0’a döner. <code>deQueue</code> değeri silmez, yalnızca <code>front</code>’u ilerletir.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>İki sürümde de bütün işlemler <code>O(1)</code>. Linked sürüm sınırsız büyüyor, dizi sürümü sabit bellek kullanıyor ve <code>new</code> gerektirmiyor.</li></ul>
+<h3>Alternatif ve ihlal ettiği kural</h3>
+<p>Dizi kuyruğunu “her <code>deQueue</code>’da elemanları bir sola kaydır” diye yazmak (Lab 02’deki <code>removeAt(0)</code>) doğru çalışır, ama her çıkarma <code>O(n)</code> olur ve slaytlardaki “circular, O(1)” tasarımını <b>ihlal eder</b>. <code>count</code> yerine bir hücreyi boş bırakma tekniği de geçerli bir alternatif: “dolu” koşulu <code>(back + 2) % size == front</code> olur ve kapasite bir eksik kullanılır.</p>
+{{ code("sol:circularqueue.cpp", "timeRequiredToBuy", title="L26-X — timeRequiredToBuy") }}
+<h2>Ezberden varyant · L26-V</h2>
+<div class="box tip"><span class="t">5 dakikada yaz</span><p><span class="tag opt">L26-V</span> <code>void LLQueue&lt;T&gt;::reverse()</code>: düğümleri yeniden bağlayarak kuyruğu ters çevir. Eski <code>front</code> yeni <code>rear</code> olur. Ardından <code>enqueue</code> yine doğru çalışmalı.</p></div>

@@ -1,0 +1,62 @@
+{{ header(7, 3, "Alternate Triples With a Queue and a Stack", "45 minutes · A–B 12 · main problem 18 · testing 15",
+  "the rotation pattern (process exactly <code>n</code> elements by moving them to the back), a stack to reverse a group, counting groups without indexes",
+  related=gfg("reverse-first-k-elements-of-queue/1", "Reverse First K of Queue") + " (B and L27-X)",
+  slides="<code>materials/slides/10-queues.ppt</code> slides 2–9 · <code>09-stacks.ppt</code> slides 2–8",
+  archive="midterm note: “sayıları döndürme 1 2 3 4 5 6 7 8 9 → 3 2 1 4 5 6 9 8 7” (M) · Lab 03 (the same task on a vector) · old camp QU-8", one="M") }}
+
+<h2>1. Problem statement</h2>
+<p>The midterm asked to turn <code>1 2 3 4 5 6 7 8 9</code> into <code>3 2 1 4 5 6 9 8 7</code>. In Lab 03 you did it on a vector with indexes and <code>swap</code>. Here the numbers sit in a <code>std::queue&lt;int&gt;</code>: there are no indexes, you can only look at the front, remove it, and add at the back. A queue cannot reverse anything by itself — a <b>stack</b> can: push three values, pop them, and they come out reversed.</p>
+<p>Write <code>reverseAlternateTriples</code>: the 1st, 3rd, 5th … <b>complete</b> group of three is reversed; the other groups and an incomplete last group keep their order. The queue must end with all <code>n</code> values in the new order, using at most one helper stack.</p>
+{{ code("lab:lab27.h", title="lab27.h — given") }}
+<div class="box rule"><span class="t">Assumptions (same as Lab 03)</span><p class="small">Groups are counted from the front; groups 0, 2, 4, … are reversed; an incomplete last group is never changed; the work happens in the same queue. Because a queue has no indexes, read <code>n = q.size()</code> once at the start and move exactly <code>n</code> elements — this is the “rotation pattern”.</p></div>
+
+<h2>2. Worked example</h2>
+<p><code>1 2 3 4 5 6 7 8</code> (n = 8). Each step takes elements from the front and puts them at the back:</p>
+<table class="grid"><tr><th>group</th><th>action</th><th>queue after the step (front … back)</th></tr>
+<tr><td>0: 1 2 3</td><td>3 into the stack, out reversed</td><td><code>4 5 6 7 8 | 3 2 1</code></td></tr>
+<tr><td>1: 4 5 6</td><td>rotate (keep order)</td><td><code>7 8 | 3 2 1 4 5 6</code></td></tr>
+<tr><td>2: 7 8</td><td>incomplete: rotate</td><td><code>3 2 1 4 5 6 7 8</code></td></tr></table>
+
+<h2>3. Tests</h2>
+{{ cases("PDF_TRI", ["queue (front first)", "after"], [
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9], [3, 2, 1, 4, 5, 6, 9, 8, 7], "midterm example"),
+    ([], [], "empty"),
+    ([1, 2], [1, 2], "no complete group"),
+    ([1, 2, 3], [3, 2, 1], "one group"),
+    ([1, 2, 3, 4, 5, 6, 7, 8], [3, 2, 1, 4, 5, 6, 7, 8], "group 2 incomplete"),
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [3, 2, 1, 4, 5, 6, 9, 8, 7, 10], "n = 10"),
+], widths=["37%", "37%", "21%"]) }}
+<p>Then 200 random queues against a vector version.</p>
+{{ cases("PDF_FK", ["queue", "k", "after reverseFirstK"], [
+    ([1, 2, 3, 4, 5], 3, [3, 2, 1, 4, 5], "GfG example 1"),
+    ([4, 3, 2, 1], 4, [1, 2, 3, 4], "GfG example 2: k = n"),
+    ([1, 2, 3], 0, [1, 2, 3], "k = 0: nothing"),
+    ([1, 2, 3], 5, [1, 2, 3], "k > n: nothing"),
+], widths=["25%", "8%", "25%", "37%"]) }}
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Lab 03’teki soru, indeks kullanamadığın bir yapıda. Kuyrukta yalnızca önü görebiliyorsun. Bir elemanı “yerinde bırakmak” için onu çıkarıp arkaya eklemen gerekiyor (döndürme). Her eleman tam bir kez arkaya taşındığında kuyruk tam bir tur dönmüş olur. Bu yüzden döngü sayısı baştan alınan <code>n</code> ile belirleniyor. Döngü koşulunda <code>q.size()</code> kullanırsan, kuyruğa sürekli eleman eklendiği için döngü hiç bitmeyebilir.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>Döndürme döngüsünde neden <code>q.size()</code>’ı döngü koşulunda değil de bir kez okuyup kullanmalıyım?</li><li>Bir grubu ters çevirmek için stack’e kaç eleman atmalıyım? Grubun eksik olduğunu nasıl anlarım?</li><li>Stack her gruptan sonra boş kalıyor mu? Neden tek bir stack yeterli?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("başlangıç", vec([1, 2, 3, 4, 5, 6], name="q", ptr={"front": 0}, show_size=False), "n = 6"),
+  ("grup 0", row(vec([4, 5, 6], name="q", ptr={"front": 0}, show_size=False), stack([1, 2, 3], name="stack")), "1, 2, 3 stack’e gitti. Tepede 3 var."),
+  ("geri", vec([4, 5, 6, 3, 2, 1], name="q", hl={3: "green", 4: "green", 5: "green"}, show_size=False), "Stack’ten çıkan sıra 3, 2, 1 → kuyruğun arkasına eklendi."),
+  ("grup 1", vec([3, 2, 1, 4, 5, 6], name="q", show_size=False), "4, 5, 6 sırası bozulmadan arkaya taşındı (döndürme). 6 eleman taşındı, tur bitti."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab27.cpp", "reverseFirstK", title="B — reverseFirstK (GfG)") }}
+{{ code("sol:lab27.cpp", "reverseAlternateTriples", title="M — reverseAlternateTriples (midterm)") }}
+<ul><li><b><code>int n = q.size();</code></b> bir kez okunuyor. Döngü <code>start &lt; n</code> ile tam <code>n</code> elemanı işliyor.</li>
+<li><b><code>len</code></b> son grubun kısa olup olmadığını söylüyor. Tam grup ve çift numaralıysa stack’ten geçiyor, değilse sırası bozulmadan döndürülüyor.</li>
+<li>Her eleman bir kez çıkarılıp bir kez ekleniyor, en fazla bir kez stack’e giriyor: <code>O(n)</code> zaman. Stack’te aynı anda en fazla 3 eleman var: <code>O(1)</code> ek bellek.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Kurallar: yalnızca izinli queue/stack işlemleri ve tek bir yardımcı stack. Sıra: çevrilmeyen gruplar ve eksik grup aynen kalıyor.</li></ul>
+<h3>Alternatifler</h3>
+<ul><li>Kuyruğu bir vektöre boşaltıp Lab 03’teki fonksiyonu çağırmak ve geri doldurmak: doğru ve kısa, ama “yalnızca queue + bir stack” şartını <b>ihlal eder</b> ve <code>O(n)</code> ek bellek kullanır.</li>
+<li>Her grup için ayrı bir geçici kuyruk kullanmak: gereksiz. Stack zaten her gruptan sonra boşalıyor.</li></ul>
+{{ code("sol:lab27.cpp", "reverseFirstKGfG", title="L27-X — GfG signature (queue by value)") }}
+<h2>Ezberden varyant · L27-V</h2>
+<div class="box tip"><span class="t">7 dakikada yaz</span><p><span class="tag opt">L27-V</span> <code>void reverseGroups(std::queue&lt;int&gt;&amp; q, int g)</code>: <b>her</b> tam <code>g</code>’lik grubu çevir, eksik son grubu bırak. Grup boyu sınavda 3 yerine 4 olarak gelirse ne değişir? Yalnızca bir sayı.</p></div>

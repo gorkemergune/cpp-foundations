@@ -1,0 +1,120 @@
+{{ header(3, 2, "Reading Lines: getline and istringstream", "45 minutes · warm-up 8 · exercises A–B 7 · main problem (two functions) 20 · testing 10",
+  "<code>cin &gt;&gt; x</code> vs. <code>getline</code>, the leftover newline, <code>in.ignore</code>, <code>std::istringstream</code> to split a line, testing <code>if (in &gt;&gt; x)</code>, <code>std::istream&amp;</code> parameters",
+  related=lc(2042, "check-if-numbers-are-ascending-in-a-sentence", "Check if Numbers Are Ascending in a Sentence") + " (L10-X)",
+  slides="<code>materials/slides/03-control-statements-1.ppt</code> slides 39–51 (sentinel-controlled input loops) · <code>05-functions.ppt</code> slides 109–125 (reference parameters)",
+  archive="midterm note: “stringdeki minimum sayıyı bulma, temp’e atıp tekrar kontrol” (M1)") }}
+
+<h2>1. Problem statement</h2>
+<p>A grading tool reads its input as text. <b>M1</b>: one line holds space-separated integers; return the smallest one through a reference parameter, using the classic “put the first number into a temporary, then compare every next number with it” loop. A line without numbers has no answer: return <code>false</code> and leave <code>out</code> unchanged.</p>
+<p><b>M2</b>: the input stream starts with a line holding a count <code>n</code>; then come <code>n</code> lines of free text (a line may be empty or have extra spaces). Return how many words each of those lines contains. This is the classic <code>cin &gt;&gt; n</code> + <code>getline</code> trap.</p>
+<p><b>Example scenario.</b> <code>minToken("12 -3 5 -3", out)</code> returns <code>true</code> with <code>out = -3</code>. For the stream <code>"3\nhello world\n\n  a b c \n"</code>, <code>wordsPerLine</code> returns <code>{2, 0, 3}</code>.</p>
+
+<h2>2. Given code</h2>
+{{ code("lab:lab10.h", title="lab10.h — given") }}
+<div class="box sig"><span class="t">Functions you complete (main problem)</span>
+{{ snippet('''
+bool minToken(const std::string& line, int& out);   // L10-M1
+std::vector<int> wordsPerLine(std::istream& in);    // L10-M2
+''') }}
+<p class="small"><code>std::istream&amp; in</code> accepts <code>std::cin</code>, a file (<code>std::ifstream</code>) or a string stream. The tests pass an <code>std::istringstream</code>; your program would pass <code>std::cin</code>.</p></div>
+<h3>Allowed</h3>
+<table class="grid">
+<tr><th style="width:36%">Call</th><th>Meaning</th></tr>
+<tr><td><code>std::istringstream in(line);</code></td><td>a stream that reads from a string (<code>&lt;sstream&gt;</code>)</td></tr>
+<tr><td><code>in &gt;&gt; x</code></td><td>skips spaces and newlines, reads one value; as a condition it is <code>false</code> when nothing could be read</td></tr>
+<tr><td><code>std::getline(in, line)</code></td><td>reads up to the next <code>'\n'</code> and removes the <code>'\n'</code></td></tr>
+<tr><td><code>in.ignore(N, '\n')</code></td><td>skips up to and including the next newline</td></tr>
+</table>
+<h3>Constraints</h3>
+<p>M1: the line contains only integers and spaces (possibly none). M2: <code>0 &lt;= n</code>, exactly <code>n</code> text lines follow; words are separated by spaces.</p>
+
+<h2>3. Warm-up (8 min)</h2>
+{{ code("lab:warmup.cpp", title="warmup.cpp") }}
+
+<h2>4. Exercises</h2>
+<p><span class="tag req">L10-A</span> <code>splitWords</code> · <span class="tag req">L10-B</span> <code>sumLine</code></p>
+{{ cases("PDF_SPLIT", ["line", "words"], [
+    ("  to be   or ", ["to", "be", "or"], "extra spaces everywhere"),
+    ("", [], "empty line"),
+    ("one", ["one"], "single word"),
+], widths=["35%", "35%", "25%"]) }}
+{{ cases("PDF_SUM", ["line", "sumLine"], [
+    ("12 -3 5", 14, "normal"),
+    ("", 0, "empty"),
+    ("  7  ", 7, "spaces around"),
+], widths=["40%", "20%", "35%"]) }}
+
+<h2>5. Worked example (M2)</h2>
+<p>Stream: <code>3⏎hello world⏎⏎  a b c ⏎</code> (⏎ = newline).</p>
+<table class="grid"><tr><th>call</th><th>reads</th><th>position after</th></tr>
+<tr><td><code>in &gt;&gt; n</code></td><td>3</td><td>just before the first ⏎</td></tr>
+<tr><td><code>in.ignore(…, '\n')</code></td><td>⏎</td><td>start of “hello world”</td></tr>
+<tr><td><code>getline</code> ×3</td><td>“hello world”, “”, “  a b c ”</td><td>end</td></tr></table>
+<p>Without the <code>ignore</code>, the first <code>getline</code> would read the empty rest of line 1 and every count would shift by one line.</p>
+
+<h2>6. Tests</h2>
+{{ cases("PDF_MIN", ["line", "return", "out (777 if untouched)"], [
+    ("12 -3 5 -3", True, -3, "statement example, repeated minimum"),
+    ("10 2", True, 2, "two numbers"),
+    ("3 -12 -12 8", True, -12, "negative"),
+    ("42", True, 42, "single number is the minimum"),
+    ("", False, 777, "empty line: out unchanged"),
+    ("   ", False, 777, "only spaces"),
+], widths=["30%", "12%", "20%", "33%"]) }}
+{{ cases("PDF_WPL", ["stream contents", "return"], [
+    ("3\nhello world\n\n  a b c \n", [2, 0, 3], "statement example"),
+    ("0\n", [], "n = 0"),
+    ("2\none\ntwo three\n", [1, 2], "no blank line"),
+    ("1\n   \n", [0], "a line of spaces has 0 words"),
+], widths=["40%", "20%", "35%"]) }}
+
+<h3>Optional · L10-X (LeetCode 2042)</h3>
+<p><span class="tag opt">L10-X</span> <code>bool areNumbersAscending(const std::string&amp; s)</code> — tokens are words or positive numbers; are the numbers strictly increasing?</p>
+{{ cases("PDF_ASC", ["s", "return"], [
+    ("1 box has 3 blue 4 red 6 green and 12 yellow marbles", True, "LeetCode example 1"),
+    ("hello world 5 x 5", False, "LeetCode example 2: equal is not increasing"),
+    ("sunset is at 7 51 pm overnight lows will be in the low 50 and 60 s", False, "LeetCode example 3"),
+], widths=["58%", "10%", "27%"]) }}
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>M1 vize notundaki soru: satırdaki ilk sayıyı geçici bir değişkene (<code>temp</code>) al, sonraki her sayıyla karşılaştır, küçükse <code>temp</code>’i güncelle. Satırda sayı yoksa <code>false</code> dön. <code>out</code>’a hiç dokunma (test 777 koyup bakıyor). Notta yazmayan kural bu kampta şöyle belirlendi: satırda yalnızca geçerli tam sayılar ve boşluklar var.</p>
+<p>M2 C++’ın en çok şaşırtan giriş tuzağı. <code>cin &gt;&gt; n</code> sayıyı okur ve satır sonunu akışta bırakır. Hemen ardından gelen <code>getline</code> o boş kalan satır sonunu okur. Python’daki <code>input()</code> her zaman bir satırın tamamını okuduğu için Python’da bu sorun yok.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li><code>temp</code>’i 0 ile ya da <code>INT_MAX</code> ile başlatmak yerine neden ilk sayıyla başlatıyoruz? Satır boşsa ne olur?</li>
+<li><code>in &gt;&gt; x</code> başarısız olduğunda <code>x</code>’in değerine güvenebilir miyim?</li>
+<li>M2’de <code>&gt;&gt;</code> ile <code>getline</code> arasındaki satır sonunu kim tüketiyor?</li></ol></div>
+<h3>Isınma programının çıktısı</h3>
+{{ run("lab:warmup.cpp") }}
+<p>1. satır tuzağın kendisi: <code>getline</code> boş bir satır okudu. 5. satırda üçüncü okuma başarısız oldu ve akış “fail” durumuna geçti. Akışın sonuna gelindiği için <code>c</code>’ye hiç yazılmadı, −1 kaldı. Sayı yerine harf okunmaya çalışılsaydı C++11’den beri <code>c</code>’ye 0 yazılırdı. İki durumda da sonuç aynı: başarısız bir okumadan sonra değişkene güvenme, her zaman <code>if (in &gt;&gt; x)</code> ile kontrol et.</p>
+<div class="avoid"><h3>Görsel iz: <code>minToken("12 -3 5 -3")</code></h3>
+{{ steps([
+  ("ilk okuma", vec(["12", "-3", "5", "-3"], name="token", ptr={"temp": 0}, show_size=False), "temp = 12. Bu okuma başarısız olsaydı (boş satır) hemen false dönerdik."),
+  ("-3", vec(["12", "-3", "5", "-3"], name="token", ptr={"temp": 1}, hl={1: "green"}, show_size=False), "-3 &lt; 12 → temp = -3"),
+  ("5, -3", vec(["12", "-3", "5", "-3"], name="token", ptr={"temp": 1}, hl={2: "gray", 3: "gray"}, show_size=False), "Daha küçük değil. Döngü biter, out = -3."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab10.cpp", "splitWords", title="splitWords") }}
+{{ code("sol:lab10.cpp", "minToken", title="M1 — minToken") }}
+<ul><li><b><code>if (!(in &gt;&gt; temp)) return false;</code></b> ilk okuma hem başlangıç değerini veriyor hem de “satır boş mu?” sorusunu cevaplıyor.</li>
+<li><b><code>out = temp;</code></b> yalnızca başarılı yolda, en sonda yapılıyor. Lab 05’teki çıkış parametresi alışkanlığının aynısı.</li></ul>
+{{ code("sol:lab10.cpp", "wordsPerLine", title="M2 — wordsPerLine") }}
+<ul><li><b><code>in.ignore(numeric_limits&lt;streamsize&gt;::max(), '\n')</code></b>: “satır sonuna kadar her şeyi atla”. Daha kısa ama kırılgan bir yol <code>getline(in, dummy)</code> çağırmak. O da çalışır.</li>
+<li><b><code>i &lt; n &amp;&amp; getline(…)</code></b>: dosya erken biterse döngü durur. Böylece eksik bir girişte sonsuz döngü ya da çöp değer oluşmaz.</li>
+<li>Kelime saymak için A’daki <code>splitWords</code>’ü yeniden kullandık.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li><b>Sözleşme.</b> Boş satır, yalnız boşluk ve tek sayı durumları tek bir <code>if</code> ile ele alınıyor.</li>
+<li><b>Maliyet.</b> M1 tek geçiş, <code>O(uzunluk)</code>, ek bellek <code>O(1)</code>. M2 toplam karakter sayısıyla doğrusal.</li></ul>
+<h3>Alternatif</h3>
+<p>M1’i elle ayrıştırmak da mümkün: karakterleri gezip <code>'-'</code> ve rakamları biriktir, boşlukta <code>std::stoi</code> çağır. Labda <code>istringstream</code> yasaksa bu yol gerekir. Daha uzun ve hataya açık (eksi işareti, çoklu boşluk). Bir başka alternatif <code>splitWords</code> + <code>std::stoi</code>. Kurallara uyar ama önce bütün kelimeleri bir vektöre kopyalar, yani <code>O(n)</code> ek bellek kullanır.</p>
+{{ code("sol:lab10.cpp", "areNumbersAscending", title="L10-X — areNumbersAscending") }}
+
+<h2>Ezberden varyant · L10-V</h2>
+<div class="box tip"><span class="t">6 dakikada yaz</span><p><span class="tag opt">L10-V</span> <code>bool maxToken(const std::string&amp; line, int&amp; out, int&amp; index)</code>: en büyük sayıyı ve <b>ilk</b> görüldüğü token sırasını döndür. Sayı yoksa iki çıkışa da dokunma.</p></div>
+{{ cases("PDF_MAX", ["line", "return", "out", "index"], [
+    ("4 9 1 9", True, 9, 1, "first maximum"),
+    ("-5", True, -5, 0, "single"),
+    ("", False, 777, 777, "empty: untouched"),
+], widths=["30%", "12%", "10%", "10%", "33%"]) }}

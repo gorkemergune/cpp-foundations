@@ -1,0 +1,7 @@
+Ada 95
+Bob 48
+
+Cem 72
+Deniz 101
+Ece 7x
+Fatih 95

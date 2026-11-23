@@ -1,0 +1,70 @@
+{{ header(3, 0, "Gradebook: Read, Validate, Report", "90–120 minutes (about 70 lines of your own code), can be split over two sittings",
+  "a class over a <code>std::vector</code> of structs, input validation with <code>istringstream</code>, <code>getline</code> loops over a stream, <code>const</code> member functions, formatted output with <code>&lt;iomanip&gt;</code>, building a small command-line program from tested parts",
+  slides="<code>materials/slides/02-classes-and-objects.ppt</code> slides 76–85 (GradeBook case study) · <code>06-arrays-and-vectors.ppt</code> slides 76–85 (GradeBook with an array)",
+  archive="<code>materials/assignments/2017-spring/as1-grades-linked-list</code> (the same idea with a linked list in Week 4)",
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 3 · Mini project (after Lab 12)", one="A") }}
+
+<h2>1. What you build</h2>
+<p>A command-line tool that reads student results, one per line, from the keyboard or a file, throws away malformed lines and prints a short report. The textbook's “GradeBook” case study (slides above) does this with an array; you do it with a class that owns a <code>std::vector&lt;Record&gt;</code>.</p>
+{{ snippet('''
+PS> Get-Content grades.txt | .\\gradebook.exe
+students: 4
+average: 77.50
+best: Ada (95)
+failing (<60): Bob
+(2 line(s) rejected)
+''', title="the finished program on the given grades.txt", lang="text") }}
+{{ code("lab:grades.txt", title="grades.txt — given test input", lang="text") }}
+
+<h2>2. Requirements</h2>
+<table class="grid">
+<tr><th style="width:12%">Part</th><th style="width:40%">Member function</th><th>Behaviour</th></tr>
+<tr><td>A</td><td><code>bool addLine(const std::string&amp; line)</code></td><td>exactly two tokens; the name only letters; the score only digits, at most 3 of them, value 0–100. Valid → stored, <code>true</code>. Anything else → <code>false</code>, nothing stored.</td></tr>
+<tr><td>A</td><td><code>int readAll(std::istream&amp; in)</code></td><td>every line through <code>addLine</code>; blank lines (only spaces) are skipped and not counted; returns the number of rejected lines</td></tr>
+<tr><td>B</td><td><code>count</code>, <code>average</code>, <code>best</code></td><td>average 0 and best <code>""</code> for an empty book; best is the <b>first</b> highest score</td></tr>
+<tr><td>C</td><td><code>failing(threshold)</code>, <code>report(threshold)</code></td><td>failing: names with score &lt; threshold in input order. Report: exactly the format in the header comment, average with two decimals.</td></tr>
+</table>
+{{ code("lab:gradebook.h", title="gradebook.h — given") }}
+
+<h2>3. Tests</h2>
+{{ cases("PDF_LINE", ["line", "addLine"], [
+    ("Ada 95", True, "valid"),
+    ("Bob 0", True, "0 is a valid score"),
+    ("Cem 100", True, "100 is a valid score"),
+    ("Deniz 101", False, "score above 100"),
+    ("Ece 7x", False, "score is not a number"),
+    ("Fatih -5", False, "negative: '-' is not a digit"),
+    ("Gul", False, "missing score"),
+    ("Hakan 50 extra", False, "three tokens"),
+    ("Ilk3r 70", False, "digit in the name"),
+    ("  Jale   88  ", True, "extra spaces are fine"),
+], widths=["35%", "15%", "45%"]) }}
+<p>Further tests: <code>readAll</code> on the contents of <code>grades.txt</code> (2 rejected, 4 stored); average/best on <code>Ada 95, Bob 48, Cem 72</code> (71.67, Ada) and a tie with <code>Fatih 95</code>; <code>failing(60)</code> = <code>{Bob}</code>, <code>failing(80)</code> = <code>{Bob, Cem}</code>; the full report text for thresholds 60 and 10 and for an empty book.</p>
+<h3>Suggested order</h3>
+<ol><li><code>count</code>, then <code>addLine</code> with only the “two tokens” rule; run <code>.\run.ps1 P01</code> — some rows fail, that is expected.</li>
+<li>Add the name and score rules one at a time; watch the failing rows disappear.</li>
+<li><code>readAll</code>, <code>average</code>, <code>best</code>, <code>failing</code>, finally <code>report</code>.</li>
+<li>Build <code>main_demo.cpp</code> and run it on <code>grades.txt</code>.</li></ol>
+
+{{ banner("önce kendi tasarımını dene") }}
+<h2>Tasarım notları</h2>
+<ul>
+<li><b>Veri.</b> Her satır bir <code>Record { name, score }</code>. Sınıf bu kayıtları <code>std::vector</code> içinde tutuyor. Dışarıdan doğrudan erişilemiyor (<code>private</code>), bu yüzden geçersiz bir kayıt hiçbir yoldan içeri giremiyor.</li>
+<li><b>Doğrulama sırası.</b> Önce token sayısı, sonra ad, sonra puanın biçimi, en son değeri. <code>stoi("7x")</code> 7 döndürür ve hata vermez. Bu yüzden önce “yalnız rakam” kontrolü gerekiyor. Uzunluk sınırı, <code>stoi</code>’nin çok uzun bir sayıda taşma hatası vermesini önlüyor.</li>
+<li><b>Okuma ile hesaplamayı ayır.</b> <code>readAll</code> akıştan okur. Hesaplamaları yapan fonksiyonlar akış görmez. Testler bu sayede <code>istringstream</code> ile çalışıyor, program <code>std::cin</code> ile.</li>
+<li><b><code>const</code>.</b> Raporlayan fonksiyonlar nesneyi değiştirmiyor. <code>const</code> işaretleri sayesinde <code>const Gradebook&amp;</code> üzerinden de çağrılabiliyorlar.</li>
+</ul>
+<div class="box q"><span class="t">Kendine sor</span><ol><li><code>"Ece 7x"</code> satırını reddetmek için hangi kontrol gerekiyor? <code>istringstream &gt;&gt; int</code> neden yetmez?</li><li>Raporda ortalamayı iki basamakla nasıl yazarsın? (<code>std::fixed</code>, <code>std::setprecision(2)</code>)</li></ol></div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:gradebook.cpp", "addLine", title="addLine") }}
+<p><code>(in &gt;&gt; extra)</code> başarılıysa satırda üçüncü bir token var demektir. Puanı önce metin olarak okumak, <code>"7x"</code> gibi yarı sayıları yakalamanın en kolay yolu.</p>
+{{ code("sol:gradebook.cpp", "readAll", title="readAll") }}
+{{ code("sol:gradebook.cpp", "best", title="best") }}
+<p>En iyi kaydı bir pointer’la izliyoruz: <code>const Record* top</code>. Kopya yerine adres tutmak 4. haftadaki pointer çalışmasına bir ısınma.</p>
+{{ code("sol:gradebook.cpp", "report", title="report") }}
+<h3>Genişletme fikirleri (isteğe bağlı)</h3>
+<ul><li>Aynı ad iki kez gelirse eskisini güncelle (2017 Assignment 4’teki <code>calendar::add</code> kuralı).</li>
+<li>Puana göre sıralı bir liste yazdır. Sıralamayı kendin yaz, Lab 08’deki birleştirmeyi kullanarak bir merge sort deneyebilirsin.</li>
+<li>4. haftadan sonra kayıtları <code>std::vector</code> yerine kendi linked list’inde tut. Arayüz (<code>gradebook.h</code>’nin public kısmı) değişmeden kalmalı.</li></ul>

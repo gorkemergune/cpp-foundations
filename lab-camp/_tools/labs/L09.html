@@ -1,0 +1,120 @@
+{{ header(3, 1, "Strings: Indexing, find and substr", "40 minutes · warm-up 7 · exercises A–B 6 · main problem (two functions) 17 · testing 10",
+  "<code>std::string</code> vs. <code>char[]</code>, <code>+=</code>, <code>s[i]</code>, <code>find</code>/<code>npos</code>, <code>substr</code>, comparing strings, <code>&lt;cctype&gt;</code> with <code>unsigned char</code>",
+  related=lc(125, "valid-palindrome", "Valid Palindrome") + " (M2) · " + lc(344, "reverse-string", "Reverse String") + " (L09-X)",
+  slides="<code>materials/slides/07-pointers.ppt</code> slides 83–118 (C strings, <code>strcmp</code>, <code>strcpy</code>: what <code>std::string</code> replaces)",
+  archive="midterm note: “iki stringin birbirinin tersi olup olmadığı” (M1, string version; the two-stack version is Lab 23)") }}
+
+<h2>1. Problem statement</h2>
+<p>A word game checks pairs of words. <b>M1</b>: two words form a “mirror pair” when the second is the first one read backwards, character by character, upper/lower case included (<code>"stack"</code> / <code>"kcats"</code>). <b>M2</b>: a phrase is a “clean palindrome” when, after removing everything that is not a letter or a digit and ignoring case, it reads the same in both directions (LeetCode 125).</p>
+<p><b>Example scenario.</b> <code>areReverses("stack", "kcats")</code> is <code>true</code>; <code>areReverses("abc", "abc")</code> is <code>false</code>. <code>isPalindromeAlnum("A man, a plan, a canal: Panama")</code> is <code>true</code> because the cleaned text is <code>"amanaplanacanalpanama"</code>.</p>
+
+<h2>2. Given code</h2>
+{{ code("lab:lab09.h", title="lab09.h — given") }}
+<div class="box sig"><span class="t">Functions you complete (main problem)</span>
+{{ snippet('''
+bool areReverses(const std::string& a, const std::string& b);   // L09-M1
+bool isPalindromeAlnum(const std::string& s);                   // L09-M2
+''') }}</div>
+<h3>Allowed</h3>
+<table class="grid">
+<tr><th style="width:32%">Call</th><th>Meaning</th></tr>
+<tr><td><code>s.size()</code>, <code>s[i]</code>, <code>s.back()</code></td><td>like a <code>vector&lt;char&gt;</code>; there is no <code>'\0'</code> to count</td></tr>
+<tr><td><code>r += c</code>, <code>r += "txt"</code></td><td>append a char or a string</td></tr>
+<tr><td><code>s.find(t)</code>, <code>s.find(t, from)</code></td><td>index of the first match, or <code>std::string::npos</code></td></tr>
+<tr><td><code>s.substr(pos, len)</code></td><td>a new string of at most <code>len</code> characters</td></tr>
+<tr><td><code>isalnum</code>, <code>tolower</code> (<code>&lt;cctype&gt;</code>)</td><td>pass <code>(unsigned char)c</code>, never a plain <code>char</code></td></tr>
+<tr><td><code>std::reverse</code></td><td><b>not allowed</b></td></tr>
+</table>
+<h3>Constraints</h3>
+<p><code>0 &lt;= length &lt;= 2·10<sup>5</sup></code>, printable ASCII. Both functions <code>O(n)</code> time; M2 must not build a cleaned copy (<code>O(1)</code> extra memory) — the alternative on the solution page does, and explains why that is weaker.</p>
+
+<h2>3. Warm-up (7 min)</h2>
+{{ code("lab:warmup.cpp", title="warmup.cpp") }}
+
+<h2>4. Exercises</h2>
+<p><span class="tag req">L09-A</span> <code>std::string reversed(const std::string&amp; s)</code> · <span class="tag req">L09-B</span> <code>int countChar(const std::string&amp; s, char c)</code></p>
+{{ cases("PDF_REV", ["s", "reversed(s)"], [
+    ("abc", "cba", "normal"),
+    ("", "", "empty string"),
+    ("a b", "b a", "spaces are characters too"),
+], widths=["30%", "30%", "35%"]) }}
+{{ cases("PDF_COUNT", ["s", "c", "countChar"], [
+    ("banana", "a", 3, "normal"),
+    ("Banana", "b", 0, "case-sensitive"),
+    ("", "x", 0, "empty"),
+], widths=["30%", "12%", "15%", "38%"]) }}
+
+<h2>5. Worked example (M2)</h2>
+<p><code>s = "No 'x' in Nixon"</code>. Two indexes move inwards and skip characters that are not letters or digits.</p>
+<table class="grid"><tr><th>lo → char</th><th>hi → char</th><th>compare (lower case)</th></tr>
+<tr><td>0 → N</td><td>14 → n</td><td>n = n ✓</td></tr>
+<tr><td>1 → o</td><td>13 → o</td><td>✓</td></tr>
+<tr><td>2 → space, skip; 3 → ' skip; 4 → x</td><td>12 → x</td><td>✓</td></tr>
+<tr><td>5 ' skip, 6 space skip, 7 → i</td><td>11 → i</td><td>✓</td></tr>
+<tr><td>8 → n</td><td>10 → N</td><td>✓ → lo meets hi: <code>true</code></td></tr></table>
+
+<h2>6. Tests</h2>
+{{ cases("PDF_AREREV", ["a", "b", "areReverses"], [
+    ("stack", "kcats", True, "statement example"),
+    ("abc", "abc", False, "equal is not reversed"),
+    ("aba", "aba", True, "a palindrome is its own reverse"),
+    ("ab", "baX", False, "different lengths"),
+    ("", "", True, "two empty strings"),
+    ("Ab", "bA", True, "case is kept"),
+    ("Ab", "ba", False, "case-sensitive"),
+], widths=["20%", "20%", "15%", "40%"]) }}
+{{ cases("PDF_PAL", ["s", "isPalindromeAlnum"], [
+    ("A man, a plan, a canal: Panama", True, "LeetCode example 1"),
+    ("race a car", False, "LeetCode example 2"),
+    (" ", True, "LeetCode example 3: nothing left is a palindrome"),
+    ("0P", False, "digit vs letter: '0' is not 'p'"),
+    ("No 'x' in Nixon", True, "worked example"),
+], widths=["45%", "15%", "35%"]) }}
+<p>Then 200 random strings each, compared with <code>std::reverse</code> versions.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>M1 vize notundaki “iki string birbirinin tersi mi?” sorusu. Uzunluklar farklıysa hemen <code>false</code> dön. Eşitse <code>a[i]</code> ile <code>b[n−1−i]</code>’yi karşılaştır. Lab 03’teki vektör sürümünün aynısı, yalnızca tür <code>string</code>. M2’de iki indeks var ve harf ya da rakam olmayan karakterleri atlıyor. Karşılaştırmayı küçük harfe çevirerek yapıyorsun.</p>
+<h3>C’den gelirken</h3>
+<table class="grid"><tr><th>C (<code>char*</code>)</th><th>C++ (<code>std::string</code>)</th></tr>
+<tr><td><code>strlen(s)</code>, her çağrıda <code>O(n)</code></td><td><code>s.size()</code>, <code>O(1)</code></td></tr>
+<tr><td><code>strcpy</code>, <code>strcat</code>, taşma riski</td><td><code>t = s</code>, <code>s += t</code>, bellek kendiliğinden büyür</td></tr>
+<tr><td><code>strcmp(a, b) == 0</code></td><td><code>a == b</code>. <code>&lt;</code> sözlük sırasıyla karşılaştırır.</td></tr>
+<tr><td><code>strstr</code> → pointer ya da <code>NULL</code></td><td><code>find</code> → indeks ya da <code>npos</code></td></tr></table>
+<p><b><code>unsigned char</code> neden şart?</b> <code>char</code> bu derleyicide işaretli. 127’den büyük bir karakter (ör. UTF-8 ile kodlanmış <code>ğ</code>’nin baytları) negatif bir sayı olur. <code>isalnum(-61)</code> tanımsız davranıştır. Dönüşüm sayıyı 0–255 aralığına taşır.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li>M1’de uzunluk kontrolünü yapmazsam <code>b[n−1−i]</code> hangi durumda dizinin dışına çıkar?</li>
+<li>M2’de atlama yaparken <code>lo &lt; hi</code> koşulunu tekrar kontrol etmem gerekiyor mu?</li>
+<li>Temizlenmiş metin boş kalırsa sonuç ne olmalı?</li></ol></div>
+<h3>Isınma programının çıktısı</h3>
+{{ run("lab:warmup.cpp") }}
+<p>3. satırdaki 5, <code>"struct"</code>’ın başladığı indeks. 4. satırda bulunamayan arama <code>npos</code> döndürüyor. <code>npos</code> en büyük <code>size_t</code> değeri, −1 değil. <code>if (s.find(x))</code> yazmak bu yüzden yanlış: 0 indeksinde bulunduğunda koşul yanlış olur, hiç bulunamadığında doğru olur.</p>
+<div class="avoid"><h3>Görsel iz: <code>areReverses("stack", "kcats")</code></h3>
+{{ steps([
+  ("i = 0", row(vec(list("stack"), name="a", ptr={"i": 0}, hl={0: "green"}, show_size=False), vec(list("kcats"), name="b", ptr={"n-1-i": 4}, hl={4: "green"}, show_size=False)), "s = s"),
+  ("i = 1", row(vec(list("stack"), name="a", ptr={"i": 1}, hl={1: "green"}, show_size=False), vec(list("kcats"), name="b", ptr={"n-1-i": 3}, hl={3: "green"}, show_size=False)), "t = t. i = 2, 3, 4 aynı şekilde eşleşir → true"),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab09.cpp", "reversed", title="reversed") }}
+<p>Döngü değişkeni <code>int</code>. <code>size_t i = s.size() - 1</code> boş stringte çok büyük bir sayı olurdu ve <code>i &gt;= 0</code> koşulu işaretsiz bir sayı için hep doğru kalırdı. Lab 03’teki tuzağın aynısı.</p>
+{{ code("sol:lab09.cpp", "areReverses", title="M1 — areReverses") }}
+{{ code("sol:lab09.cpp", "isPalindromeAlnum", title="M2 — isPalindromeAlnum") }}
+<ul><li><b><code>continue</code></b> ile her adımda yalnızca bir indeksi hareket ettirip döngü koşulunu (<code>lo &lt; hi</code>) yeniden kontrol ediyoruz. İç içe <code>while</code> ile atlama yapsaydık sınırı her iç döngüde ayrıca kontrol etmek gerekirdi.</li>
+<li><b>Bellek.</b> Temiz bir kopya oluşturmadan çalışıyor: <code>O(1)</code> ek bellek.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li><b>İzinler.</b> <code>std::reverse</code> kullanmadık. Karşılaştırma indekslerle yapılıyor.</li>
+<li><b>Maliyet.</b> İkisi de <code>O(n)</code>. M1 ilk farkta, M2 ilk uyuşmazlıkta duruyor.</li></ul>
+<h3>Alternatif</h3>
+<p>M2’nin en okunaklı hâli: harf ve rakamları küçük harfe çevirerek yeni bir <code>clean</code> stringine topla, sonra <code>clean == reversed(clean)</code> karşılaştır. Doğru çalışır ama <code>O(n)</code> ek bellek kullanır ve iki kopya oluşturur. <b>Bu labın <code>O(1)</code> bellek hedefini ihlal eder.</b> Sınavda önce bu sürümü yazıp sonra iki indeksli sürüme geçmek kötü bir strateji değil.</p>
+<p>M1 Lab 23’te tekrar gelecek. O zaman iki string karakter karakter iki stack’e atılacak ve yalnızca <code>push</code>, <code>top</code>, <code>pop</code> ve <code>empty</code> kullanılabilecek. Buradaki uzunluk kontrolü orada da ilk adım olacak.</p>
+
+<h2>Ezberden varyant · L09-V</h2>
+<div class="box tip"><span class="t">6 dakikada yaz</span><p><span class="tag opt">L09-V</span> <code>int countWord(const std::string&amp; text, const std::string&amp; word)</code>: <code>find</code> ile örtüşmeyen eşleşmeleri say. Bir sonraki aramayı eşleşmenin bittiği yerden başlat. Boş kelimede 0 dön (yoksa sonsuz döngü!).</p></div>
+{{ cases("PDF_WORD", ["text", "word", "return"], [
+    ("the cat and the hat", "the", 2, "normal"),
+    ("aaaa", "aa", 2, "non-overlapping: not 3"),
+    ("abc", "", 0, "empty word"),
+    ("", "a", 0, "empty text"),
+], widths=["35%", "15%", "12%", "33%"]) }}

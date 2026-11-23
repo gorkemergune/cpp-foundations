@@ -1,0 +1,62 @@
+{{ header(3, 0, "Thinking Problems on Strings", "60–90 minutes in total",
+  "sliding window with a “last seen” table, expanding around a centre, careful parsing with overflow checks",
+  related=lc(3, "longest-substring-without-repeating-characters", "Longest Substring Without Repeating Characters") + " · " + lc(5, "longest-palindromic-substring", "Longest Palindromic Substring") + " · " + lc(8, "string-to-integer-atoi", "String to Integer (atoi)"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 3 · Challenge set (after Lab 12)", one="A") }}
+
+<h2>C03-A · Longest Substring Without Repeating Characters (medium)</h2>
+<p>Return the length of the longest contiguous substring of <code>s</code> in which no character appears twice. Target <code>O(n)</code>: checking every substring is <code>O(n<sup>3</sup>)</code>.</p>
+{{ snippet("int lengthOfLongestSubstring(const std::string& s);") }}
+{{ cases("PDF_LONG", ["s", "return"], [
+    ("abcabcbb", 3, "LeetCode example 1: \"abc\""),
+    ("bbbbb", 1, "LeetCode example 2"),
+    ("pwwkew", 3, "LeetCode example 3: \"wke\" (a substring, not a subsequence)"),
+    ("", 0, "empty"),
+    ("abba", 2, "the window must never move left"),
+], widths=["25%", "12%", "58%"]) }}
+
+<h2>C03-B · Longest Palindromic Substring (medium)</h2>
+<p>Return the longest substring that reads the same in both directions. If several have the maximal length, return the one that starts <b>leftmost</b>. Target <code>O(n<sup>2</sup>)</code> time, <code>O(1)</code> extra memory.</p>
+{{ snippet("std::string longestPalindrome(const std::string& s);") }}
+{{ cases("PDF_PAL", ["s", "return"], [
+    ("babad", "bab", "LeetCode example 1 (\"aba\" is as long but starts later)"),
+    ("cbbd", "bb", "LeetCode example 2: even length"),
+    ("a", "a", "single character"),
+    ("", "", "empty"),
+    ("forgeeksskeegfor", "geeksskeeg", "long even palindrome"),
+], widths=["30%", "25%", "40%"]) }}
+
+<h2>C03-C · String to Integer (atoi) (medium)</h2>
+<p>Parse like this: skip leading spaces; read one optional <code>+</code> or <code>-</code>; read digits until the first non-digit; if no digit was read the result is 0. If the value leaves the 32-bit range, return <code>INT_MAX</code> (2147483647) or <code>INT_MIN</code> (−2147483648).</p>
+{{ snippet("int myAtoi(const std::string& s);") }}
+{{ cases("PDF_ATOI", ["s", "return"], [
+    ("42", 42, "LeetCode example 1"),
+    ("   -042", -42, "LeetCode example 2: spaces, sign, leading zero"),
+    ("1337c0d3", 1337, "LeetCode example 3: stop at the first non-digit"),
+    ("0-1", 0, "LeetCode example 4"),
+    ("words and 987", 0, "LeetCode example 5: no digits first"),
+    ("91283472332", 2147483647, "overflow -> INT_MAX"),
+    ("-91283472332", -2147483648, "overflow -> INT_MIN"),
+    ("-2147483648", -2147483648, "exactly INT_MIN"),
+    ("+-12", 0, "only one sign is allowed"),
+], widths=["30%", "20%", "45%"]) }}
+
+{{ banner("önce her soruyla en az 20 dakika uğraş") }}
+<h2>İpuçları</h2>
+<div class="box q"><span class="t">C03-A</span><ol><li>Tekrarsız bir “pencere” <code>[left, i]</code> tutarsan yeni karakter pencerede varsa <code>left</code> nereye atlamalı?</li><li>Bir karakterin en son nerede görüldüğünü <code>O(1)</code>’de nasıl bilirim? 256 elemanlı bir dizi yeter mi?</li></ol></div>
+<div class="box q"><span class="t">C03-B</span><ol><li>Her palindromun bir merkezi var. Kaç olası merkez var? (Çift uzunlukları unutma.)</li></ol></div>
+<div class="box q"><span class="t">C03-C</span><ol><li><code>value * 10 + d</code> taşmadan önce sınırı nasıl kontrol ederim? Ara değeri <code>long long</code>’da tutmak yeter mi?</li><li><code>-2147483648</code> neden özel? <code>INT_MAX</code>’tan bir fazla.</li></ol></div>
+<div class="avoid"><h3>Görsel: C03-A, “abba”</h3>
+{{ steps([
+  ("i = 1", vec(list("abba"), name="s", ptr={"left": 0, "i": 1}, hl={0: "green", 1: "green"}, show_size=False), "pencere \"ab\", uzunluk 2"),
+  ("i = 2", vec(list("abba"), name="s", ptr={"left,i": 2}, hl={2: "green"}, show_size=False), "b daha önce 1’de görüldü ve 1 ≥ left → left = 2"),
+  ("i = 3", vec(list("abba"), name="s", ptr={"left": 2, "i": 3}, hl={2: "green", 3: "green"}, show_size=False), "a’nın son görülmesi 0 &lt; left: pencerede değil, left geri gitmez → \"ba\""),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+{{ code("sol:challenge03.cpp", "lengthOfLongestSubstring", title="C03-A") }}
+<p><code>last[c] &gt;= left</code> kontrolü önemli. “abba”da son <code>a</code> geldiğinde <code>a</code>’nın son görüldüğü 0 indeksi pencerenin dışında. Kontrol yapılmasaydı <code>left</code> 1’e, yani geriye giderdi ve pencerede iki <code>b</code> olurdu. Her karakter bir kez işlendiği için süre <code>O(n)</code>. Tablo sabit boyutta (256), yani bellek <code>O(1)</code>. 11. haftada aynı fikri <code>unordered_map</code> ile genelleyeceksin.</p>
+{{ code("sol:challenge03.cpp", "longestPalindrome", title="C03-B") }}
+<p><code>2n − 1</code> merkez var (her karakter ve her iki karakter arası). Her merkezden dışarı doğru genişliyoruz. En kötü durum <code>O(n<sup>2</sup>)</code>, örneğin hepsi aynı harf olduğunda. Kesin daha uzun olduğunda güncelliyoruz (<code>&gt;</code>), böylece eşitlikte soldaki kalıyor. Alternatif olarak dinamik programlama tablosu da <code>O(n<sup>2</sup>)</code> sürer ama <code>O(n<sup>2</sup>)</code> bellek ister. Manacher algoritması <code>O(n)</code> ama bu dersin kapsamı dışında.</p>
+{{ code("sol:challenge03.cpp", "myAtoi", title="C03-C") }}
+<p>Ara değer <code>long long</code> ve her rakamdan sonra kontrol ediliyor. Böylece 19 basamaklı bir girdi bile <code>long long</code>’u taşırmadan kesiliyor. Sınava özel not: “atoi” soruları puanı adımları doğru sırada yapmaya verir (boşluk, işaret, rakam, taşma). Testlerdeki <code>"+-12"</code> ve <code>"0-1"</code> satırları sıra hatalarını yakalıyor.</p>

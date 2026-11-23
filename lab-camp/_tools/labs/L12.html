@@ -1,0 +1,84 @@
+{{ header(3, 4, "Timed Lab: Word Processing", "<b>50 minutes</b>, closed notes · Part A 15 · Part B 12 · Part C 13 · final test 10",
+  "everything from Labs 09–11: <code>istringstream</code>, building strings with <code>+=</code>, runs of equal characters, reference outputs",
+  related=lc(151, "reverse-words-in-a-string", "Reverse Words in a String") + " (Part A) · " + lc(14, "longest-common-prefix", "Longest Common Prefix") + " (L12-X)",
+  archive="midterm note: “stringdeki minimum sayı” (Part C extends it to min and max)", timed=True, one="B") }}
+<div class="box warn"><span class="t">Exam conditions</span><p>50-minute timer, only <code>lab12.cpp</code>, compile after every part. At the end run <code>.\run.ps1 L12</code> and grade yourself.</p></div>
+
+<h2>1. Problem statement</h2>
+<p>A text tool needs three functions:</p>
+<ol><li><b>Part A — <code>reverseWords</code></b> (LeetCode 151): return the words of <code>s</code> in reverse order, separated by exactly one space, with no spaces at the beginning or end. Words are separated by one or more spaces in the input.</li>
+<li><b>Part B — <code>compress</code></b>: run-length encoding. Every maximal run of the same character becomes that character followed by the run length in decimal: <code>"aaabcc"</code> → <code>"a3b1c2"</code>, <code>"aaaaaaaaaaaa"</code> → <code>"a12"</code>.</li>
+<li><b>Part C — <code>minMaxTokens</code></b>: like Lab 10's <code>minToken</code>, but return both the smallest and the largest integer of the line through two reference parameters. No integer: <code>false</code>, outputs unchanged.</li></ol>
+<h2>2. Given code</h2>
+{{ code("lab:lab12.h", title="lab12.h — given") }}
+<p><b>Rules:</b> no <code>&lt;algorithm&gt;</code>. Each part runs in time linear in the length of the input.</p>
+
+<h2>3. Tests</h2>
+{{ cases("PDF_RW", ["s", "reverseWords"], [
+    ("the sky is blue", "blue is sky the", "LeetCode example 1"),
+    ("  hello world  ", "world hello", "LeetCode example 2: spaces at the ends"),
+    ("a good   example", "example good a", "LeetCode example 3: several spaces"),
+    ("   ", "", "no word at all"),
+    ("one", "one", "single word"),
+], widths=["35%", "30%", "30%"]) }}
+{{ cases("PDF_RLE", ["s", "compress"], [
+    ("aaabcc", "a3b1c2", "statement example"),
+    ("", "", "empty"),
+    ("abc", "a1b1c1", "no repeats"),
+    ("aaaaaaaaaaaa", "a12", "a two-digit count"),
+    ("aabaa", "a2b1a2", "the same letter in two runs"),
+], widths=["30%", "30%", "35%"]) }}
+{{ cases("PDF_MM", ["line", "return", "mn", "mx"], [
+    ("7 -2 9 3", True, -2, 9, "normal"),
+    ("5", True, 5, 5, "single number is both"),
+    ("", False, 777, 777, "empty: outputs untouched"),
+    ("  -1   -1 ", True, -1, -1, "repeated value, extra spaces"),
+], widths=["30%", "11%", "10%", "10%", "34%"]) }}
+<h3>Self-grading</h3>
+<table class="grid"><tr><th>Part</th><th>Points</th></tr><tr><td>A</td><td>35</td></tr><tr><td>B</td><td>30</td></tr><tr><td>C</td><td>25</td></tr><tr><td>clean compile</td><td>10</td></tr></table>
+<h3>Optional</h3>
+<p><span class="tag opt">L12-X</span> <code>std::string longestCommonPrefix(const std::vector&lt;std::string&gt;&amp; strs)</code></p>
+{{ cases("PDF_LCP", ["strs", "return"], [
+    (["flower", "flow", "flight"], "fl", "LeetCode example 1"),
+    (["dog", "racecar", "car"], "", "LeetCode example 2"),
+    (["alone"], "alone", "single string"),
+    ([], "", "no strings"),
+], widths=["40%", "20%", "35%"]) }}
+
+{{ banner("süre bitmeden bu sayfaya geçme") }}
+<h2>Soru ne istiyor?</h2>
+<p>A’da asıl zorluk boşluklar. <code>istringstream</code> ile kelimeleri okursan fazla boşluklar kendiliğinden düşer, geriye kelimeleri ters sırada, aralarına tek boşluk koyarak birleştirmek kalır. B’de “koşu” (run) mantığı var: eşit karakterler bitene kadar ilerle, karakteri ve sayıyı yaz. C, Lab 10’daki <code>temp</code> kalıbının iki değişkenli hâli.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li>A’da son kelimeden sonra boşluk eklememek için hangi koşul gerekiyor?</li>
+<li>B’de sayıyı <code>char('0' + count)</code> ile yazarsam 12 için ne olur?</li>
+<li>C’de <code>mn</code> ve <code>mx</code> için başlangıç değeri ne olmalı?</li></ol></div>
+<div class="avoid"><h3>Görsel: B’de koşular</h3>
+{{ vec(list("aaabcc"), name="s", groups=[(0, 2, "a ×3", "blue"), (3, 3, "b ×1", "green"), (4, 5, "c ×2", "red")], show_size=False) }}
+<p class="small">Her koşu için <code>i</code> koşunun başında, <code>j</code> ilk farklı karakterde. Yazılan sayı <code>j − i</code>, sonra <code>i = j</code>.</p></div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab12.cpp", "reverseWords", title="Part A — reverseWords") }}
+<p>Kelimeleri bir vektöre toplayıp tersten birleştiriyoruz. <code>O(n)</code> zaman, <code>O(n)</code> ek bellek. LeetCode’un “follow-up” sorusu <code>O(1)</code> ek bellekle yerinde çözüm istiyor: önce bütün stringi ters çevir, sonra her kelimeyi kendi içinde ters çevir, sonra fazla boşlukları sıkıştır. Bu Lab 04’teki üç ters çevirme fikrinin aynısı ama bu labın süresi için fazla uzun.</p>
+{{ code("sol:lab12.cpp", "compress", title="Part B — compress") }}
+<p><code>to_string(j - i)</code> çok basamaklı sayıları doğru yazıyor. Yaygın hata <code>out += (char)('0' + count)</code>. Bu yalnız 0–9 arasında çalışır, 12 için <code>'&lt;'</code> karakterini yazar. Testteki <code>"a12"</code> satırı bu hatayı yakalıyor.</p>
+{{ code("sol:lab12.cpp", "minMaxTokens", title="Part C — minMaxTokens") }}
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Üç parça da tek geçişte bitiyor. Çıkış parametrelerine yalnızca başarı durumunda, en sonda yazılıyor.</li>
+<li>A’daki <code>istringstream</code> çözümü boşluk kurallarını (baş, son, çoklu boşluk) tek satırda hallediyor. Elle ayrıştırmak da kurallara uyar ama daha çok sınır durumu getirir.</li></ul>
+{{ code("sol:lab12.cpp", "longestCommonPrefix", title="L12-X — longestCommonPrefix") }}
+
+<h2>Ezberden varyant · L12-V</h2>
+<div class="box tip"><span class="t">3 dakikada yaz</span><p><span class="tag opt">L12-V</span> <code>bool isRotationString(const std::string&amp; a, const std::string&amp; b)</code>: <code>b</code>, <code>a</code>’nın bir döndürmesi mi? Lab 04’te bunu döngüyle <code>O(n<sup>2</sup>)</code> çözmüştün. İpucu: <code>a + a</code> stringi <code>a</code>’nın bütün döndürmelerini içerir.</p></div>
+{{ cases("PDF_ROT", ["a", "b", "return"], [
+    ("abcde", "cdeab", True, "rotation by 2"),
+    ("abcde", "abced", False, "not a rotation"),
+    ("", "", True, "empty"),
+    ("ab", "aba", False, "different length"),
+], widths=["20%", "20%", "12%", "43%"]) }}
+
+<h2>3. haftanın kontrol listesi</h2>
+<div class="box"><ul><li><code>find</code>/<code>npos</code>, <code>substr</code> ve <code>+=</code> ile string kurabiliyor musun? <code>isalnum</code>’a neden <code>unsigned char</code> verdiğini biliyor musun?</li>
+<li><code>cin &gt;&gt; n</code> sonrası <code>getline</code> tuzağını ve <code>istringstream</code> ile satır ayrıştırmayı açıklayabiliyor musun?</li>
+<li>Bir sınıfı <code>.h</code> ve <code>.cpp</code> olarak ayırıp initializer list ve <code>const</code> üye fonksiyonlarla yazabiliyor musun?</li></ul>
+<p>Evet diyebiliyorsan bu haftanın mini projesi <b>P01</b>’i yap. Ardından 4. haftaya (pointer ve linked list) geç.</p></div>

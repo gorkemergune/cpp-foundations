@@ -1,0 +1,45 @@
+{{ header(11, 0, "Thinking Problems on Hashing", "60–90 minutes in total",
+  "choosing the key of a hash map (a canonical form), “is this the start of a run?”, prefix sums counted in a map",
+  related=lc(49, "group-anagrams", "Group Anagrams") + " · " + lc(128, "longest-consecutive-sequence", "Longest Consecutive Sequence") + " · " + lc(560, "subarray-sum-equals-k", "Subarray Sum Equals K"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 11 · Challenge set (after Lab 42)", one="C") }}
+{{ code("lab:challenge11.h", title="challenge11.h — given") }}
+<h2>C11-A · Group Anagrams (medium)</h2>
+<p>Put the words that consist of the same letters into one group. The order of the groups and inside the groups does not matter (the test sorts both).</p>
+{{ cases("PDF_GA", ["words", "groups"], [
+    (["eat", "tea", "tan", "ate", "nat", "bat"], [["eat", "tea", "ate"], ["tan", "nat"], ["bat"]], "LeetCode example 1"),
+    ([""], [[""]], "LeetCode example 2: one empty word"),
+    (["ab", "ba", "ab"], [["ab", "ba", "ab"]], "a word twice stays twice"),
+    ([], [], "no words"),
+], widths=["35%", "40%", "20%"]) }}
+<h2>C11-B · Longest Consecutive Sequence (medium)</h2>
+<p>The longest set of values <code>x, x+1, …, x+L−1</code> that all occur in the array, in <code>O(n)</code> — sorting would be <code>O(n log n)</code>.</p>
+{{ cases("PDF_LC", ["nums", "longest run"], [
+    ([100, 4, 200, 1, 3, 2], 4, "LeetCode example 1: 1 2 3 4"),
+    ([0, 3, 7, 2, 5, 8, 4, 6, 0, 1], 9, "LeetCode example 2: 0 .. 8"),
+    ([1, 2, 0, 1], 3, "duplicates count once"),
+    ([], 0, "empty"),
+], widths=["40%", "15%", "40%"]) }}
+<h2>C11-C · Subarray Sum Equals K (medium)</h2>
+<p>Count the contiguous pieces of the array whose sum is <code>k</code>. Values can be negative, so a sliding window does not work.</p>
+{{ cases("PDF_SS", ["nums", "k", "count"], [
+    ([1, 1, 1], 2, 2, "LeetCode example 1"),
+    ([1, 2, 3], 3, 2, "LeetCode example 2: {1,2} and {3}"),
+    ([1, -1, 0], 0, 3, "negative values: {1,-1}, {0}, {1,-1,0}"),
+    ([0, 0], 0, 3, "zeros"),
+], widths=["35%", "8%", "10%", "42%"]) }}
+<p>Every problem also runs 200 random inputs against a brute-force answer.</p>
+
+{{ banner("önce her soruyla en az 25 dakika uğraş") }}
+<h2>İpuçları</h2>
+<div class="box q"><span class="t">C11-A</span><ol><li>İki kelimenin anagram olduğunu tek bir anahtarla nasıl ifade edersin? Harfleri sıralanmış kelime iyi bir anahtar mı?</li></ol></div>
+<div class="box q"><span class="t">C11-B</span><ol><li>Her sayıdan sağa doğru saymak <code>O(n<sup>2</sup>)</code> sürebilir. Bir sayı ancak <code>x − 1</code> yoksa bir dizinin başıdır. Sadece başlardan saymak her sayıyı kaç kez gezer?</li></ol></div>
+<div class="box q"><span class="t">C11-C</span><ol><li><code>prefix[j] − prefix[i] = k</code> ise <code>i..j</code> arası istenen parça. j’ye gelince daha önceki kaç önekin değeri <code>prefix[j] − k</code>? C10-B’de ağaçta yaptığın şeyin dizi hâli.</li></ol></div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+{{ code("sol:challenge11.cpp", "groupAnagrams", title="C11-A") }}
+<p>Anahtar, harfleri sıralanmış kelime (kanonik biçim). Toplam <code>O(n · L log L)</code>. Yalnızca küçük harf varsa sıralama yerine 26 sayılık bir sayım dizisinden bir string anahtar üretilebilir: <code>O(n · L)</code>.</p>
+{{ code("sol:challenge11.cpp", "longestConsecutive", title="C11-B") }}
+<p>İç <code>while</code> yalnızca bir dizinin başında çalışıyor, yani her sayı en fazla iki kez ziyaret ediliyor (bir kez dış döngüde, bir kez kendi dizisinin sayımında). Toplam <code>O(n)</code>. Tekrar eden değerler set’e alınırken düşüyor.</p>
+{{ code("sol:challenge11.cpp", "subarraySum", title="C11-C") }}
+<p>Map, şimdiye kadar görülen her önek toplamının kaç kez çıktığını tutuyor. <code>seen[0] = 1</code>, dizinin başından başlayan parçaları sayıyor. Önce sayıp sonra <code>seen[sum]++</code> yapmak, boş parçanın sayılmasını önlüyor. <code>O(n)</code>. Bütün parçaları denemek <code>O(n<sup>2</sup>)</code> (testlerdeki referans çözüm).</p>

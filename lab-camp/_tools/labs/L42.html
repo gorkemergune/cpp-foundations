@@ -1,0 +1,66 @@
+{{ header(11, 3, "unordered_map, unordered_set and map", "45 minutes · A–B 10 · M1 8 · M2 7 · M3 12 · testing 8",
+  "the library's hash tables, <code>operator[]</code> vs <code>find</code>/<code>count</code>, counting with a map, “last index seen”, sliding windows, <code>std::map</code> when the order matters",
+  related=lc(387, "first-unique-character-in-a-string", "First Unique Character") + " · " + lc(219, "contains-duplicate-ii", "Contains Duplicate II") + " · " + lc(242, "valid-anagram", "Valid Anagram") + " · " + lc(3, "longest-substring-without-repeating-characters", "Longest Substring Without Repeating Characters") + " · " + lc(205, "isomorphic-strings", "Isomorphic Strings") + " (L42-X)",
+  slides="<code>materials/slides/17-hash-tables.pptx</code> slides 32–33 (hash tables vs. search trees, performance) · <code>materials/cpp-reference</code> (CS205 notes on the STL containers)",
+  archive="no archive question allows the STL here — but in the term project and in interviews these two containers solve most “have I seen it?” and “how many?” questions", one="M3") }}
+
+<h2>1. Problem statement</h2>
+<p>After building hash tables by hand (L40, L41), use the library's: <code>std::unordered_map&lt;K, V&gt;</code> (key → value) and <code>std::unordered_set&lt;K&gt;</code> (keys only) are chained hash tables with average <code>O(1)</code> operations and <b>no</b> order. <code>std::map</code> is a balanced search tree: <code>O(log n)</code> operations, but it iterates in sorted key order.</p>
+<table class="grid"><tr><th>expression</th><th>what it does</th></tr>
+<tr><td><code>m[k]</code></td><td>the value of <code>k</code>; <b>inserts</b> <code>k</code> with value <code>V()</code> (0 for <code>int</code>) if it is missing — perfect for counting, wrong for “is it there?”</td></tr>
+<tr><td><code>m.find(k)</code></td><td>an iterator to the element, or <code>m.end()</code>; inserts nothing; <code>it-&gt;first</code> is the key, <code>it-&gt;second</code> the value</td></tr>
+<tr><td><code>m.count(k)</code></td><td>1 if present, 0 if not</td></tr>
+<tr><td><code>s.insert(k).second</code></td><td><code>true</code> if <code>k</code> was new</td></tr></table>
+{{ code("lab:lab42.h", title="lab42.h — given") }}
+
+<h2>2. Tests</h2>
+<p>A: <code>"to be\tor\nnot  to be"</code> → <code>{("be",2), ("not",1), ("or",1), ("to",2)}</code>; upper case sorts before lower case (<code>"A" &lt; "a"</code>).</p>
+{{ cases("PDF_U", ["s", "firstUniqChar"], [
+    ("leetcode", 0, "LeetCode example 1"),
+    ("loveleetcode", 2, "LeetCode example 2"),
+    ("aabb", -1, "LeetCode example 3"),
+    ("", -1, "empty"),
+], widths=["35%", "20%", "40%"]) }}
+{{ cases("PDF_NB", ["nums", "k", "nearby duplicate?"], [
+    ([1, 2, 3, 1], 3, True, "LeetCode example 1"),
+    ([1, 0, 1, 1], 1, True, "LeetCode example 2"),
+    ([1, 2, 3, 1, 2, 3], 2, False, "LeetCode example 3"),
+    ([5, 5], 0, False, "k = 0: i != j is impossible"),
+], widths=["30%", "8%", "20%", "37%"]) }}
+{{ cases("PDF_LS", ["s", "longest"], [
+    ("abcabcbb", 3, "LeetCode example 1: abc"),
+    ("bbbbb", 1, "LeetCode example 2"),
+    ("pwwkew", 3, "LeetCode example 3: wke (not a subsequence)"),
+    ("abba", 2, "the old 'a' is outside the window"),
+    ("", 0, "empty"),
+], widths=["30%", "12%", "53%"]) }}
+<p>M1, M2 and M3 also run 200 random inputs against brute-force answers.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Bu labın soruları üç kalıba indirgeniyor. <b>Sayma</b> (A, B, M2): <code>count[x]++</code>. <b>Görüldü mü, nerede?</b> (M1, X): değeri son görüldüğü indekse eşleyen bir map. <b>Kayan pencere</b> (M3): pencerede bir karakter tekrar ederse pencerenin başı o karakterin eski yerinin bir sonrasına atlar. Hepsinde iç içe döngüden kurtulup <code>O(n)</code>’e iniyoruz.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li><code>if (m[k] &gt; 0)</code> ile <code>if (m.count(k))</code> arasında ne fark var? Hangisi map’i büyütür?</li><li>B’de neden <code>unordered_map</code>’i değil, string’i ikinci kez geziyorum?</li><li>M3’te <code>"abba"</code> için ikinci <code>a</code> geldiğinde pencerenin başı nerede? Eski <code>a</code>’nın indeksi pencerenin dışındaysa ne yapmalıyım?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("i = 2", vec(list("abba"), name="s", hl={1: "red", 2: "green"}, ptr={"start = i": 2}, show_size=False), "<code>b</code>’nin eski yeri 1 ve pencerenin içinde. start, 1 + 1 = 2’ye atlar. Pencere yalnızca \"b\"."),
+  ("i = 3", vec(list("abba"), name="s", hl={2: "green", 3: "green"}, ptr={"start": 2, "i": 3}, show_size=False), "<code>a</code>’nın eski yeri 0 ama 0 &lt; start, yani pencerenin dışında. start değişmez, pencere \"ba\" (2)."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab42.cpp", "wordCount", title="A — wordCount") }}
+{{ code("sol:lab42.cpp", "containsNearbyDuplicate", title="M1 — containsNearbyDuplicate") }}
+{{ code("sol:lab42.cpp", "isAnagram", title="M2 — isAnagram") }}
+{{ code("sol:lab42.cpp", "lengthOfLongestSubstring", title="M3 — lengthOfLongestSubstring") }}
+<ul><li><b>A.</b> <code>std::map</code> anahtar sırasıyla gezildiği için sonuç kendiliğinden sıralı. <code>unordered_map</code> ile aynı kod çalışır, ama sonra ayrıca sıralamak gerekir.</li>
+<li><b>M1.</b> Her değerin yalnızca son indeksi tutuluyor. Daha eski bir indeks hiçbir zaman daha yakın olamaz.</li>
+<li><b>M3.</b> <code>it-&gt;second &gt;= start</code> kontrolü <code>"abba"</code> tuzağını yakalıyor. Pencerenin başı hiçbir zaman geri gitmiyor.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Hepsi tek geçiş: <code>O(n)</code> ortalama süre, farklı eleman sayısı kadar bellek. Sıralayıp karşılaştırmak (M2) <code>O(n log n)</code> sürer. M1 ve M3’te iç içe döngü <code>O(n·k)</code> ya da <code>O(n<sup>2</sup>)</code>.</li></ul>
+<h3>Alternatif</h3>
+<p>Yalnızca küçük harfler varsa <code>int count[26]</code> dizisi hash tablosundan hem hızlı hem basit (<code>count[c - 'a']++</code>). M2 ve B için iyi bir seçim, ama genel karakterlerde (<code>"A a"</code>, rakamlar) map gerekir. Sınavda STL yasaksa L40’taki <code>ChainTable</code> ile aynı işi yapabilirsin.</p>
+{{ code("sol:lab42.cpp", "isIsomorphic", title="L42-X — isIsomorphic") }}
+<h2>Ezberden varyant · L42-V</h2>
+<div class="box tip"><span class="t">1 dakikada yaz</span><p><span class="tag opt">L42-V</span> <code>int countDistinct(const std::vector&lt;int&gt;&amp; v)</code>: farklı değer sayısı. Tek satır: aralıktan bir <code>unordered_set</code> kur, boyutunu döndür.</p></div>
+<h2>11. hafta kontrol listesi</h2>
+<div class="box"><ul><li>Slayttaki üç açık adresleme tablosunu kâğıtta doldurabiliyor musun? Silme neden “x” işareti bırakır?</li><li>Zincirleme ile açık adreslemeyi yük faktörü, silme ve bellek açısından karşılaştırabiliyor musun?</li><li>Hash tablosu ile BST arasında ne zaman hangisini seçersin (sıralı çıktı, aralık sorgusu, en kötü durum)?</li></ul>
+<p>Sonra <b>C11</b>. Ardından 12. hafta: heap ve öncelik kuyruğu.</p></div>

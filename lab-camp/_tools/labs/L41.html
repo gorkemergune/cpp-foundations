@@ -1,0 +1,52 @@
+{{ header(11, 2, "Open Addressing: Linear, Quadratic, Double Hashing", "45 minutes · A–B 8 · M1 + M2 20 · M3 7 · testing 10",
+  "probe sequences, primary clustering, why quadratic probing can miss free slots, double hashing, the three slot states and why deletion needs a DELETED mark",
+  related=lc(706, "design-hashmap", "Design HashMap") + " · " + gfg("linear-probing/1", "Linear Probing in Hashing"),
+  slides="<code>materials/slides/17-hash-tables.pptx</code> slides 16–17 (collision resolution, open addressing), 18–20 (linear probing, example, clustering), 21–22 (quadratic), 23–24 (double hashing), 25 (retrieval and deletion), 32–33 (hash tables vs. search trees)",
+  archive="final exams usually ask for these tables on paper: do the three slide examples by hand first, then compare with your program", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>With <b>open addressing</b> every key lives in the table itself. If its home slot <code>h1(key) = key % size</code> is taken, the key tries other slots in a fixed order, its <b>probe sequence</b> (A):</p>
+<table class="grid"><tr><th>method</th><th>i-th slot tried</th><th>slide</th></tr>
+<tr><td>linear probing</td><td><code>(h1 + i) % size</code></td><td>18–20</td></tr>
+<tr><td>quadratic probing</td><td><code>(h1 + i²) % size</code></td><td>21–22</td></tr>
+<tr><td>double hashing</td><td><code>(h1 + i·h2) % size</code>, <code>h2 = 7 − key % 7</code></td><td>23–24</td></tr></table>
+<p>A search follows the same sequence and stops at the key or at an <b>empty</b> slot. That is why deletion cannot simply empty a slot (slide 25): a later key whose sequence passed through it would no longer be found. A deleted slot is marked <b>DELETED</b>: a search walks over it, an insertion may reuse it.</p>
+<p><b>Order of work.</b> <code>insert</code> must first check that the key is not already there, so it calls <code>find</code>: write M1 and M2 together (the test of M1 shows “needs L41-M2” until <code>find</code> exists).</p>
+{{ code("lab:lab41.h", title="lab41.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_OA", ["mode", "size", "keys inserted", "indexes returned", "layout"], [
+    ("linear", 11, [20, 30, 2, 13, 25, 24, 10, 9], [9, 8, 2, 3, 4, 5, 10, 0], "9 _ 2 13 25 24 _ _ 30 20 10", "slide 19"),
+    ("quadratic", 11, [20, 30, 2, 13, 25, 24, 10, 9], [9, 8, 2, 3, 4, 6, 10, 7], "_ _ 2 13 25 _ 24 9 30 20 10", "slide 22"),
+    ("double", 11, [58, 14, 91], [3, 10, 6], "_ _ _ 58 _ _ 91 _ _ _ 14", "slide 24"),
+    ("quadratic", 4, [0, 4, 8], [0, 1, -1], "0 4 _ _", "free slots, but i² % 4 is only 0 or 1"),
+    ("linear", 3, [5, 5], [2, -1], "_ _ 5", "a key is stored once"),
+], widths=["11%", "6%", "22%", "18%", "28%", "15%"]) }}
+<p>M2 searches the slide-19 table (24 → 5, 9 → 0 after the wrap-around, 35 → −1 because slot 6 is empty). M3 removes 13 and checks that 24 is still found, that 46 reuses slot 3, and runs 200 random operation sequences in all three modes.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Zincirlemede (L40) çakışan anahtarlar listeye ekleniyordu. Açık adreslemede liste yok, anahtar tablodaki başka bir boş hücreyi arıyor. Üç yöntem yalnızca “sonraki hücre hangisi?” sorusuna verdikleri cevapla ayrılıyor. Doğrusal yöntem yan yana dolu hücre blokları (küme) oluşturuyor. Karesel yöntem bu kümelenmeyi azaltıyor ama her hücreyi denemeyebilir. Çift hash her anahtara farklı bir adım boyu veriyor.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>13’ü siler ve hücresini EMPTY yaparsam <code>find(24)</code> ne döndürür? 24 nereye yerleşmişti?</li><li>Boyut 4 ve karesel yöntemle <code>i²</code> % 4 hangi değerleri alır? Tablo yarı boşken ekleme neden başarısız olabilir? Slaytlar neden asal boyut ve en fazla yarı dolu tablo önerir?</li><li>Çift hash’te <code>h2</code> neden asla 0 olmamalı?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("doğrusal", vec(["9", "", "2", "13", "25", "24", "", "", "30", "20", "10"], name="slot", hl={2: "yellow", 3: "yellow", 4: "yellow", 5: "green"}, show_size=False), "24 % 11 = 2. 2, 3 ve 4 dolu, 5 boş. 2–5 arası bir küme oluştu (slayt 20). Bu kümeye düşen her yeni anahtar onu daha da büyütür."),
+  ("karesel", vec(["", "", "2", "13", "25", "", "24", "9", "30", "20", "10"], name="slot", hl={9: "yellow", 10: "yellow", 2: "yellow", 7: "green"}, show_size=False), "9 % 11 = 9. 9, 10 (9+1), 2 (9+4 = 13 % 11) dolu, 7 (9+9 = 18 % 11) boş."),
+  ("silme", vec(["", "", "2", "x", "25", "24", "", "", "30", "20", ""], name="slot", hl={3: "red", 5: "green"}, show_size=False), "13 silindi ve hücresi DELETED (x) oldu. <code>find(24)</code> 2’den başlar, x’in üstünden geçer ve 5’te 24’ü bulur."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab41.cpp", "probe", title="A — probe") }}
+{{ code("sol:lab41.cpp", "insert", title="M1 — insert") }}
+{{ code("sol:lab41.cpp", "find", title="M2 — find") }}
+{{ code("sol:lab41.cpp", "remove", title="M3 — remove") }}
+<ul><li><b>A.</b> <code>long long</code>, <code>i*i</code> ve <code>i*h2</code> çarpımlarında taşmayı önlüyor. Anahtarlar negatif olmadığı için <code>%</code> sonucu hep geçerli bir indeks.</li>
+<li><b>M1.</b> İlk boş <b>ya da silinmiş</b> hücre kullanılıyor. Ama önce <code>find</code> ile anahtarın dizinin ilerisinde zaten olup olmadığına bakılıyor. Testteki “insert 24 again” bunu kontrol ediyor: ilk silinmiş hücre 3, 24 ise 5’te.</li>
+<li><b>M2.</b> En fazla <code>size</code> deneme. Tablo hiç EMPTY hücre içermiyorsa (dolu ya da çok silinmiş) döngü yine sona eriyor.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Açık adresleme düğüm ve pointer kullanmıyor, hücreler yan yana duruyor, yani önbelleğe dost. Bedeli: yük faktörü 1’i geçemez ve α büyüdükçe deneme sayısı hızla artar (slayt 33). Silinmiş işaretler zamanla birikir ve aramayı yavaşlatır. Bu yüzden ara sıra <code>rehash</code> (L41-X) gerekir.</li></ul>
+<h3>Alternatif</h3>
+<p>Doğrusal yöntemde silinmiş işareti kullanmadan silmek mümkün: silinen hücreden sonraki kümeyi baştan yerleştirmek (backward shift). Slaytlardaki yöntem DELETED işareti. Sınavda soru “slayttaki gibi sil” diyorsa işareti kullan.</p>
+{{ code("sol:lab41.cpp", "rehash", title="L41-X — rehash") }}
+<h2>Ezberden varyant · L41-V</h2>
+<div class="box tip"><span class="t">3 dakikada yaz</span><p><span class="tag opt">L41-V</span> <code>int OpenTable::longestCluster() const</code>: art arda dolu hücrelerin en uzun dizisi (slayt 20’deki kümelenme). Slayt 19 tablosunda 4 (2, 3, 4, 5).</p></div>

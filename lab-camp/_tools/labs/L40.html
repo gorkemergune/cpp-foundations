@@ -1,0 +1,63 @@
+{{ header(11, 1, "Hash Functions and Separate Chaining", "45 minutes · A–B 8 · M1 15 · M2 5 · M3 10 · testing 7",
+  "hash tables, hash functions for strings (sum, Horner with 37), collisions, separate chaining with <code>std::list</code>, the load factor, negative keys and <code>%</code>",
+  related=lc(705, "design-hashset", "Design HashSet") + " · " + lc(1, "two-sum", "Two Sum") + " (L40-X)",
+  slides="<code>materials/slides/17-hash-tables.pptx</code> slides 3–6 (hash tables, collisions), 7–15 (hash functions, modular arithmetic, primes), 26–27 (separate chaining), 28–31 (good hash functions, strings)",
+  archive="2021 Assignment 5 (<code>materials/assignments/2021-fall/a5-hashing</code>: ints and strings in 10 chained buckets) = M2 and M3", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>A hash table stores a key at the index <code>h(key)</code> computed by a <b>hash function</b>. Two keys with the same index <b>collide</b>; with <b>separate chaining</b> every index holds a list (a chain) of all keys that hash to it (slides 26–27). Search, insertion and deletion only look at one chain, so they take <code>O(1 + α)</code> on average, where the load factor <code>α = n / tableSize</code>.</p>
+<ul><li><b>A, B</b>: the two string hash functions of slides 29–30.</li>
+<li><b>M1</b>: a chained table of <code>int</code>s. In C++ <code>-3 % 10</code> is <code>-3</code>, so the bucket is <code>((x % size) + size) % size</code>.</li>
+<li><b>M2, M3</b>: 2021 Assignment 5 — ints and strings of up to 4 characters in one table of 10 buckets. A string is turned into a number (<code>"AAA"</code> → 65 65 65 → 656565) and hashed like an int; every entry also remembers its type, otherwise the int 656565 and the string <code>"AAA"</code> would be the same entry (the archive solution's bug).</li></ul>
+<div class="fig">{{ buckets([[], [], [12, 22, 2], [], [], [], [], [-3, 7], [], []]) }}<div class="cap">10 buckets after inserting 12, 22, −3, 7, 2 (new keys at the end of the chain).</div></div>
+{{ code("lab:lab40.h", title="lab40.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_HASH", ["key", "tableSize", "hashSum", "hash37"], [
+    ("ali", 10007, 310, 6803, "slide 31 (see the note)"),
+    ("ali", 10, 0, 4, "small table"),
+    ("Z", 13, 12, 12, "one character: both equal its code % size"),
+    ("data", 101, 6, 73, "4 characters"),
+    ("structures", 10007, 1124, 3994, "long key: unsigned wrap-around"),
+    ("", 7, 0, 0, "empty key"),
+], widths=["18%", "13%", "13%", "13%", "38%"]) }}
+<div class="box warn"><span class="t">A mistake in slide 31</span><p>The slide computes <code>hash("ali")</code> with <code>98</code> for <code>'a'</code> and gets 8172. The code of <code>'a'</code> is <b>97</b>: <code>(97·37² + 108·37 + 105) % 10007 = 6803</code>. Check every hand computation against the ASCII table.</p></div>
+{{ cases("PDF_ENC", ["s", "encodeString"], [
+    ("AAA", 656565, "Assignment 5's example"),
+    ("A1", 6549, "a digit is a character too ('1' = 49)"),
+    ("ZZZZ", 90909090, "the largest code: still fits in an int"),
+    ("9:@Z", 57586490, "the edges of 48..90"),
+    ("AAAAA", -1, "5 characters"),
+    ("a", -1, "lower case needs 3 digits (97)"),
+    (" A", -1, "space is 32"),
+    ("", -1, "empty"),
+], widths=["20%", "20%", "55%"]) }}
+<p>M1 runs the example of the drawing (plus removals) and 200 random operation sequences against <code>std::set</code>, checking that every key sits in the right bucket. M3 checks the int/string collision of Assignment 5.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Hash tablosu bir dizi gibi çalışıyor: anahtarı bir indekse çevirip doğrudan o hücreye gidiyoruz. Çevirme işini hash fonksiyonu yapıyor. Farklı anahtarlar aynı indekse düşebilir (çakışma). Zincirleme yöntemi bunu her hücrede bir liste tutarak çözüyor. Arama yalnızca tek bir zincirde yapıldığı için zincirler kısa kaldıkça işlemler <code>O(1)</code>.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>Slayt 29’daki toplam fonksiyonu neden kötü dağıtır? <code>"ali"</code> ile <code>"lia"</code> aynı sonucu verir mi? <code>hash37</code> verir mi?</li><li>Tablo boyutu neden asal seçilir (slayt 13–14)? Boyut 10 ve anahtarlar hep 10’un katıysa ne olur?</li><li>Ödev 5’te sayı ve string aynı kodu alınca ne oluyordu? Tür bilgisini nerede saklamalıyım?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("hash37", vec([97, 108, 105], name="\"ali\"", show_size=False), "h = 0 → 0·37 + 97 = 97 → 97·37 + 108 = 3697 → 3697·37 + 105 = 136894. 136894 % 10007 = 6803."),
+  ("ekle −3", buckets([[], [], [12, 22], [], [], [], [], [-3], [], []], hl={(7, 0): "yellow"}), "<code>-3 % 10 = -3</code>, <code>(-3 + 10) % 10 = 7</code>. Düzeltme yapılmasa <code>table[-3]</code> dizinin dışına yazardı."),
+  ("ekle 2", buckets([[], [], [12, 22, 2], [], [], [], [], [-3, 7], [], []], hl={(2, 2): "yellow"}), "2 de bucket 2’ye düştü: çakışma. Zincirin sonuna eklendi. <code>contains(2)</code> yalnızca bu zinciri tarar."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab40.cpp", "hash37", title="B — hash37") }}
+{{ code("sol:lab40.cpp", "indexOf", title="M1 — indexOf") }}
+{{ code("sol:lab40.cpp", "insert", title="M1 — insert") }}
+{{ code("sol:lab40.cpp", "remove", title="M1 — remove") }}
+{{ code("sol:lab40.cpp", "has", title="M3 — has") }}
+<ul><li><b>B.</b> <code>unsigned int</code> taşınca 2<sup>32</sup>’ye göre mod alınmış gibi davranıyor ve bu tanımlı bir davranış. Slayttaki <code>int</code> taşması C++’ta tanımsız davranış. <code>if (hashVal &lt; 0)</code> düzeltmesi pratikte çalışsa da güvenilir değil.</li>
+<li><b>M1.</b> <code>std::list::erase</code> bir yineleyici alıyor ve o yineleyiciyi geçersiz kılıyor. Bu yüzden siler silmez dönüyoruz. Ödev 5’teki <code>IntSLList</code> ile aynı iş, listeyi baştan sona döndürerek yapılıyordu.</li>
+<li><b>M3.</b> Her girdi <code>(kod, isString)</code> çifti olarak tutuluyor. İki alan da eşleşmeden “var” denmiyor.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Zincirleme, tablo dolsa bile çalışmaya devam ediyor (α &gt; 1 olabilir). Silme gerçekten siliyor (açık adreslemedeki “silindi” işaretine gerek yok, L41). Bedeli düğüm başına bir pointer ve dağınık bellek.</li></ul>
+<h3>Alternatif</h3>
+<p><code>std::unordered_set&lt;int&gt;</code> aynı işi kütüphanede zincirleme ile yapıyor (L42). Bu labın amacı yapıyı kendin kurmak olduğu için M1’de onu kullanmak kuralı <b>ihlal eder</b>. X’te ise serbest.</p>
+{{ code("sol:lab40.cpp", "twoSum", title="L40-X — twoSum") }}
+<h2>Ezberden varyant · L40-V</h2>
+<div class="box tip"><span class="t">3 dakikada yaz</span><p><span class="tag opt">L40-V</span> <code>int ChainTable::longestChain() const</code>: en uzun zincirin uzunluğu. İyi bir hash fonksiyonunda bu değer α’ya yakın kalır.</p></div>

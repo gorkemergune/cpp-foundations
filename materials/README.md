@@ -101,7 +101,7 @@ Slayt metinlerinden çıkarılan gerçek imzalar. Lab kampı bu adları kullanı
 | Labwork sınıfları | `IntSLList`: `addToHead`, `addToTail`, `int deleteFromHead()`, `int deleteFromTail()`, `int isEmpty()`. `DoublyLinkedList<T>`: `addToDLLHead/Tail`, `T deleteFromDLLHead/Tail()`, `T& firstEl()` | [lw1](labworks/lw1-singly-linked-list/), [lw2](labworks/lw2-doubly-linked-list/) |
 | Ödev sınıfları | `codeStack::pushToStack(const char*)`, `string popFromStack()`. A3 `queue<T>`: `enqueue`, `T dequeue()`, `T firstElement()` | [a2](assignments/2021-fall/a2-code-stack-undo/), [a3](assignments/2021-fall/a3-directed-graph/) |
 | Heap | `heapInsert`, `heapDelete`, `heapRebuild(int root)` (slayt), labwork’te `percolate_down`, `delete_min`, `heapify` | [16-heaps](slides/16-heaps.pptx), slayt 11–15 · [lw8](labworks/lw8-min-heap/) |
-| Hash | `int hash(const string& key, int tableSize)` | [17-hash-tables](slides/17-hash-tables.pptx), slayt 29–31 |
+| Hash | `int hash(const string& key, int tableSize)`. Not: slayt 31’deki örnek `'a'` için 98 kullanıyor ve 8172 buluyor. `'a'` = 97, doğru sonuç `hash("ali", 10007) = 6803` (Lab 40). | [17-hash-tables](slides/17-hash-tables.pptx), slayt 29–31 |
 
 ## Ek kaynaklar
 

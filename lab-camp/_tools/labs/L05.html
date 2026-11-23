@@ -1,0 +1,144 @@
+{{ header(2, 1, "C-Style Arrays: Passing an Array and Its Length", "40 minutes · warm-up 8 · exercises A–B 8 · main problem 14 · testing 10",
+  "<code>int a[N]</code>, initialization, <code>sizeof</code>, array-to-pointer decay, passing <code>(const int a[], int n)</code>, <code>int&amp;</code> output parameters, returning <code>bool</code> for “no answer”",
+  related=gfg("find-minimum-and-maximum-element-in-an-array4428/1", "Min and Max in Array") + " (L05-X) · " + gfg("second-largest3735/1", "Second Largest") + " (L05-V)",
+  slides="<code>materials/slides/06-arrays-and-vectors.ppt</code> slides 6–11 (declaring arrays), 62–75 (passing arrays to functions) · <code>07-pointers.ppt</code> slides 73–81 (pointers and arrays)") }}
+
+<h2>1. Problem statement</h2>
+<p>A weather station stores the readings of one day in a plain C array <code>int a[N]</code>. The station's firmware is written in a style that is still common in course labs: no <code>std::vector</code>, the array and its length travel together as two parameters, and results that are not a single value come back through <b>reference parameters</b>.</p>
+<p>Write <code>minMaxIndex</code>. It finds the index of the smallest and the index of the largest reading. If a value appears several times, report its <b>first</b> index. If the array is empty (<code>n &lt;= 0</code>) there is no answer: return <code>false</code> and do not touch the output parameters.</p>
+<p><b>Example scenario.</b> Readings <code>{3, 9, 2, 9, 2}</code>: the smallest value 2 first appears at index 2, the largest value 9 first appears at index 1. The call <code>minMaxIndex(a, 5, lo, hi)</code> returns <code>true</code> and sets <code>lo = 2</code>, <code>hi = 1</code>.</p>
+
+<h2>2. Given code</h2>
+{{ code("lab:lab05.h", title="lab05.h — given") }}
+<div class="box sig"><span class="t">Function you complete (main problem, L05-M)</span>
+{{ snippet("bool minMaxIndex(const int a[], int n, int& minIdx, int& maxIdx);") }}
+<p class="small"><code>const int a[]</code> means “a pointer to the first element, through which I will not write”. <code>int&amp; minIdx</code> is a reference to the caller's variable: assigning to it changes the caller's variable. This is how C++ returns several results without a struct.</p></div>
+
+<h3>Functions and operations you may use</h3>
+<table class="grid">
+<tr><th style="width:30%">Operation</th><th>Meaning</th></tr>
+<tr><td><code>a[i]</code></td><td>element <code>i</code>, valid only for <code>0 &lt;= i &lt; n</code>; nothing checks this for you</td></tr>
+<tr><td><code>minIdx = …</code></td><td>writes the caller's variable (reference parameter)</td></tr>
+<tr><td><code>&lt;algorithm&gt;</code> (<code>min_element</code>…)</td><td><b>not allowed</b> in A, B and M</td></tr>
+</table>
+<div class="box rule"><span class="t">Lab rules</span><ul>
+<li>Never read <code>a[n]</code> or beyond, and never read anything when <code>n &lt;= 0</code>.</li>
+<li><code>n &lt;= 0</code>: return <code>false</code>; the tests set the outputs to <code>-100</code> before the call and check that they are still <code>-100</code>.</li></ul></div>
+
+<h3>Input, output, constraints</h3>
+<table class="grid">
+<tr><td style="width:22%"><b>Input</b></td><td><code>a</code> points to <code>n</code> integers, <code>-10<sup>9</sup> &lt;= a[i] &lt;= 10<sup>9</sup></code>, <code>n &lt;= 10<sup>5</sup></code> (n may be 0 or negative).</td></tr>
+<tr><td><b>Output</b></td><td>return value; <code>minIdx</code>, <code>maxIdx</code> only when the return value is <code>true</code>.</td></tr>
+<tr><td><b>Complexity</b></td><td>one pass, <code>O(n)</code> time, <code>O(1)</code> extra memory.</td></tr>
+</table>
+
+<h2>3. Warm-up (8 min)</h2>
+<p>Predict the six output lines, then compile. Line 3 is the reason the length has to be passed.</p>
+{{ code("lab:warmup.cpp", title="warmup.cpp") }}
+
+<h2>4. Exercises before the main problem</h2>
+<p><span class="tag req">L05-A</span> <code>int sumArray(const int a[], int n)</code></p>
+{{ cases("PDF_SUM", ["a", "return"], [
+    ([4, -1, 7], 10, "normal"),
+    ([], 0, "n = 0"),
+    ([-5], -5, "single element"),
+    ([1000000, 1000000], 2000000, "large values still fit in int"),
+], widths=["40%", "20%", "35%"]) }}
+<p><span class="tag req">L05-B</span> <code>void fillSquares(int a[], int n)</code> — the test puts two guard cells after the <code>n</code> slots and checks that you did not write past the end.</p>
+{{ cases("PDF_SQ", ["n", "a[0..n-1] after"], [
+    (4, [0, 1, 4, 9], "normal"),
+    (0, [], "nothing to write"),
+    (1, [0], "single slot"),
+], widths=["15%", "45%", "35%"]) }}
+
+<h2>5. Worked example</h2>
+<table class="grid">
+<tr><th><code>i</code></th><th><code>a[i]</code></th><th><code>lo</code> (value)</th><th><code>hi</code> (value)</th><th>why</th></tr>
+<tr><td>start</td><td>3</td><td>0 (3)</td><td>0 (3)</td><td>first element is both min and max so far</td></tr>
+<tr><td>1</td><td>9</td><td>0 (3)</td><td>1 (9)</td><td>9 &gt; 3</td></tr>
+<tr><td>2</td><td>2</td><td>2 (2)</td><td>1 (9)</td><td>2 &lt; 3</td></tr>
+<tr><td>3</td><td>9</td><td>2 (2)</td><td>1 (9)</td><td>9 &gt; 9 is false: the first 9 stays</td></tr>
+<tr><td>4</td><td>2</td><td>2 (2)</td><td>1 (9)</td><td>2 &lt; 2 is false</td></tr>
+</table>
+
+<h2>6. Tests for L05-M</h2>
+{{ cases("PDF_MINMAX", ["a", "return", "minIdx", "maxIdx"], [
+    ([3, 9, 2, 9, 2], True, 2, 1, "statement example: first occurrences"),
+    ([], False, -100, -100, "empty: outputs unchanged"),
+    ([7], True, 0, 0, "single element is both"),
+    ([5, 5, 5], True, 0, 0, "all equal"),
+    ([-3, -8, -1], True, 1, 2, "negative values"),
+    ([1, 2, 3, 4], True, 0, 3, "sorted ascending"),
+], widths=["26%", "11%", "11%", "11%", "36%"]) }}
+<p>Then 200 random arrays are compared with <code>std::min_element</code> / <code>std::max_element</code>.</p>
+
+<h3>Optional · L05-X (GeeksforGeeks)</h3>
+<p><span class="tag opt">L05-X</span> <code>std::pair&lt;int, int&gt; getMinMax(const int a[], int n)</code> returns the values <code>{min, max}</code> (the site uses a vector; the idea is the same). Reuse your M function.</p>
+{{ cases("PDF_GETMM", ["a", "min", "max"], [
+    ([3, 2, 1, 56, 10000, 167], 1, 10000, "site example 1"),
+    ([1, 345, 234, 21, 56789], 1, 56789, "site example 2"),
+    ([56789], 56789, 56789, "single element"),
+], widths=["40%", "12%", "13%", "30%"]) }}
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Bir C dizisinde en küçük ve en büyük elemanın <b>indeksini</b> bulacaksın. Değeri değil, konumu döndürüyorsun. Fonksiyon iki sonucu <code>int&amp;</code> parametreler üzerinden çağırana yazıyor, dönüş değeri olan <code>bool</code> da “cevap var mı?” sorusunu yanıtlıyor. Dizi boşsa çıktı parametrelerine hiç dokunmadan <code>false</code> dönmelisin.</p>
+<h3>C’den bildiğin, C++’ta değişen</h3>
+<ul>
+<li><b>Bozulma (decay).</b> Fonksiyon parametresindeki <code>int a[]</code> yazımı aslında <code>int* a</code> demek. Uzunluk bilgisi kaybolur. Isınma programında <code>sizeof(a)</code> fonksiyon içinde 8 çıkıyor, çünkü bu bir pointer’ın boyutu. Derleyici bunu <code>-Wall</code> uyarısıyla da söylüyor.</li>
+<li><b>Kopya yok.</b> Vektörü değerle verince kopya oluşuyordu (Lab 01). C dizisinde kopya oluşmaz. <code>fillSquares</code> doğrudan çağıranın belleğine yazıyor. <code>const</code> bu yüzden önemli: <code>const int a[]</code> “okuyacağım, yazmayacağım” sözü veriyor.</li>
+<li><b>Çıkış parametresi.</b> C’de <code>int* minIdx</code> alıp <code>*minIdx = i</code> yazardın. C++’ta <code>int&amp; minIdx</code> alıp <code>minIdx = i</code> yazıyorsun. Referans null olamaz, bu yüzden null kontrolü gerekmez.</li>
+</ul>
+
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li>Döngüye başlamadan önce “şimdiye kadarki en küçük” için hangi indeksi seçmeliyim? Boş dizide bu seçim neden tehlikeli?</li>
+<li>Eşit değerde ilk indeksin kalması için <code>&lt;</code> mı yazmalıyım, <code>&lt;=</code> mı?</li>
+<li>Çıkış parametrelerine döngü içinde mi yazmalıyım, yoksa sonunda bir kez mi?</li></ol></div>
+
+<h3>Isınma programının çıktısı</h3>
+{{ run("lab:warmup.cpp") }}
+<p>1. satırda 5 elemanlı dizi 20 bayt kaplıyor (her <code>int</code> 4 bayt). 3. satırda fonksiyon içinde yalnızca bir pointer var, bu yüzden 8 çıkıyor. 4. satırda fonksiyonun yazdığı 99 değeri çağıranın dizisine geçmiş. 5. satırda <code>p[2]</code> ile <code>*(p + 2)</code> aynı şeyi ifade ediyor: dizinin başından 2 eleman ileri git ve oku.</p>
+
+<div class="avoid"><h3>Görsel iz: <code>minMaxIndex({3, 9, 2, 9, 2}, 5)</code></h3>
+{{ steps([
+  ("başlangıç", vec([3, 9, 2, 9, 2], name="a", ptr={"lo,hi": 0}, show_size=False), "lo = hi = 0. n ≥ 1 olduğu için <code>a[0]</code> okunabilir."),
+  ("i = 1", vec([3, 9, 2, 9, 2], name="a", ptr={"lo": 0, "hi": 1}, hl={1: "green"}, show_size=False), "9 &gt; 3 → hi = 1"),
+  ("i = 2", vec([3, 9, 2, 9, 2], name="a", ptr={"lo": 2, "hi": 1}, hl={2: "green"}, show_size=False), "2 &lt; 3 → lo = 2"),
+  ("i = 3, 4", vec([3, 9, 2, 9, 2], name="a", ptr={"lo": 2, "hi": 1}, hl={3: "gray", 4: "gray"}, show_size=False), "Eşit değerler (9 ve 2) indeksleri değiştirmez, çünkü karşılaştırma katı."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab05.cpp", "sumArray", title="sumArray") }}
+{{ code("sol:lab05.cpp", "fillSquares", title="fillSquares") }}
+{{ code("sol:lab05.cpp", "minMaxIndex", title="minMaxIndex") }}
+<ul>
+<li><b><code>if (n &lt;= 0) return false;</code></b> en başta. Boş dizide <code>a[0]</code> okumak tanımsız davranış olurdu.</li>
+<li><b>Yerel <code>lo</code>, <code>hi</code>.</b> Çıkışlara en sonda bir kez yazıyoruz. Böylece fonksiyon yarıda bir hata ile çıkarsa çağıranın değişkenleri yarı güncellenmiş kalmaz. Labda “değişmeden kalsın” denen durumlar için iyi bir alışkanlık.</li>
+<li><b>Katı karşılaştırma.</b> <code>a[i] &lt; a[lo]</code> eşitlikte yanlış olduğu için ilk görülen indeks korunur. <code>&lt;=</code> yazsaydın son görülen indeksi döndürürdün.</li>
+</ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul>
+<li><b>İzinli işlemler.</b> Yalnızca indeksleme ve döngü kullandık. Uzunluk <code>n</code> parametresinden geliyor.</li>
+<li><b>Sıra.</b> Dizi değişmiyor (<code>const</code>). Sonuç “ilk görülen” kuralını izliyor.</li>
+<li><b>Maliyet.</b> Tek geçiş, <code>O(n)</code> zaman, <code>O(1)</code> ek bellek. İki ayrı döngüyle min ve max bulmak da <code>O(n)</code> olurdu. Tek döngü diziyi bir kez okuyor.</li>
+</ul>
+<h3>Alternatifler</h3>
+<p><b>STL ile.</b> <code>min_element(a, a + n)</code> bir pointer döndürür. Başlangıçtan çıkarınca indeks elde edilir. İki pointer arasındaki fark, aralarındaki eleman sayısıdır. Bu sürüm <b>“&lt;algorithm&gt; kullanma” kuralını ihlal eder</b>.</p>
+{{ code("sol:alternatives.cpp", "stl", title="alternatives.cpp — STL") }}
+<p><b>Uzunluğu türün içinde taşımak.</b> <code>const int (&amp;a)[N]</code> parametresi dizinin kendisine referanstır, bu yüzden bozulma olmaz. <code>N</code> derleme anında bilinir. Lab 06’da bunun daha okunaklı hâli olan <code>std::array&lt;int, N&gt;</code> ile çalışacaksın. Bu sürüm yalnızca boyutu derleme anında bilinen dizilerle çalışır, <code>new int[n]</code> ile ayrılmış bir diziyle çalışmaz.</p>
+{{ code("sol:alternatives.cpp", "template", title="alternatives.cpp — boyut türün parçası") }}
+<h3>L05-X</h3>
+{{ code("sol:lab05.cpp", "getMinMax", title="getMinMax") }}
+<p><code>{a[lo], a[hi]}</code> bir <code>std::pair</code> kurar. Çağıran tarafta <code>p.first</code> ve <code>p.second</code> ile okunur. Precondition <code>n &gt;= 1</code> olduğu için <code>minMaxIndex</code>’in dönüşünü kontrol etmedik. Sözleşmeyi yorum satırında yazmak bu yüzden önemli.</p>
+
+<h2>Ezberden varyant · L05-V</h2>
+<div class="box tip"><span class="t">Kodlara bakmadan 6 dakikada yaz</span>
+<p><span class="tag opt">L05-V</span> <code>int secondLargest(const int a[], int n)</code>: en büyükten <b>kesinlikle küçük</b> olan en büyük değer. Böyle bir değer yoksa <code>-1</code> dön. Değerler 0 veya pozitif. İpucu: tek geçişte iki değişken taşı (<code>first</code>, <code>second</code>). Yeni bir maksimum geldiğinde eski maksimum ne olur?</p></div>
+{{ cases("PDF_SECOND", ["a", "return"], [
+    ([12, 35, 1, 10, 34, 1], 34, "GfG example"),
+    ([10, 5, 10], 5, "the maximum repeats"),
+    ([10, 10, 10], -1, "all equal: no second value"),
+    ([7], -1, "single element"),
+    ([], -1, "empty"),
+], widths=["40%", "15%", "40%"]) }}

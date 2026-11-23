@@ -1,0 +1,59 @@
+{{ header(2, 0, "Thinking Problems on Matrices", "60–90 minutes in total",
+  "boundary-shrinking loops, rotation as transpose + reverse, using the input itself as marker storage",
+  related=lc(54, "spiral-matrix", "Spiral Matrix") + " · " + lc(48, "rotate-image", "Rotate Image") + " · " + lc(73, "set-matrix-zeroes", "Set Matrix Zeroes"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 2 · Challenge set (after Lab 08)", one="A") }}
+<p>Matrix problems are pure index arithmetic: no new data structure, but many off-by-one traps. A matrix here is <code>std::vector&lt;std::vector&lt;int&gt;&gt;</code> (<code>using Matrix = …</code> in the header), the way LeetCode passes it.</p>
+
+<h2>C02-A · Spiral Matrix (medium)</h2>
+<p>Return all elements of an <code>R × C</code> matrix in clockwise spiral order, starting at the top-left corner.</p>
+{{ snippet("std::vector<int> spiralOrder(const Matrix& m);") }}
+{{ cases("PDF_SPIRAL", ["m", "return"], [
+    ([[1, 2, 3], [4, 5, 6], [7, 8, 9]], [1, 2, 3, 6, 9, 8, 7, 4, 5], "LeetCode example 1"),
+    ([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]], [1, 2, 3, 4, 8, 12, 11, 10, 9, 5, 6, 7], "LeetCode example 2"),
+    ([[1, 2, 3]], [1, 2, 3], "single row: no way back"),
+    ([[1], [2], [3]], [1, 2, 3], "single column"),
+], widths=["38%", "37%", "20%"]) }}
+
+<h2>C02-B · Rotate Image (medium)</h2>
+<p>Rotate an <code>n × n</code> matrix by 90° clockwise <b>in place</b> — no second matrix.</p>
+{{ snippet("void rotateImage(Matrix& m);   // LeetCode: void rotate(vector<vector<int>>& matrix)") }}
+{{ cases("PDF_ROT", ["m", "m after"], [
+    ([[1, 2, 3], [4, 5, 6], [7, 8, 9]], [[7, 4, 1], [8, 5, 2], [9, 6, 3]], "LeetCode example 1"),
+    ([[1, 2], [3, 4]], [[3, 1], [4, 2]], "n = 2"),
+    ([[5]], [[5]], "n = 1"),
+], widths=["37%", "37%", "21%"]) }}
+
+<h2>C02-C · Set Matrix Zeroes (medium)</h2>
+<p>If <code>m[i][j] == 0</code>, set all of row <code>i</code> and column <code>j</code> to 0. Decide from the <b>original</b> zeros only (a zero you create must not spread further). Target: <code>O(1)</code> extra memory.</p>
+{{ snippet("void setZeroes(Matrix& m);") }}
+{{ cases("PDF_ZERO", ["m", "m after"], [
+    ([[1, 1, 1], [1, 0, 1], [1, 1, 1]], [[1, 0, 1], [0, 0, 0], [1, 0, 1]], "LeetCode example 1"),
+    ([[0, 1, 2, 0], [3, 4, 5, 2], [1, 3, 1, 5]], [[0, 0, 0, 0], [0, 4, 5, 0], [0, 3, 1, 0]], "LeetCode example 2: zeros in row 0"),
+    ([[1, 2], [3, 4]], [[1, 2], [3, 4]], "no zero"),
+], widths=["38%", "37%", "20%"]) }}
+<p>Each problem also runs 200 random matrices against a version that uses extra memory.</p>
+
+{{ banner("önce her soruyla en az 20 dakika uğraş") }}
+<h2>İpuçları</h2>
+<div class="box q"><span class="t">C02-A</span><ol><li>Dört sınır tut: <code>top, bottom, left, right</code>. Her kenarı yürüdükten sonra hangi sınır içeri kayar?</li><li>Tek satır kaldığında “alt satırı geri yürü” adımı aynı elemanları ikinci kez ekler mi? Bunu hangi kontrol önler?</li></ol></div>
+<div class="box q"><span class="t">C02-B</span><ol><li>Döndürülmüş matriste <code>(i, j)</code> hücresi nereye gidiyor? <code>(j, n−1−i)</code> formülünü iki basit işleme bölebilir misin?</li></ol></div>
+<div class="box q"><span class="t">C02-C</span><ol><li>Hangi satırların ve sütunların sıfırlanacağını <code>O(R + C)</code> bellekle nasıl hatırlarsın? Bu bilgiyi matrisin kendi ilk satırına ve ilk sütununa yazabilir misin?</li><li>İlk satırın kendisi sıfırlanacaksa bu bilgi nerede saklanır?</li></ol></div>
+<div class="avoid"><h3>Görsel: C02-B = transpoz + satırları ters çevirme</h3>
+{{ steps([
+  ("başlangıç", vec([1, 2, 3], name="satır 0", show_size=False) + vec([4, 5, 6], name="satır 1", show_size=False) + vec([7, 8, 9], name="satır 2", show_size=False), ""),
+  ("transpoz", vec([1, 4, 7], name="satır 0", show_size=False) + vec([2, 5, 8], name="satır 1", show_size=False) + vec([3, 6, 9], name="satır 2", show_size=False), "Lab 07 M2: köşegene göre ayna."),
+  ("satırları çevir", vec([7, 4, 1], name="satır 0", show_size=False) + vec([8, 5, 2], name="satır 1", show_size=False) + vec([9, 6, 3], name="satır 2", show_size=False), "Lab 03: her satırda iki indeksle ters çevirme. Sonuç 90° saat yönü."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+<h3>C02-A</h3>
+{{ code("sol:challenge02.cpp", "spiralOrder", title="spiralOrder") }}
+<p>Her tur bir “halka” işler. Üst satır ve sağ sütun her zaman vardır. Alt satır ve sol sütun için <code>top &lt;= bottom</code> ve <code>left &lt;= right</code> kontrolleri, tek satır ya da tek sütun kaldığında aynı elemanların geri dönerken tekrar eklenmesini önler. Testlerdeki “single row” ve “single column” satırları tam olarak bu hatayı yakalar. Süre <code>O(R·C)</code>.</p>
+<h3>C02-B</h3>
+{{ code("sol:challenge02.cpp", "rotateImage", title="rotateImage") }}
+<p>Transpoz <code>(i, j) → (j, i)</code>, satır ters çevirme <code>(j, i) → (j, n−1−i)</code>. İkisi art arda uygulanınca istenen dönüşüm çıkar. Bu soru iki eski labın birleşimi. Alternatif: dört köşeyi aynı anda döndüren “katman katman” çözüm. O da <code>O(1)</code> bellek kullanır ama indeksleri daha zor.</p>
+<h3>C02-C</h3>
+{{ code("sol:challenge02.cpp", "setZeroes", title="setZeroes") }}
+<ul><li><b>İşaretçi olarak ilk satır ve sütun.</b> <code>m[i][0] = 0</code> “satır <code>i</code> sıfırlanacak”, <code>m[0][j] = 0</code> “sütun <code>j</code> sıfırlanacak” anlamına geliyor. İlk satır ve sütunun kendi durumu iki <code>bool</code>’da saklanıyor ve en sonda uygulanıyor. Önce uygulansaydı bütün işaretleri bozardı.</li>
+<li><b>Alternatif.</b> <code>vector&lt;bool&gt; zeroRow(R), zeroCol(C)</code> ile çok daha okunaklı bir çözüm yazılabilir. Bu <code>O(R + C)</code> bellek kullanır ve sorunun <code>O(1)</code> hedefini karşılamaz. Testleri yine de geçer. Önce bu sürümü yazıp sonra iyileştirmek iyi bir yöntem.</li></ul>

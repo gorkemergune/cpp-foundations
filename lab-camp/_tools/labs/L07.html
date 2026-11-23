@@ -1,0 +1,121 @@
+{{ header(2, 3, "Pointers Into Arrays and 2-D Arrays", "45 minutes · paper trace 12 · exercises A–B 8 · main problem 15 · testing 10",
+  "pointer arithmetic (<code>p + k</code>, <code>p - q</code>, <code>*p</code>, <code>p++</code>), half-open ranges <code>[begin, end)</code>, <code>nullptr</code>, 2-D arrays <code>int m[R][C]</code> and how they are passed",
+  related=lc(1572, "matrix-diagonal-sum", "Matrix Diagonal Sum") + " (M1) · " + lc(867, "transpose-matrix", "Transpose Matrix") + " (L07-X)",
+  slides="<code>materials/slides/07-pointers.ppt</code> slides 6–21 (declaring, <code>&amp;</code> and <code>*</code>), 60–81 (pointer arithmetic, pointers and arrays) · <code>06-arrays-and-vectors.ppt</code> slides 86–93 (multidimensional arrays)") }}
+
+<h2>1. Paper trace (do this first, 12 min, no computer)</h2>
+<p>Every linked-list lab from Week 4 on is a pointer exercise. Before you write pointer code, trace pointers by hand. Copy the table to paper and fill every cell for the program <code>warmup.cpp</code> below. Then compile and compare.</p>
+{{ code("lab:warmup.cpp", title="warmup.cpp — the program to trace") }}
+<table class="grid">
+<tr><th style="width:9%">line</th><th>what to write down</th><th style="width:30%">your answer</th></tr>
+<tr><td>1</td><td><code>*p</code></td><td></td></tr>
+<tr><td>2</td><td><code>*p</code> and <code>p - a</code></td><td></td></tr>
+<tr><td>3</td><td>the whole array <code>a</code></td><td></td></tr>
+<tr><td>4</td><td><code>q - p</code> and <code>*(p - 1)</code></td><td></td></tr>
+<tr><td>5</td><td>the whole array <code>a</code></td><td></td></tr>
+<tr><td>6</td><td>how many values are greater than 25</td><td></td></tr>
+<tr><td>7</td><td><code>m[1][0]</code> and <code>flat[3]</code></td><td></td></tr>
+</table>
+
+<h2>2. Problem statement</h2>
+<p>An image-processing library keeps small square tiles in fixed 2-D arrays <code>int m[MAXN][MAXN]</code>; only the top-left <code>n × n</code> part is used. Implement two tile operations:</p>
+<ul><li><b>M1 · <code>diagonalSum</code></b> — the sum of the main diagonal (<code>m[i][i]</code>) and the anti-diagonal (<code>m[i][n−1−i]</code>). For odd <code>n</code> the centre cell lies on both and is counted <b>once</b> (LeetCode 1572).</li>
+<li><b>M2 · <code>transposeSquare</code></b> — mirror the tile over its main diagonal <b>in place</b>: <code>m[i][j]</code> and <code>m[j][i]</code> exchange values. Cells outside the <code>n × n</code> part must not change.</li></ul>
+<p><b>Example scenario.</b> For <code>&#123;&#123;1,2,3},{4,5,6},{7,8,9}&#125;</code>, the diagonals are 1+5+9 and 3+5+7; the 5 is shared, so the answer is 25. Transposing gives <code>&#123;&#123;1,4,7},{2,5,8},{3,6,9}&#125;</code>.</p>
+
+<h2>3. Given code</h2>
+{{ code("lab:lab07.h", title="lab07.h — given") }}
+<div class="box sig"><span class="t">Functions you complete (main problem)</span>
+{{ snippet('''
+int diagonalSum(const int m[][MAXN], int n);   // L07-M1
+void transposeSquare(int m[][MAXN], int n);    // L07-M2
+''') }}
+<p class="small">In a 2-D parameter every size except the first must be written: the compiler needs <code>MAXN</code> to know where row <code>i</code> starts (<code>&amp;m[i][0]</code> is <code>i · MAXN</code> ints after <code>&amp;m[0][0]</code>).</p></div>
+<h3>Allowed and constraints</h3>
+<table class="grid">
+<tr><td style="width:22%"><b>A, B, V</b></td><td>walk with pointers: <code>p != end</code>, <code>*p</code>, <code>p++</code>. Never dereference <code>end</code>. Indexing is not the point of these exercises.</td></tr>
+<tr><td><b>M1, M2</b></td><td><code>m[i][j]</code> with <code>0 &lt;= i, j &lt; n</code>, <code>1 &lt;= n &lt;= MAXN</code>. No second array in M2 (<code>O(1)</code> extra memory).</td></tr>
+<tr><td><b>Complexity</b></td><td>M1 <code>O(n)</code>, M2 <code>O(n<sup>2</sup>)</code> with each pair swapped exactly once.</td></tr>
+</table>
+
+<h2>4. Exercises before the main problem</h2>
+<p><span class="tag req">L07-A</span> <code>const int* findFirst(const int* begin, const int* end, int x)</code> — the table shows the index of the returned pointer (<code>result - begin</code>); “not found” means <code>end</code>, i.e. index <code>n</code>.</p>
+{{ cases("PDF_FIND", ["a", "x", "result - begin"], [
+    ([4, 7, 2, 7], 7, 1, "first of two"),
+    ([4, 7, 2], 5, 3, "not found: end"),
+    ([], 1, 0, "empty range: begin == end"),
+    ([9], 9, 0, "first element"),
+], widths=["30%", "10%", "18%", "37%"]) }}
+<p><span class="tag req">L07-B</span> <code>void swapViaPointers(int* x, int* y)</code> — tests: two ints, the same address twice, a <code>nullptr</code>, two cells of an array.</p>
+
+<h2>5. Tests for M1 and M2</h2>
+{{ cases("PDF_DIAG", ["m", "diagonalSum"], [
+    ([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 25, "LeetCode example 1: centre counted once"),
+    ([[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 1]], 8, "LeetCode example 2: even n, no shared cell"),
+    ([[5]], 5, "LeetCode example 3: n = 1"),
+    ([[1, 2], [3, 4]], 10, "n = 2: all four cells"),
+], widths=["45%", "15%", "35%"]) }}
+{{ cases("PDF_TRANS", ["m", "m after transposeSquare"], [
+    ([[1, 2, 3], [4, 5, 6], [7, 8, 9]], [[1, 4, 7], [2, 5, 8], [3, 6, 9]], "statement example"),
+    ([[1, 2], [3, 4]], [[1, 3], [2, 4]], "n = 2"),
+    ([[7]], [[7]], "n = 1: nothing moves"),
+], widths=["35%", "35%", "25%"]) }}
+<p>Both run 200 random <code>n × n</code> tiles (<code>n</code> = 1 … 10). The cells outside <code>n × n</code> hold <code>-99</code> and are checked after M2.</p>
+
+<h3>Optional · L07-X (LeetCode 867)</h3>
+<p><span class="tag opt">L07-X</span> <code>transpose</code> of a non-square <code>vector&lt;vector&lt;int&gt;&gt;</code>: an <code>R × C</code> matrix becomes <code>C × R</code>, so in-place swapping is impossible.</p>
+{{ cases("PDF_TX", ["matrix", "transpose"], [
+    ([[1, 2, 3], [4, 5, 6], [7, 8, 9]], [[1, 4, 7], [2, 5, 8], [3, 6, 9]], "LeetCode example 1"),
+    ([[1, 2, 3], [4, 5, 6]], [[1, 4], [2, 5], [3, 6]], "LeetCode example 2: 2 x 3 -> 3 x 2"),
+    ([[1, 2, 3]], [[1], [2], [3]], "one row"),
+], widths=["35%", "35%", "25%"]) }}
+
+{{ banner("önce tabloyu kâğıtta doldur") }}
+<h2>Kâğıt izinin cevapları</h2>
+{{ run("lab:warmup.cpp") }}
+<div class="avoid">{{ steps([
+  ("satır 1", vec([10, 20, 30, 40, 50], name="a", ptr={"p": 0}), "<code>int* p = a;</code> Dizinin adı <code>&amp;a[0]</code>’a dönüşür."),
+  ("satır 2–3", vec([10, 20, 7, 40, 50], name="a", ptr={"p": 2}, hl={2: "yellow"}), "<code>p += 2</code> iki <b>eleman</b> ilerler. Adresteki artış <code>2 · sizeof(int)</code> = 8 bayttır. <code>*p = 7</code> ile <code>a[2]</code> değişti."),
+  ("satır 4", vec([10, 20, 7, 40, 50], name="a", ptr={"p": 2, "q": 4}), "<code>q - p = 2</code>: iki pointer arasındaki <b>eleman</b> sayısı. <code>*(p - 1)</code> = <code>a[1]</code> = 20."),
+  ("satır 5", vec([10, 20, 7, 41, 50], name="a", ptr={"p": 3, "q": 4}, hl={3: "yellow"}), "<code>p++</code>, sonra <code>*p += 1</code>: <code>a[3]</code> 41 oldu."),
+  ("satır 6", vec([10, 20, 7, 41, 50], name="a", ptr={"r": 0, "end": 5}, cap=6, show_size=False), "<code>end = a + 5</code> son elemandan bir sonrasını gösterir. Karşılaştırılabilir ama <code>*end</code> okunamaz."),
+]) }}</div>
+<p>7. satır 2 boyutlu dizinin bellekte satır satır, arka arkaya durduğunu gösteriyor. <code>m[1][0]</code> ile <code>flat[3]</code> aynı hücre. Bu yüzden parametrede sütun sayısı (<code>MAXN</code>) zorunlu: derleyici <code>m[i][j]</code>’yi <code>i · MAXN + j</code> konumu olarak hesaplar.</p>
+
+<h2>Soru ne istiyor?</h2>
+<p>M1 ve M2 kare bir matrisin köşegenleriyle çalışıyor. Asıl zorluk iki noktada: tek <code>n</code>’de iki köşegenin kesiştiği hücreyi bir kez saymak ve yerinde transpozda her çifti <b>yalnızca bir kez</b> takas etmek. Bir çifti iki kez takas edersen matris eski hâline döner.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li><code>i</code> satırında ikinci köşegenin sütunu nedir? Hangi <code>i</code> için iki köşegen aynı hücreye düşer?</li>
+<li>Transpoz döngüsünde <code>j</code> nereden başlamalı ki <code>(i, j)</code> ile <code>(j, i)</code> çifti bir kez ele alınsın?</li>
+<li>A ve V’de <code>begin</code> parametresini doğrudan ilerletmek çağıranı etkiler mi?</li></ol></div>
+<div class="avoid"><h3>Görsel: transpozda yalnız üst üçgen</h3>
+{{ steps([
+  ("önce", vec([1, 2, 3], name="satır 0", hl={1: "yellow", 2: "yellow"}, show_size=False) + vec([4, 5, 6], name="satır 1", hl={0: "blue", 2: "yellow"}, show_size=False) + vec([7, 8, 9], name="satır 2", hl={0: "blue", 1: "blue"}, show_size=False), "Sarılar köşegenin üstü (<code>j &gt; i</code>), maviler altı. Her sarı hücre bir maviyle eşleşir."),
+  ("sonra", vec([1, 4, 7], name="satır 0", hl={1: "blue", 2: "blue"}, show_size=False) + vec([2, 5, 8], name="satır 1", hl={0: "yellow", 2: "blue"}, show_size=False) + vec([3, 6, 9], name="satır 2", hl={0: "yellow", 1: "yellow"}, show_size=False), "3 takas: (0,1)↔(1,0), (0,2)↔(2,0), (1,2)↔(2,1). Köşegen yerinde kalır."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab07.cpp", "findFirst", title="findFirst") }}
+{{ code("sol:lab07.cpp", "swapViaPointers", title="swapViaPointers") }}
+<p><code>findFirst</code> standart kütüphanenin <code>std::find</code> sözleşmesini uyguluyor: bulamazsan <code>end</code> dön. Bu “yarı açık aralık” fikri STL’in her yerinde var. <code>v.begin()</code>/<code>v.end()</code> çifti de aynı şekilde çalışır. <code>swapViaPointers</code>, C’deki <code>swap(int*, int*)</code> ile aynı. Lab 02’de bunu <code>int&amp;</code> ile daha kısa yazmıştık.</p>
+{{ code("sol:lab07.cpp", "diagonalSum", title="diagonalSum") }}
+<ul><li><b><code>i != n - 1 - i</code></b> yalnızca tek <code>n</code>’de, ortadaki satırda yanlış olur. Bu kontrol merkez hücrenin iki kez sayılmasını önler. Alternatif: iki köşegeni de topla, <code>n</code> tekse sonunda <code>m[n/2][n/2]</code>’yi bir kez çıkar.</li></ul>
+{{ code("sol:lab07.cpp", "transposeSquare", title="transposeSquare") }}
+<ul><li><b><code>j = i + 1</code></b>: yalnızca üst üçgen. <code>j = 0</code>’dan başlasaydın her çift iki kez takas edilir ve matris hiç değişmemiş gibi görünürdü. Bu, sınavlarda en sık görülen hatalardan biri.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li><b>İzinler.</b> A/B/V pointer yürüyüşüyle, M1/M2 indeksle çözüldü. İkinci dizi kullanılmadı.</li>
+<li><b>Korunan bilgi.</b> <code>n × n</code> dışındaki hücrelere hiç dokunmuyoruz. Test bunu <code>-99</code> değerleriyle kontrol ediyor.</li>
+<li><b>Maliyet.</b> M1 <code>O(n)</code>, M2 <code>n(n−1)/2</code> takas, yani <code>O(n<sup>2</sup>)</code> zaman ve <code>O(1)</code> bellek.</li></ul>
+<h3>Alternatif: L07-X</h3>
+{{ code("sol:lab07.cpp", "transpose", title="transpose (LeetCode 867)") }}
+<p>Kare olmayan matriste yerinde transpoz yapılamaz, çünkü sonucun boyutları farklı. <code>vector&lt;vector&lt;int&gt;&gt; t(cols, vector&lt;int&gt;(rows))</code>, <code>cols</code> satırlı ve her satırı <code>rows</code> uzunluğunda olan bir matris kurar. Bu çözüm <code>O(R·C)</code> ek bellek kullanır. M2’deki “ikinci dizi yok” kuralına uymaz, ama burada başka yol yok.</p>
+
+<h2>Ezberden varyant · L07-V</h2>
+<div class="box tip"><span class="t">Kodlara bakmadan 5 dakikada yaz</span>
+<p><span class="tag opt">L07-V</span> <code>int countInRange(const int* begin, const int* end, int lo, int hi)</code>: <code>[begin, end)</code> aralığında <code>lo &lt;= v &lt;= hi</code> olan değerleri say. İndeks kullanma, yalnızca <code>*begin</code> ve <code>begin++</code> kullan.</p></div>
+{{ cases("PDF_RANGE", ["a", "lo", "hi", "return"], [
+    ([5, 1, 9, 3], 2, 6, 2, "normal"),
+    ([], 0, 9, 0, "empty range"),
+    ([2, 6, 2], 2, 6, 3, "both ends included"),
+], widths=["30%", "10%", "10%", "12%", "33%"]) }}

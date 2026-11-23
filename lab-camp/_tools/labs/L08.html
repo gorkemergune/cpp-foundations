@@ -1,0 +1,121 @@
+{{ header(2, 4, "Timed Lab: Merging Sorted Arrays", "<b>50 minutes</b>, closed notes · Part A 12 · Part B 15 · Part C 13 · final compile and test 10",
+  "two-index merge, filling from the back, intersection of sorted ranges, C arrays and <code>std::vector</code> in one lab",
+  related=lc(88, "merge-sorted-array", "Merge Sorted Array") + " (Part B, same signature) · " + lc(977, "squares-of-a-sorted-array", "Squares of a Sorted Array") + " (L08-X)",
+  slides="<code>materials/slides/06-arrays-and-vectors.ppt</code> slides 62–75 · <code>07-pointers.ppt</code> slides 73–81", timed=True, one="B") }}
+<div class="box warn"><span class="t">Exam conditions</span><p>Start a 50-minute timer. Work only in <code>lab08.cpp</code>. Compile after every part. When the time is up, run <code>.\run.ps1 L08</code> once and grade yourself with Section 5.</p></div>
+
+<h2>1. Problem statement</h2>
+<p>Two sensors produce sorted logs of event timestamps. The analysis tool needs three operations on sorted data, all in linear time — sorting again would cost <code>O(n log n)</code> and is not allowed.</p>
+<ol>
+<li><b>Part A — <code>mergeInto</code>.</b> Merge two sorted C arrays into a third array <code>out</code> and return the number of values written. On equal values, take the one from <code>a</code> first.</li>
+<li><b>Part B — <code>merge</code> (LeetCode 88).</b> <code>nums1</code> has room for both logs: its first <code>m</code> values are real, the last <code>n</code> are placeholders. Merge <code>nums2</code> into <code>nums1</code> <b>in place</b>, without a third array.</li>
+<li><b>Part C — <code>intersectSorted</code>.</b> Write the timestamps seen by <b>both</b> sensors into <code>out</code>, each value once, ascending; return how many.</li>
+</ol>
+<p><b>Example scenario.</b> <code>a = {1, 4, 9}</code>, <code>b = {2, 4}</code>: merge gives <code>{1, 2, 4, 4, 9}</code>, intersection gives <code>{4}</code>.</p>
+
+<h2>2. Given code</h2>
+{{ code("lab:lab08.h", title="lab08.h — given") }}
+<h3>Rules</h3>
+<table class="grid">
+<tr><th style="width:12%">Part</th><th>Required</th></tr>
+<tr><td>A</td><td>one pass with two indexes; never write past <code>out[na + nb − 1]</code> (the test checks the next cell)</td></tr>
+<tr><td>B</td><td>no second vector; <code>O(m + n)</code>; LeetCode's signature (both vectors by reference)</td></tr>
+<tr><td>C</td><td>one pass; duplicates inside one array must not produce duplicates in <code>out</code></td></tr>
+<tr><td>all</td><td><code>&lt;algorithm&gt;</code> (<code>sort</code>, <code>merge</code>, <code>set_intersection</code>) is <b>not allowed</b></td></tr>
+</table>
+<h3>Constraints</h3>
+<p><code>0 &lt;= na, nb, m, n &lt;= 10<sup>4</sup></code>; inputs sorted non-decreasing; values in <code>[-10<sup>9</sup>, 10<sup>9</sup>]</code>.</p>
+
+<h2>3. Worked example (Part B)</h2>
+<p><code>nums1 = {1, 2, 3, 0, 0, 0}</code>, <code>m = 3</code>, <code>nums2 = {2, 5, 6}</code>. Indexes start at the last real values: <code>i = 2</code>, <code>j = 2</code>, write position <code>k = 5</code>.</p>
+<table class="grid">
+<tr><th>compare</th><th>write</th><th><code>nums1</code> after</th></tr>
+<tr><td>3 vs 6</td><td><code>nums1[5] = 6</code>, j = 1</td><td><code>{1, 2, 3, 0, 0, 6}</code></td></tr>
+<tr><td>3 vs 5</td><td><code>nums1[4] = 5</code>, j = 0</td><td><code>{1, 2, 3, 0, 5, 6}</code></td></tr>
+<tr><td>3 vs 2</td><td><code>nums1[3] = 3</code>, i = 1</td><td><code>{1, 2, 3, 3, 5, 6}</code></td></tr>
+<tr><td>2 vs 2</td><td><code>nums1[2] = 2</code> (from nums2), j = −1</td><td><code>{1, 2, 2, 3, 5, 6}</code> → stop, nums2 is used up</td></tr>
+</table>
+
+<h2>4. Tests</h2>
+{{ cases("PDF_MERGE", ["a", "b", "out (and return = its length)"], [
+    ([1, 4, 9], [2, 4], [1, 2, 4, 4, 9], "statement example"),
+    ([], [3, 5], [3, 5], "a empty"),
+    ([1, 2], [], [1, 2], "b empty"),
+    ([], [], [], "both empty"),
+    ([5, 6], [1, 2], [1, 2, 5, 6], "all of b first"),
+], widths=["20%", "20%", "30%", "25%"]) }}
+{{ cases("PDF_LC88", ["nums1", "m", "nums2", "n", "nums1 after"], [
+    ([1, 2, 3, 0, 0, 0], 3, [2, 5, 6], 3, [1, 2, 2, 3, 5, 6], "LeetCode example 1"),
+    ([1], 1, [], 0, [1], "LeetCode example 2"),
+    ([0], 0, [1], 1, [1], "LeetCode example 3: m = 0"),
+    ([4, 5, 0, 0], 2, [1, 2], 2, [1, 2, 4, 5], "nums2 entirely smaller"),
+], widths=["19%", "6%", "13%", "6%", "19%", "32%"]) }}
+{{ cases("PDF_INTER", ["a", "b", "out"], [
+    ([1, 2, 2, 5, 7], [2, 2, 3, 7], [2, 7], "duplicates appear once"),
+    ([1, 3], [2, 4], [], "nothing in common"),
+    ([], [1], [], "empty input"),
+    ([4, 4, 4], [4], [4], "same value many times"),
+], widths=["25%", "20%", "15%", "35%"]) }}
+<p>Each part also runs 200 random sorted inputs compared with <code>std::merge</code> / <code>std::set_intersection</code>.</p>
+<p><span class="tag opt">L08-X</span> <code>std::vector&lt;int&gt; sortedSquares(const std::vector&lt;int&gt;&amp; nums)</code> (LeetCode 977) — squares of a sorted array, sorted, in <code>O(n)</code>.</p>
+{{ cases("PDF_SQ", ["nums", "return"], [
+    ([-4, -1, 0, 3, 10], [0, 1, 9, 16, 100], "LeetCode example 1"),
+    ([-7, -3, 2, 3, 11], [4, 9, 9, 49, 121], "LeetCode example 2"),
+    ([], [], "empty"),
+], widths=["35%", "35%", "25%"]) }}
+
+<h2>5. Self-grading</h2>
+<table class="grid"><tr><th>Item</th><th style="width:12%">Points</th><th>Full points when</th></tr>
+<tr><td>Part A</td><td>30</td><td>L08-A green, including the “no write past” check</td></tr>
+<tr><td>Part B</td><td>35</td><td>L08-B green and no second vector</td></tr>
+<tr><td>Part C</td><td>25</td><td>L08-C green</td></tr>
+<tr><td>Clean compile</td><td>10</td><td>no warnings</td></tr></table>
+
+{{ banner("süre bitmeden bu sayfaya geçme") }}
+<h2>Soru ne istiyor?</h2>
+<p>Üç parçanın ortak fikri <b>iki indeks</b>. İki sıralı dizinin başlarına (ya da sonlarına) birer parmak koyup her adımda küçük olanı ilerletiyorsun. Sıralı girdide her eleman bir kez işlenir, toplam <code>O(n + m)</code> olur.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol>
+<li>A’da dizilerden biri bittiğinde döngü durur. Diğerinin kalanı ne olacak?</li>
+<li>B’de baştan doldurursam <code>nums1</code>’in henüz okumadığım değerlerinin üzerine yazar mıyım? Sondan doldurunca neden yazmam?</li>
+<li>C’de aynı değeri ikinci kez <code>out</code>’a yazmamak için neye bakmalıyım?</li></ol></div>
+<div class="avoid"><h3>Görsel iz: Part A</h3>
+{{ steps([
+  ("başlangıç", row(vec([1, 4, 9], name="a", ptr={"i": 0}, show_size=False), vec([2, 4], name="b", ptr={"j": 0}, show_size=False)), "1 ≤ 2 → out[0] = 1"),
+  ("adım 2–3", row(vec([1, 4, 9], name="a", ptr={"i": 1}, show_size=False), vec([2, 4], name="b", ptr={"j": 1}, show_size=False)), "4 &gt; 2 → out[1] = 2. Sonra 4 ≤ 4 → a’nın 4’ü önce yazılır (kararlılık)."),
+  ("sonuç", vec([1, 2, 4, 4, 9], name="out", show_size=False, hl={2: "blue", 3: "yellow"}), "b biter, a’nın kalanı (9) kopyalanır. Dönüş 5."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab08.cpp", "mergeInto", title="Part A — mergeInto") }}
+<p><code>out[k++] = a[i++]</code> satırı önce <code>out[k] = a[i]</code> yazar, sonra iki indeksi de bir artırır. Kısa ama C’den gelen biri için tanıdık. İki “kalanı kopyala” döngüsünden yalnızca biri çalışır.</p>
+{{ code("sol:lab08.cpp", "merge", title="Part B — merge (LeetCode 88)") }}
+<ul><li><b>Sondan doldurma.</b> <code>k</code> her zaman <code>i</code>’nin sağında ya da onunla aynı yerde. Bu yüzden henüz okunmamış bir <code>nums1</code> değerinin üzerine hiçbir zaman yazılmaz.</li>
+<li><b><code>while (j &gt;= 0)</code></b>: <code>nums2</code> bittiğinde <code>nums1</code>’in kalan başı zaten doğru yerde. Kopyalamaya gerek yok.</li></ul>
+{{ code("sol:lab08.cpp", "intersectSorted", title="Part C — intersectSorted") }}
+<p>Eşitlikte iki indeksi birlikte ilerletiyoruz. <code>out[k - 1] != a[i]</code> kontrolü tekrarı engelliyor. Çıktı sıralı olduğu için yalnızca son yazılan değere bakmak yetiyor.</p>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li><b>İzinler.</b> Hiçbir parçada sıralama yok. Girdi zaten sıralı.</li>
+<li><b>Korunan sıra.</b> A eşitlikte kararlı, C artan sırada ve tekrarsız.</li>
+<li><b>Maliyet.</b> Üçü de <code>O(n + m)</code> zaman. A ve C’de <code>out</code> çağıranın belleği, B’de ek bellek <code>O(1)</code>.</li></ul>
+<h3>Alternatif</h3>
+<p>B için “<code>nums2</code>’yi <code>nums1</code>’in sonuna kopyala, sonra <code>std::sort</code>” iki satırlık bir çözüm. <code>O((m+n) log(m+n))</code> sürer ve <b>“&lt;algorithm&gt; yok” kuralını ihlal eder</b>. Sınavda “in place, linear” yazıyorsa puan kaybettirir.</p>
+<h3>L08-X</h3>
+{{ code("sol:lab08.cpp", "sortedSquares", title="sortedSquares (LeetCode 977)") }}
+<p>Negatif sayılar da olduğu için en büyük kare iki uçtan birinde. Sonuç dizisini sondan doldurmak Part B’deki fikrin aynısı.</p>
+
+<h2>Ezberden varyant · L08-V</h2>
+<div class="box tip"><span class="t">5 dakikada yaz</span><p><span class="tag opt">L08-V</span> <code>int removeDuplicatesSorted(int a[], int n)</code>: sıralı dizide tekrarları yerinde at, yeni uzunluğu döndür (LeetCode 26’nın C dizisi hâli). Lab 02’deki yazma indeksi kalıbını kullan.</p></div>
+{{ cases("PDF_DEDUP", ["a", "first k after"], [
+    ([1, 1, 2, 3, 3], [1, 2, 3], "normal"),
+    ([], [], "empty"),
+    ([7, 7, 7], [7], "all equal"),
+], widths=["35%", "30%", "30%"]) }}
+
+<h2>2. haftanın kontrol listesi</h2>
+<div class="box"><ul>
+<li>C dizisini fonksiyona verirken uzunluğun neden ayrıca gittiğini ve <code>sizeof</code>’un fonksiyon içinde neden 8 verdiğini açıklayabiliyor musun?</li>
+<li>Bir template’i neden başlık dosyasına yazdığını biliyor musun? <code>template &lt;typename T&gt;</code> ile <code>template &lt;std::size_t N&gt;</code> farkını açıklayabiliyor musun?</li>
+<li><code>p + k</code>, <code>q - p</code>, <code>*(p - 1)</code> ifadelerini kâğıtta izleyebiliyor musun? <code>end</code>’in neden okunmadığını biliyor musun?</li>
+<li>İki sıralı diziyi tek geçişte birleştirebiliyor musun? LeetCode 88’i sondan doldurabiliyor musun?</li></ul>
+<p>Evet diyebiliyorsan 3. haftaya (<code>std::string</code>, <code>getline</code>, sınıflar) geç.</p></div>

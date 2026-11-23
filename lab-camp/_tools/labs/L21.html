@@ -1,0 +1,76 @@
+{{ header(6, 1, "std::stack and the Slides' Stack: empty() vs. !empty()", "40 minutes · warm-up 6 · A–B 8 · main problem (two versions) 16 · testing 10",
+  "LIFO, <code>std::stack</code> (<code>push</code>, <code>top</code>, <code>pop</code> returning <code>void</code>, <code>empty</code>), the slides' <code>bool</code> API (<code>pop()</code>, <code>pop(item&amp;)</code>, <code>getTop(item&amp;)</code>), guarding every read with an emptiness check",
+  related=lc(20, "valid-parentheses", "Valid Parentheses") + " (M1, M2) · " + lc(1047, "remove-all-adjacent-duplicates-in-string", "Remove All Adjacent Duplicates In String") + " (L21-X)",
+  slides="<code>materials/slides/09-stacks.ppt</code> slides 2–8 (ADT stack and its <code>bool</code> operations), 9–12 (balanced braces), 15–22 (array-based implementation = <code>SlidesStack.h</code>)",
+  archive="midterm note: “!st.empty() / st.empty() farkı ve kullanımı” · lecture code <code>materials/lecture-code/week04/stacks.cpp</code>, <code>func.cpp</code> · 2017 Assignment 3 (bracket traces)", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>The same stack operation looks different in each API you will meet:</p>
+<table class="grid"><tr><th style="width:22%">operation</th><th><code>std::stack</code></th><th>slides' <code>Stack</code> (<code>SlidesStack.h</code>)</th></tr>
+<tr><td>is it empty?</td><td><code>st.empty()</code></td><td><code>st.isEmpty()</code></td></tr>
+<tr><td>add</td><td><code>st.push(x)</code> (<code>void</code>)</td><td><code>st.push(x)</code> → <code>false</code> when full</td></tr>
+<tr><td>read the top</td><td><code>st.top()</code> — undefined when empty</td><td><code>st.getTop(x)</code> → <code>false</code> when empty</td></tr>
+<tr><td>remove the top</td><td><code>st.pop()</code> returns <b>nothing</b></td><td><code>st.pop()</code> → <code>bool</code>; <code>st.pop(x)</code> reads <b>and</b> removes</td></tr></table>
+<p>Write the bracket checker of LeetCode 20 twice: <b>M1</b> with <code>std::stack&lt;char&gt;</code>, <b>M2</b> with the slides' <code>Stack</code>. A string of <code>()[]{}</code> is valid when every closer matches the most recent unmatched opener and nothing stays open.</p>
+<p><b>Example.</b> <code>"{[()]}"</code> → <code>true</code>; <code>"([)]"</code> → <code>false</code> (the <code>)</code> meets a <code>[</code>); <code>"(("</code> → <code>false</code> (still open at the end); <code>"]"</code> → <code>false</code> (nothing to match).</p>
+{{ code("lab:SlidesStack.h", title="SlidesStack.h — given (the slides' array-based Stack)") }}
+{{ code("lab:lab21.h", title="lab21.h — given") }}
+<div class="box rule"><span class="t">Rules</span><ul><li>Never call <code>top()</code> or <code>pop()</code> on an empty <code>std::stack</code>: check <code>empty()</code> first.</li><li>M2 uses only the slides' operations; reading <code>items</code>/<code>top</code> is impossible anyway (private).</li><li><code>O(n)</code> time.</li></ul></div>
+
+<h2>2. Warm-up</h2>
+{{ code("lab:warmup.cpp", title="warmup.cpp") }}
+
+<h2>3. Tests</h2>
+<p>A and B: stacks <code>{3, 2, 1}</code> (top first), empty, <code>{-5}</code>: the sum, and the stack must be empty afterwards.</p>
+{{ cases("PDF_VALID", ["s", "valid"], [
+    ("()", True, "LeetCode example 1"),
+    ("()[]{}", True, "LeetCode example 2"),
+    ("(]", False, "LeetCode example 3: wrong type"),
+    ("([])", True, "LeetCode example 4: nested"),
+    ("([)]", False, "crossing pairs"),
+    ("((", False, "still open at the end"),
+    ("]", False, "a closer on an empty stack"),
+    ("", True, "empty string"),
+], widths=["30%", "15%", "50%"]) }}
+<p>M1 and M2 run the same rows plus 200 random bracket strings.</p>
+<p><span class="tag opt">L21-X</span> <code>removeDuplicates</code> (LeetCode 1047):</p>
+{{ cases("PDF_DUP", ["s", "return"], [
+    ("abbaca", "ca", "LeetCode example 1"),
+    ("azxxzy", "ay", "LeetCode example 2: removals cascade"),
+    ("aa", "", "everything disappears"),
+], widths=["30%", "20%", "45%"]) }}
+
+{{ banner() }}
+<h2>Vize notu: <code>empty()</code> ve <code>!empty()</code></h2>
+<table class="grid"><tr><th>stack durumu</th><th><code>st.empty()</code></th><th><code>!st.empty()</code></th><th>ne zaman kullanılır</th></tr>
+<tr><td>boş</td><td><code>true</code></td><td><code>false</code></td><td rowspan="2"><code>while (!st.empty())</code>: “eleman kaldıkça işle” · <code>if (st.empty()) return …</code>: “boşsa erken çık” · <code>top()</code>/<code>pop()</code> öncesinde koruma: <code>if (!st.empty())</code></td></tr>
+<tr><td>dolu</td><td><code>false</code></td><td><code>true</code></td></tr></table>
+{{ run("lab:warmup.cpp") }}
+<p>3. satır en sık yapılan hatayı gösteriyor: <code>while (st.empty())</code> dolu stack’te hiç çalışmaz. Boş stack’te ise sonsuza kadar döner. Doğru kalıp her zaman “eleman varken” anlamına gelen <code>while (!st.empty())</code>. Slayt API’sinde aynı döngü <code>while (st.pop(x))</code> diye yazılır. <code>pop(item&amp;)</code> boşluğu kendisi kontrol eder ve <code>false</code> döner.</p>
+<h2>Soru ne istiyor?</h2>
+<p>Açılan her parantez stack’e gider. Kapanan her parantez stack’in tepesindeki açılanla eşleşmeli. Eşleşmiyorsa ya da stack boşsa geçersiz. Sonda stack boş değilse kapanmamış bir parantez var demektir. Aynı algoritmayı iki API ile yazınca farkı görüyorsun. <code>std::stack</code>’te boşluk kontrolü <b>senin</b> sorumluluğun. Slayt sınıfında <code>bool</code> dönüş değerleri bunu zorla hatırlatıyor.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li><code>"]"</code> girdisinde <code>top()</code>’u çağırmadan önce neyi kontrol etmeliyim?</li><li>Döngü bittiğinde stack’te eleman kalmışsa sonuç ne olmalı?</li><li>M2’de <code>getTop</code> + <code>pop()</code> yerine tek bir çağrı yeter mi?</li></ol></div>
+<div class="avoid"><h3>Görsel iz: <code>"{[()]}"</code></h3>
+{{ steps([
+  ("{ [ (", row(stack(["{"], name="{"), stack(["{", "["], name="["), stack(["{", "[", "("], name="(")), "Açanlar sırayla push edilir."),
+  (")", stack(["{", "["], name=") ile ( eşleşti"), "top = ( → pop"),
+  ("] }", row(stack(["{"], name="]"), stack([], name="}")), "Sonda stack boş → true"),
+  ("([)]", stack(["(", "["], name=") geldi, top ["), "Eşleşmiyor → false"),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab21.cpp", "popAllSum", title="A — popAllSum (std::stack)") }}
+{{ code("sol:lab21.cpp", "popAllSumSlides", title="B — popAllSumSlides") }}
+{{ code("sol:lab21.cpp", "isValid", title="M1 — isValid (std::stack)") }}
+{{ code("sol:lab21.cpp", "isValidSlides", title="M2 — isValidSlides (slides' Stack)") }}
+<ul><li><b>M1</b>’de üç okuma adımı var: boş mu, <code>top()</code>, <code>pop()</code>. <b>M2</b>’de <code>pop(open)</code> üçünü birden yapıyor.</li>
+<li><b>Kapasite.</b> Slayt sınıfı diziyle yazıldığı için 50 elemanla sınırlı. <code>push</code> <code>false</code> dönerse çok derin bir girdi demektir. Biz bunu “geçersiz” sayıyoruz. Linked stack’te (Lab 22) bu sınır yok.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Stack, “en son açılan ilk kapanır” kuralının doğrudan karşılığı. Her karakter bir kez push/pop edilir: <code>O(n)</code> zaman, en kötü durumda <code>O(n)</code> bellek.</li></ul>
+<h3>Alternatif</h3>
+<p>Yalnızca bir parantez türü olsaydı (ders kodundaki <code>is_balanced</code>, <code>lecture-code/week04/stacks.cpp</code>) bir sayaç yeterdi: <code>{</code>’da artır, <code>}</code>’da azalt, negatife düşerse ya da sonda sıfır değilse geçersiz. Üç türde bu yaklaşım <code>"([)]"</code>’yi geçerli sayar, yani <b>soru sözleşmesini ihlal eder</b>. Ders kodundaki yorumlu “string ile çözüm” denemesi de aynı nedenle yanlış.</p>
+{{ code("sol:lab21.cpp", "removeDuplicates", title="L21-X — a std::string used as a stack") }}
+
+<h2>Ezberden varyant · L21-V</h2>
+<div class="box tip"><span class="t">6 dakikada yaz</span><p><span class="tag opt">L21-V</span> <code>int maxKeep(Stack&amp; st)</code>: slayt stack’indeki en büyük değeri bul, ama stack çağrıdan sonra <b>tamamen aynı</b> kalmalı. Elemanları geçici bir stack’e boşaltıp geri doldurmak sırayı korur. Bu “boşalt ve geri kur” kalıbı vizenin iki-stack sorularının temeli (Lab 23).</p></div>

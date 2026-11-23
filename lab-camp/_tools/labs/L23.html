@@ -1,0 +1,60 @@
+{{ header(6, 3, "Two Stacks", "45 minutes · A–B 8 · M1 12 · M2 15 · testing 10",
+  "moving elements between stacks, how pouring reverses order, comparing two stacks top by top, amortized analysis of a two-stack queue",
+  related=lc(232, "implement-queue-using-stacks", "Implement Queue using Stacks") + " (M2) · " + lc(946, "validate-stack-sequences", "Validate Stack Sequences") + " (L23-X)",
+  slides="<code>materials/slides/09-stacks.ppt</code> slides 2–8 · <code>10-queues.ppt</code> slides 2–9 (the queue ADT that M2 imitates)",
+  archive="midterm notes: “iki stackte push pop fonksiyonu yazma” (A, B, M2), “iki stringin birbirinin tersi olup olmadığı 2 stack ile kontrol etme” (M1) · old camp ST-6, ST-9", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>Three midterm-style questions with two stacks. Only <code>push</code>, <code>top</code>, <code>pop</code> and <code>empty</code> of <code>std::stack</code> may be used — no vectors, no indexing into a stack.</p>
+<ul><li><b>A / B</b>: move one element (or all) from one stack to another. Moving everything <b>reverses</b> the order; that single fact drives M1 and M2.</li>
+<li><b>M1</b>: decide with two <code>std::stack&lt;char&gt;</code> whether <code>b</code> is <code>a</code> read backwards. Lab 09 did this with indexes; here every comparison must be between the tops of the two stacks.</li>
+<li><b>M2</b> (LeetCode 232): build a FIFO queue from two stacks, <code>in</code> and <code>out</code>.</li></ul>
+<div class="box rule"><span class="t">Assumptions added for this lab</span><p class="small">The midterm note gives no signatures. M1 is fixed as: the characters of <code>a</code> go into one stack in order, the characters of <code>b</code> into the other stack from its <b>last</b> to its first, then both are popped together and compared top by top. Different lengths are rejected before any push. The comparison is case-sensitive; two empty strings are reverses.</p></div>
+{{ code("lab:lab23.h", title="lab23.h — given") }}
+
+<h2>2. Tests</h2>
+<p>A: <code>{9, 4}</code> → <code>{7}</code> gives <code>{4}</code> and <code>{9, 7}</code> (top first); an empty source returns <code>false</code> and leaves the target. B: <code>{1, 2, 3}</code> poured into an empty stack gives <code>{3, 2, 1}</code>.</p>
+{{ cases("PDF_REV", ["a", "b", "areReverses"], [
+    ("stack", "kcats", True, "midterm example"),
+    ("abc", "abc", False, "equal is not reversed"),
+    ("aba", "aba", True, "palindrome"),
+    ("ab", "ba ", False, "different length: rejected before pushing"),
+    ("", "", True, "both empty"),
+    ("Ab", "ba", False, "case-sensitive"),
+], widths=["18%", "18%", "15%", "44%"]) }}
+<p>M2: <code>push 1, push 2, peek = 1, pop = 1, empty = false</code> (LeetCode example), then 200 random sequences of <code>push</code>/<code>pop</code> compared with <code>std::deque</code>.</p>
+<p><span class="tag opt">L23-X</span> <code>validateStackSequences</code> (LeetCode 946):</p>
+{{ cases("PDF_SEQ", ["pushed", "popped", "return"], [
+    ([1, 2, 3, 4, 5], [4, 5, 3, 2, 1], True, "LeetCode example 1"),
+    ([1, 2, 3, 4, 5], [4, 3, 5, 1, 2], False, "LeetCode example 2"),
+    ([], [], True, "empty"),
+], widths=["25%", "25%", "12%", "33%"]) }}
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Vizede iki stack’li iki soru vardı. Birincisi iki stack arasında push/pop ile eleman taşımak. Burada en kritik nokta boş stack kontrolü: <code>if (from.empty()) return false;</code>. Lab 21’deki <code>empty()</code>/<code>!empty()</code> konusu burada uygulamaya dönüşüyor. İkincisi iki stringin birbirinin tersi olup olmadığını iki stack ile kontrol etmek.</p>
+<p><b>Neden b’yi sondan başa push ediyoruz?</b> <code>a = "abc"</code> stack’e sırayla girerse pop sırası <code>c b a</code> olur. Bu <code>a</code>’nın tersi. <code>b</code> gerçekten <code>a</code>’nın tersiyse <code>b = "cba"</code> olur ve pop sırasında da <code>c b a</code> görmemiz gerekir. Bunun için <code>b</code>’yi sondan başa push etmek gerekiyor. Böylece iki stack’in tepeleri her adımda eşit olmalı.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>Uzunluklar farklıysa stack’leri hiç doldurmadan cevap verebilir miyim?</li><li>M2’de <code>out</code> boş değilken <code>in</code>’i <code>out</code>’a dökersem FIFO sırası neden bozulur?</li><li>M2’de bir eleman toplam kaç kez taşınır? Tek bir <code>pop</code> <code>O(n)</code> sürse bile ortalama maliyet nedir?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("M1 doldur", row(stack(["s", "t", "a", "c", "k"], name="sa ← stack"), stack(["s", "t", "a", "c", "k"], name="sb ← kcats tersten")), "İki stack aynı görünüyor: tepeler eşit olmalı."),
+  ("M2: push 1, 2, 3", row(stack([1, 2, 3], name="in"), stack([], name="out")), "Yeni elemanlar hep in’e girer."),
+  ("ilk pop", row(stack([], name="in"), stack([3, 2], name="out")), "out boştu: in’in hepsi döküldü (sıra ters döndü), 1 tepeye çıktı ve pop edildi."),
+  ("push 4, pop", row(stack([4], name="in"), stack([3], name="out")), "out boş değil: dökme yok. Sırada 2 vardı, 2 çıktı. 4 bekliyor."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab23.cpp", "moveTop", title="A — moveTop") }}
+{{ code("sol:lab23.cpp", "areReverses", title="M1 — areReverses with two stacks") }}
+{{ code("sol:lab23.cpp", "peek", title="M2 — MyQueue::peek (the refill rule)") }}
+{{ code("sol:lab23.cpp", "pop", title="M2 — MyQueue::pop") }}
+<ul><li><b>M1</b>: uzunluk eşit olduğu için iki stack aynı anda boşalır. Döngüde yalnızca birinin boşluğunu kontrol etmek yeterli.</li>
+<li><b>M2</b>: <code>out</code> yalnızca boşken dolduruluyor. Her eleman en fazla bir kez <code>in</code>’e, bir kez <code>out</code>’a girip bir kez çıkıyor. Bir işlem tek başına <code>O(n)</code> sürebilir ama <code>n</code> işlemin toplamı <code>O(n)</code>. Buna amortize <code>O(1)</code> denir.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Yalnızca izinli dört işlem kullanıldı. M1 <code>O(n)</code> zaman ve <code>O(n)</code> bellek kullanıyor, M2 amortize <code>O(1)</code>.</li></ul>
+<h3>Alternatifler</h3>
+<ul><li><b>M1, tek stack:</b> <code>a</code>’yı stack’e at, sonra <code>b</code>’yi indeksle baştan okuyup tepeyle karşılaştır. Daha kısa ve doğru, ama vizedeki “2 stack ile” şartını <b>ihlal eder</b>.</li>
+<li><b>M2, her pop’ta iki kez dökme:</b> <code>in</code>’i <code>out</code>’a dök, pop et, geri dök. Sonuç doğru ama her işlem <code>O(n)</code>. Amortize <code>O(1)</code> beklentisini karşılamaz.</li></ul>
+{{ code("sol:lab23.cpp", "validateStackSequences", title="L23-X — validateStackSequences") }}
+<h2>Ezberden varyant · L23-V</h2>
+<div class="box tip"><span class="t">8 dakikada yaz</span><p><span class="tag opt">L23-V</span> <code>void sortStack(std::stack&lt;int&gt;&amp; s)</code>: yalnızca bir ek stack ile, en küçük tepeye gelecek şekilde sırala (eski kampta ST-9). İpucu: geçici stack’i “en büyük tepede” sıralı tut. Yeni eleman yerine oturana kadar büyükleri asıl stack’e geri at.</p></div>

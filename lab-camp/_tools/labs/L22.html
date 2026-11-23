@@ -1,0 +1,55 @@
+{{ header(6, 2, "Your Own LLStack&lt;T&gt;", "50 minutes · A 8 · B 10 · M1 7 · M2 12 · testing 13",
+  "a class template over a linked list, the course names <code>pushToStack</code> / <code>popFromStack</code> (returns the value), exceptions for an empty stack, destructor, moving a node between two stacks, copy constructor (rule of three)",
+  related=lc(155, "min-stack", "Min Stack") + " (next lab) · " + lc(232, "implement-queue-using-stacks", "Implement Queue using Stacks") + " (Lab 23)",
+  slides="<code>materials/slides/09-stacks.ppt</code> slides 23–32 (pointer-based stack: copy constructor, destructor, push, pop)",
+  archive="2021 Assignment 2 <code>codeStack</code> (<code>pushToStack(const char*)</code>, <code>string popFromStack()</code>) · old midterm camp <code>LLStack</code> (ST-1 … ST-10)", one="M2") }}
+
+<h2>1. Problem statement</h2>
+<p>The slides build a stack on a linked list: the <b>top</b> is the head of the list, so push and pop are <code>O(1)</code> and there is no capacity limit (unlike <code>SlidesStack.h</code>). The course assignments use other names for the same operations — <code>pushToStack</code> and a <code>popFromStack</code> that <b>returns</b> the removed value — and the old midterm camp's <code>LLStack&lt;T&gt;</code> uses them too. Write that class yourself, as a template, in <code>llstack.h</code>.</p>
+<p><b>M2</b> is a <i>practice signature</i>: <code>pushFromStack</code> does not exist in the course archive; it is defined here to train the “two stacks” midterm question (Lab 23). It moves the top <b>node</b> of <code>source</code> onto this stack — no new node, no copy of the value.</p>
+{{ code("sol:llstack.h", "classes", title="llstack.h — the class part (given inside your file; you write the member bodies below it)") }}
+<div class="box rule"><span class="t">Contracts</span><ul>
+<li><code>popFromStack</code> and <code>peek</code> on an empty stack throw <code>std::runtime_error</code> (as in the old camp). Compare: <code>std::stack::pop</code> is undefined there, the slides' <code>pop()</code> returns <code>false</code>.</li>
+<li><code>size()</code> is <code>O(1)</code>: keep <code>count</code> correct in every member.</li>
+<li><code>pushFromStack(source)</code>: <code>false</code> if <code>source</code> is empty or is this same stack; otherwise the node moves (the tests count nodes).</li>
+<li>The destructor calls <code>clear()</code>; <code>clear()</code> must free every node and must not throw.</li></ul></div>
+
+<h2>2. Tests</h2>
+<table class="grid"><tr><th>Question</th><th>What is checked</th></tr>
+<tr><td>A</td><td>empty stack; push 1, 2, 3 → top first <code>3 2 1</code>, size 3; <code>T = std::string</code></td></tr>
+<tr><td>B</td><td>peek 3 (no removal); pops 3, 2, 1; empty pop/peek throw <code>runtime_error</code>; a popped node is deleted</td></tr>
+<tr><td>M1</td><td>four nodes freed by the destructor; <code>clear()</code> then reuse</td></tr>
+<tr><td>M2</td><td>a: <code>9</code>, b: <code>4 7</code> → <code>a.pushFromStack(b)</code> gives a: <code>4 9</code>, b: <code>7</code>, node count unchanged; again; then <code>false</code> on empty b and on <code>a.pushFromStack(a)</code></td></tr></table>
+<p><span class="tag opt">L22-X</span> copy constructor: a deep copy with the same order; popping the copy must not change the original.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Lab 21’de hazır stack’leri kullandın. Şimdi kendi stack’ini yazıyorsun. Bu, 4. haftadaki <code>pushFront</code> ve “baştan sil” işlemlerinin bir şablon sınıf içindeki hâli: tepe listenin başı. Aynı işlemi gördüğün üç farklı API var:</p>
+<table class="grid"><tr><th>işlem</th><th><code>std::stack</code></th><th>slaytlar</th><th>kamp / A2 (<code>LLStack</code>, <code>codeStack</code>)</th></tr>
+<tr><td>çıkar</td><td><code>top()</code> + <code>pop()</code> (void)</td><td><code>pop(x)</code> → bool</td><td><code>x = popFromStack()</code> değeri döndürür, boşken exception</td></tr>
+<tr><td>bak</td><td><code>top()</code></td><td><code>getTop(x)</code> → bool</td><td><code>peek()</code> (kamp alıştırması)</td></tr></table>
+<p>Değer döndüren <code>popFromStack</code> kullanışlı, ama boş stack’te döndürecek bir değeri yok. Bu yüzden ya exception fırlatıyor ya da (A2’deki gibi) hata mesajı yazıp boş değer dönüyor. Labda hangi sözleşmenin verildiğini mutlaka oku.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li><code>popFromStack</code>’te değeri ne zaman kopyalamalıyım: düğümü silmeden önce mi, sonra mı?</li><li><code>pushFromStack</code>’te kaç ok değişir? İki stack’in <code>count</code>’u nasıl güncellenir?</li><li>Kopya kurucu yazmasaydık <code>LLStack&lt;int&gt; b(a);</code> ne yapardı ve yıkıcılar çalıştığında ne olurdu?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("önce", row(stack([9], name="a"), stack([7, 4], name="b")), "b’nin tepesi 4."),
+  ("a.pushFromStack(b)", row(stack([9, 4], name="a", hl={1: "green"}), stack([7], name="b")), "4’ün düğümü b’den koparılıp a’nın tepesine bağlandı. Yeni düğüm oluşturulmadı, silinen de yok."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:llstack.h", "pushToStack", title="A — pushToStack") }}
+{{ code("sol:llstack.h", "popFromStack", title="B — popFromStack") }}
+{{ code("sol:llstack.h", "clear", title="M1 — clear (the destructor calls it)") }}
+{{ code("sol:llstack.h", "pushFromStack", title="M2 — pushFromStack (practice signature)") }}
+<ul><li><b>Önce kopyala, sonra sil.</b> <code>T el = old-&gt;info;</code> satırı <code>delete</code>’ten önce gelmeli. Sıra ters olursa silinmiş bellekten okunur.</li>
+<li><b>Exception.</b> <code>throw std::runtime_error("…")</code> fonksiyonu anında bitirir. Çağıran <code>try/catch</code> ile yakalayabilir. Testler bunu yapıyor.</li>
+<li><b>M2</b> iki stack’in iç yapısına dokunuyor. Aynı sınıfın nesneleri birbirinin <code>private</code> üyelerine erişebilir, bu yüzden <code>source.top</code> yazmak serbest.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Bütün işlemler <code>O(1)</code>, <code>clear</code> <code>O(n)</code>. Dizi tabanlı slayt sınıfının kapasite sınırı yok.</li>
+<li><code>pushFromStack</code> düğümü taşıdığı için <code>T</code> büyük bir nesne olsa bile kopya oluşmuyor.</li></ul>
+<h3>Alternatif ve ihlal ettiği kural</h3>
+<p>M2’yi <code>pushToStack(source.popFromStack())</code> olarak tek satırda yazmak: davranış aynı görünür, ama bir düğüm silinip yenisi oluşturulur ve değer kopyalanır. Bu “düğüm taşınır, yeni düğüm yok” sözleşmesini <b>ihlal eder</b>. Canlı düğüm sayısı aynı kaldığı için <code>alive</code> sayacı bunu göremez, adres de güvenilir değildir (silinen düğümün belleği yeni düğüme verilebilir). Test bu yüzden şimdiye kadar oluşturulan düğüm sayısına (<code>stackNode&lt;T&gt;::created</code>) bakıyor. Sınavda “yalnızca push/pop kullan” deniyorsa doğru cevap tam olarak bu tek satırlık sürüm. Kural sorudan soruya değişiyor.</p>
+{{ code("sol:llstack.h", "LLStack", title="L22-X — copy constructor") }}
+<p>Kopya kurucu yazılmasaydı derleyicinin ürettiği sürüm yalnızca <code>top</code> pointer’ını kopyalardı. İki stack aynı düğümleri paylaşır ve ikinci yıkıcı silinmiş düğümleri tekrar silmeye çalışırdı. 2021 Assignment 1’in arşiv çözümündeki hata da buydu. Bu sınıf kopya atamayı <code>= delete</code> ile kapatıyor.</p>
+<h2>Ezberden varyant · L22-V</h2>
+<div class="box tip"><span class="t">5 dakikada yaz</span><p><span class="tag opt">L22-V</span> <code>void reverse()</code>: stack’i düğümleri yeniden bağlayarak ters çevir (L16 Part A’nın aynısı, liste başı burada <code>top</code>).</p></div>

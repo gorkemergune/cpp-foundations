@@ -1,0 +1,46 @@
+{{ header(6, 0, "Thinking Problems on Stacks", "60–100 minutes in total",
+  "monotonic stacks (“who is waiting for a bigger value?”), a stack of partial results for nested brackets, left/right boundaries found by one stack",
+  related=lc(739, "daily-temperatures", "Daily Temperatures") + " · " + lc(394, "decode-string", "Decode String") + " · " + lc(84, "largest-rectangle-in-histogram", "Largest Rectangle in Histogram"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 6 · Challenge set (after Lab 24)", one="A") }}
+{{ code("lab:challenge06.h", title="challenge06.h — given") }}
+<h2>C06-A · Daily Temperatures (medium)</h2>
+<p>For each day, how many days until a strictly warmer day? 0 if there is none. <code>O(n)</code> — the double loop is <code>O(n<sup>2</sup>)</code>.</p>
+{{ cases("PDF_TEMP", ["temperatures", "answer"], [
+    ([73, 74, 75, 71, 69, 72, 76, 73], [1, 1, 4, 2, 1, 1, 0, 0], "LeetCode example 1"),
+    ([30, 40, 50, 60], [1, 1, 1, 0], "LeetCode example 2"),
+    ([30, 60, 90], [1, 1, 0], "LeetCode example 3"),
+    ([50, 50, 50], [0, 0, 0], "equal is not warmer"),
+], widths=["35%", "30%", "30%"]) }}
+<h2>C06-B · Decode String (medium)</h2>
+<p><code>k[text]</code> means <code>text</code> repeated <code>k</code> times; brackets can be nested and <code>k</code> can have several digits.</p>
+{{ cases("PDF_DEC", ["s", "decoded"], [
+    ("3[a]2[bc]", "aaabcbc", "LeetCode example 1"),
+    ("3[a2[c]]", "accaccacc", "LeetCode example 2: nested"),
+    ("2[abc]3[cd]ef", "abcabccdcdcdef", "LeetCode example 3"),
+    ("10[a]", "aaaaaaaaaa", "two-digit count"),
+    ("abc", "abc", "no brackets"),
+], widths=["30%", "35%", "30%"]) }}
+<h2>C06-C · Largest Rectangle in Histogram (hard)</h2>
+<p>Bars of width 1 and heights <code>heights[i]</code> stand side by side. Return the area of the largest rectangle that fits inside the histogram, in <code>O(n)</code>.</p>
+{{ cases("PDF_HIST", ["heights", "area"], [
+    ([2, 1, 5, 6, 2, 3], 10, "LeetCode example 1"),
+    ([2, 4], 4, "LeetCode example 2"),
+    ([1, 1, 1, 1], 4, "all equal: the whole width"),
+    ([], 0, "empty"),
+    ([0, 9], 9, "a zero bar splits the histogram"),
+], widths=["35%", "12%", "48%"]) }}
+
+{{ banner("önce her soruyla en az 25 dakika uğraş") }}
+<h2>İpuçları</h2>
+<div class="box q"><span class="t">C06-A</span><ol><li>Henüz daha sıcak bir günü gelmemiş günleri bir yerde beklet. Yeni bir gün geldiğinde bekleyenlerden hangileri “cevabını” bulur? Bekleyenler hangi sırada durmalı?</li></ol></div>
+<div class="box q"><span class="t">C06-B</span><ol><li><code>[</code> gördüğünde o ana kadar kurduğun metni ve sayıyı bir kenara koy, içerideki metni sıfırdan kur. <code>]</code> gördüğünde ne yapmalısın?</li></ol></div>
+<div class="box q"><span class="t">C06-C</span><ol><li>Her çubuğu “yüksekliği bu olan en geniş dikdörtgenin” yüksekliği olarak düşün. Sola ve sağa ilk daha kısa çubuğu bulursan genişlik ne olur? Tek bir stack iki sınırı birden verebilir mi?</li></ol></div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+{{ code("sol:challenge06.cpp", "dailyTemperatures", title="C06-A — monotonic stack") }}
+<p>Stack’teki günlerin sıcaklıkları azalan sırada. Yeni gün kendisinden soğuk olan bütün bekleyenlerin cevabı oluyor. Her indeks bir kez push, en fazla bir kez pop ediliyor: <code>O(n)</code>. Eski kampın ST-10’u (next greater element) aynı fikrin değer döndüren hâli.</p>
+{{ code("sol:challenge06.cpp", "decodeString", title="C06-B — stacks of partial results") }}
+<p>İki stack paralel çalışıyor: tekrar sayısı ve <code>[</code>’dan önceki metin. İç içe parantezlerin her seviyesi bir stack seviyesine karşılık geliyor. Recursive bir çözüm de aynı yapıyı çağrı yığını ile kurar.</p>
+{{ code("sol:challenge06.cpp", "largestRectangleArea", title="C06-C — boundaries from one stack") }}
+<p>Stack’te yükseklikleri artan çubukların indeksleri var. Bir çubuk pop edildiğinde sağdaki ilk kısa çubuk <code>i</code>, soldaki ilk kısa çubuk da yeni tepe. Genişlik <code>i − left − 1</code>. Sondaki sanal 0 yüksekliği stack’te kalan her şeyi işletiyor. Kaba kuvvet <code>O(n<sup>2</sup>)</code>, böl ve yönet ortalama <code>O(n log n)</code>. Bu soru mülakatlarda monotonic stack’in en ünlü örneği.</p>

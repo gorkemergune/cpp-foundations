@@ -1,0 +1,56 @@
+{{ header(12, 0, "Emergency Room Triage on Your Own Heap", "100–120 minutes (about 95 lines of your own code)",
+  "a heap of structs with a two-level priority (severity, then arrival), sift up and sift down as helpers, changing the priority of an item inside the heap, removing from the middle, reporting through a copy",
+  related=lc(1845, "seat-reservation-manager", "Seat Reservation Manager") + " · " + lc(2353, "design-a-food-rating-system", "Design a Food Rating System") + " (priority changes)",
+  slides="<code>16-heaps.pptx</code> slides 11–20 (heap class, priority queue) · <code>16-heaps.pptx</code> slide 3 (a heap is not sorted: searching is linear)",
+  archive="Labwork 5 (priority queue with FIFO ties, on a list) · Lab 43 (the heap functions) · Lab 46-A (arrival numbers)",
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 12 · Mini project (after C12, the last project)", one="B") }}
+
+<h2>1. What you build</h2>
+<p>The waiting room of an emergency department. Every patient has a <b>severity</b> 1–5; the most severe patient is treated first, and among equal severities the one who arrived first. A patient's condition can get worse while waiting (<code>upgrade</code>), and a patient can leave without treatment (<code>leave</code>). The queue is your own binary heap of <code>Patient</code> structs — <code>std::priority_queue</code> cannot change or remove an element in the middle.</p>
+{{ snippet('''
+> arrive Ali 2
+queue: Ali(2)
+> arrive Ayse 5
+queue: Ayse(5) Ali(2)
+> arrive Can 3
+queue: Ayse(5) Can(3) Ali(2)
+> up Ali 4
+upgraded
+queue: Ayse(5) Ali(4) Can(3)
+> treat
+treating Ayse
+queue: Ali(4) Can(3)
+> leave Can
+left
+queue: Ali(4)
+''', title="main_demo.cpp after your tests pass", lang="text") }}
+{{ code("lab:triage.h", title="triage.h — given") }}
+
+<h2>2. Tests</h2>
+<table class="grid"><tr><th style="width:10%">Part</th><th>What is checked</th></tr>
+<tr><td>A</td><td>empty room; Ali 2, Ayse 5, Can 3, Deniz 5, Ece 2 → <code>Ayse Deniz Can Ali Ece</code>; <code>peek</code> does not remove; 20 patients of equal severity come out in arrival order</td></tr>
+<tr><td>B</td><td>Ece 1 → 5 goes right after Ayse (same severity, later arrival); a lower or equal new severity is refused; unknown names; leaving twice; 200 random sequences of arrive/upgrade/leave compared with a sorted list</td></tr>
+<tr><td>C</td><td><code>Ayse(5) Can(3) Ali(2)</code>; the report does not change who is next</td></tr></table>
+
+{{ banner("önce kendi tasarımını dene") }}
+<h2>Tasarım notları</h2>
+<ul><li><b>Tek karşılaştırma fonksiyonu.</b> Bütün heap kodu yalnızca <code>before(a, b)</code> fonksiyonunu kullanıyor: aciliyet farklıysa büyük olan önce, eşitse erken gelen. Kuralı değiştirmek tek satırı değiştirmek demek.</li>
+<li><b>Geliş numarası.</b> Heap eşit elemanların sırasını korumaz (heapsort kararlı değildi, L45). Her hastaya artan bir geliş numarası verince eşitlik hiç oluşmuyor.</li>
+<li><b>Ortadan silme.</b> Son hasta boşluğa taşınıyor. Yeni yerine göre yukarı <b>ya da</b> aşağı gitmesi gerekebilir. İkisini birden çağırmak güvenli, çünkü yalnızca biri bir şey yapar.</li>
+<li><b>Bulmak doğrusal.</b> Heap isme göre sıralı değil, bu yüzden <code>indexOf</code> <code>O(n)</code>. Gerçek sistemler bir <code>unordered_map&lt;string, int&gt;</code> ile her ismin heap’teki indeksini tutar ve her yer değiştirmede günceller (genişletme fikri).</li>
+<li><b>Rapor bir kopyayla.</b> <code>report() const</code> kuyruğu değiştiremez. Nesnenin bir kopyası alınıp hastalar o kopyadan “tedavi ediliyor”. Sınıf yalnızca <code>vector</code> ve <code>string</code> tuttuğu için varsayılan kopya doğru çalışıyor (P05’in aksine).</li></ul>
+<div class="avoid">{{ steps([
+  ("heap", tree(heap_tree(["Ayse5", "Ali2", "Can3"]), dx=46, r=22, font_size=10), "Ali 2, Ayse 5, Can 3 geldi. Ayse siftUp ile köke çıktı, Ali sola indi."),
+  ("up Ali 4", tree(heap_tree(["Ayse5", "Ali4", "Can3"]), hl={"Ali4": "yellow"}, dx=46, r=22, font_size=10), "Ali’nin aciliyeti 4 oldu. Ebeveyni Ayse 5, daha acil, bu yüzden siftUp burada duruyor."),
+  ("treat", tree(heap_tree(["Ali4", "Can3"]), hl={"Ali4": "green"}, dx=46, r=22, font_size=10), "Ayse çıktı, son eleman Can köke geçti. siftDown: çocuğu Ali 4 daha acil, yer değiştirdiler."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:triage.cpp", "before", title="before") }}
+{{ code("sol:triage.cpp", "siftDown", title="siftDown") }}
+{{ code("sol:triage.cpp", "removeAt", title="removeAt") }}
+{{ code("sol:triage.cpp", "upgrade", title="upgrade") }}
+{{ code("sol:triage.cpp", "report", title="report") }}
+<h3>Genişletme fikirleri</h3>
+<ul><li><code>unordered_map&lt;string, int&gt; where</code>: ismi heap indeksine eşle. <code>upgrade</code> ve <code>leave</code> <code>O(log n)</code>’e iner. Her <code>swap</code>’ta iki girdiyi güncellemeyi unutma.</li><li><b>Yaşlanma</b>: her 10 tedavide bir, bekleyen herkesin aciliyetini 1 artır (5’i geçmesin). Neden heap’i yeniden kurmak (<code>buildHeap</code>) gerekmiyor?</li><li>Birden fazla doktor: her <code>treat</code> çağrısında boş doktor sayısı kadar hasta çıkar (LeetCode 1834’ün çok işlemcili hâli).</li></ul>

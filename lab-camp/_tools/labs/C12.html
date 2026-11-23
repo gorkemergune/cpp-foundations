@@ -1,0 +1,37 @@
+{{ header(12, 0, "Thinking Problems on Heaps", "60–100 minutes in total",
+  "a heap of list heads, two heaps that balance each other, counting with a map then keeping the best k",
+  related=lc(23, "merge-k-sorted-lists", "Merge k Sorted Lists") + " · " + lc(295, "find-median-from-data-stream", "Find Median from Data Stream") + " · " + lc(347, "top-k-frequent-elements", "Top K Frequent Elements"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 12 · Challenge set (after Lab 46)", one="B") }}
+{{ code("lab:challenge12.h", title="challenge12.h — given") }}
+<h2>C12-A · Merge k Sorted Lists (hard)</h2>
+<p>Lab 20 merged two sorted lists. With k lists, comparing all k heads at every step costs <code>O(k)</code>; a min-heap of the heads makes it <code>O(log k)</code>. Relink the given nodes — do not allocate new ones (the test checks the addresses).</p>
+{{ cases("PDF_MK", ["lists", "merged"], [
+    ([[1, 4, 5], [1, 3, 4], [2, 6]], [1, 1, 2, 3, 4, 4, 5, 6], "LeetCode example 1"),
+    ([], [], "LeetCode example 2: no lists"),
+    ([[]], [], "LeetCode example 3: one empty list"),
+    ([[5], [], [1, 9]], [1, 5, 9], "an empty list among others"),
+], widths=["40%", "30%", "25%"]) }}
+<h2>C12-B · Find Median from Data Stream (hard)</h2>
+<p>Numbers arrive one at a time; after each one the median must be available. Keep the smaller half in a max-heap and the larger half in a min-heap, with sizes equal or the lower one bigger by one: the median is on top.</p>
+<p>Tests: add 1, 2 → 1.5; add 3 → 2; then 200 random streams compared after every number with a sorted copy.</p>
+<h2>C12-C · Top K Frequent Elements (medium)</h2>
+{{ cases("PDF_TK", ["nums", "k", "top k (any order)"], [
+    ([1, 1, 1, 2, 2, 3], 2, [1, 2], "LeetCode example 1"),
+    ([1], 1, [1], "LeetCode example 2"),
+    ([4, 4, -1, -1, -1, 7], 1, [-1], "negative values"),
+], widths=["35%", "8%", "20%", "32%"]) }}
+
+{{ banner("önce her soruyla en az 25 dakika uğraş") }}
+<h2>İpuçları</h2>
+<div class="box q"><span class="t">C12-A</span><ol><li>Sıradaki en küçük eleman mutlaka listelerden birinin <b>başında</b>. Heap’te her listeden yalnızca bir düğüm tutsan yeter mi? Bir düğüm çıkınca yerine hangisi girmeli?</li></ol></div>
+<div class="box q"><span class="t">C12-B</span><ol><li>Medyan sıralı dizinin ortası. Sol yarının en büyüğü ile sağ yarının en küçüğünü hızlı bulabilseydin yeterli olur muydu? Hangi heap hangisini verir?</li></ol></div>
+<div class="box q"><span class="t">C12-C</span><ol><li>Önce say (L42). Sonra “en büyük k” sorusu: L45-M2’deki boyutu k olan min-heap fikri burada nasıl uygulanır?</li></ol></div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+{{ code("sol:challenge12.cpp", "mergeKLists", title="C12-A") }}
+<p>Heap’te her listenin bir “sıradaki” düğümü var. En küçük çıkıyor ve sonucun sonuna bağlanıyor, yerine kendi listesindeki bir sonraki düğüm giriyor. Sahte bir ilk düğüm (<code>dummy</code>) “sonuç boş mu?” kontrolünü ortadan kaldırıyor. N toplam düğüm sayısı ise <code>O(N log k)</code>. Listeleri ikişer ikişer birleştirmek (Lab 20’yi <code>log k</code> tur çağırmak) de aynı süreyi verir.</p>
+{{ code("sol:challenge12.cpp", "addNum", title="C12-B — addNum") }}
+<p><code>low</code> küçük yarıyı (tepede en büyüğü), <code>high</code> büyük yarıyı (tepede en küçüğü) tutuyor. Yeni sayı doğru yarıya eklendikten sonra boyutlar en fazla bir farkla dengeleniyor. Her ekleme <code>O(log n)</code>, medyan <code>O(1)</code>. <code>(double)</code> dönüşümü, iki büyük <code>int</code>’in toplamında taşmayı ve tam sayı bölmesini önlüyor.</p>
+{{ code("sol:challenge12.cpp", "topKFrequent", title="C12-C") }}
+<p>Sayım <code>O(n)</code>, k boyutlu heap <code>O(m log k)</code> (m farklı değer sayısı). Frekansa göre “kova” dizisi (bucket sort) ile <code>O(n)</code>’e de inilebilir: <code>bucket[f]</code>, f kez geçen değerleri tutar.</p>

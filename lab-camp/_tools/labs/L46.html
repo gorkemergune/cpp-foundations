@@ -1,0 +1,59 @@
+{{ header(12, 4, "Priority Queues at Work", "50 minutes · A 7 · M1 15 · M2 10 · M3 12 · testing 6",
+  "a stable priority queue with arrival numbers, Dijkstra's shortest paths, Prim with a heap (<code>O(E log V)</code>), simulating a scheduler, lazy deletion (“skip stale entries”)",
+  related=lc(743, "network-delay-time", "Network Delay Time") + " · " + lc(1834, "single-threaded-cpu", "Single-Threaded CPU") + " · " + lc(1642, "furthest-building-you-can-reach", "Furthest Building You Can Reach") + " (L46-X)",
+  slides="<code>16-heaps.pptx</code> slides 16–20 (the priority queue ADT on a heap) · <code>12-graphs.pptx</code> slides 39–45 (Prim) — Dijkstra is not in the slides: it is Prim's twin and appears in the P04 extension ideas",
+  archive="<code>materials/labworks/lw5-priority-queue</code> (<code>enqueue(el, priority)</code>, FIFO among equal priorities: = A, with a heap instead of a sorted doubly linked list)", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<ul><li><b>A (Labwork 5).</b> The labwork kept a <i>sorted doubly linked list</i>: <code>enqueue</code> was <code>O(n)</code>. On a heap it is <code>O(log n)</code>, but a heap does not remember arrival order — so store an arrival counter with every element and compare <code>(priority, −arrival)</code>.</li>
+<li><b>M1 — Dijkstra.</b> The cheapest distance from <code>src</code> in a graph with non-negative weights: repeatedly take the vertex with the <b>smallest tentative distance</b> from a min-heap; the first time a vertex comes out, its distance is final. A vertex may be pushed several times; older (longer) entries are <b>skipped</b> when they come out (lazy deletion).</li>
+<li><b>M2 — Prim with a heap.</b> The same skeleton with <code>(edge weight, vertex)</code> instead of <code>(distance, vertex)</code>. Lab 35's array version was <code>O(V²)</code>, this one is <code>O(E log V)</code>.</li>
+<li><b>M3 — LeetCode 1834.</b> Simulate a CPU: tasks arrive over time; whenever the CPU is free it takes the available task with the shortest processing time.</li></ul>
+<div class="fig">{{ graph([0, 1, 2, 3], [(0, 1), (0, 2), (2, 1), (1, 3)], directed=True, weights={(0, 1): 4, (0, 2): 1, (2, 1): 2, (1, 3): 1}, pos={0: (0.0, 0.5), 1: (0.55, 0.05), 2: (0.55, 0.95), 3: (1.0, 0.5)}, labels={0: "0", 1: "3", 2: "1", 3: "4"}, size=170) }}<div class="cap">M1's example: the direct edge 0 → 1 costs 4, the detour 0 → 2 → 1 costs 3. Distances are written under the vertices.</div></div>
+{{ code("lab:lab46.h", title="lab46.h — given") }}
+<p>The starter defines <code>template &lt;class T&gt; using MinHeap = std::priority_queue&lt;T, std::vector&lt;T&gt;, std::greater&lt;T&gt;&gt;;</code> — use it to keep the lines short. <code>std::pair</code> compares the first field, then the second.</p>
+
+<h2>2. Tests</h2>
+{{ cases("PDF_DJ", ["n", "edges {u, v, w}", "src", "distances"], [
+    (4, [[0, 1, 4], [0, 2, 1], [2, 1, 2], [1, 3, 1]], 0, [0, 3, 1, 4], "the drawing"),
+    (3, [[0, 1, 1]], 0, [0, 1, -1], "2 cannot be reached"),
+    (3, [[0, 1, 5], [0, 1, 2], [1, 2, 0]], 0, [0, 2, 2], "parallel edges, a 0 weight"),
+    (2, [[1, 0, 3]], 0, [0, -1], "directed: only 1 -> 0"),
+], widths=["6%", "40%", "7%", "17%", "25%"]) }}
+{{ cases("PDF_CPU", ["tasks {enqueue, processing}", "order"], [
+    ([[1, 2], [2, 4], [3, 2], [4, 1]], [0, 2, 3, 1], "LeetCode example 1"),
+    ([[7, 10], [7, 12], [7, 5], [7, 4], [7, 2]], [4, 3, 2, 0, 1], "LeetCode example 2: all at once"),
+    ([[5, 2], [1, 3]], [1, 0], "the CPU starts at the first arrival"),
+    ([[1, 2], [10, 1]], [0, 1], "idle gap: jump to time 10"),
+], widths=["45%", "20%", "30%"]) }}
+<p>A: <code>a 1, b 5, c 5, d 3</code> → <code>b c d a</code>. M2: the Lab 35 graph → 16; not connected → −1. M1, M2 and M3 run 200 random inputs each against Bellman-Ford, Kruskal and a slow simulation.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Öncelik kuyruğu, “sıradaki en önemli iş hangisi?” sorusunu <code>O(log n)</code>’de cevaplıyor. Dijkstra’da en önemli iş, en yakın henüz kesinleşmemiş köşe. Prim’de ağaca en ucuz bağlanan köşe. CPU’da en kısa iş. Üçünde de aynı iskelet var: <code>push</code>, <code>top</code>/<code>pop</code> ve eskimiş girdiyi atla.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>Dijkstra’da bir köşe heap’e iki kez girebilir mi? İkinci kopya çıktığında ne yapmalıyım?</li><li>Negatif ağırlıklı bir kenar olsaydı “ilk çıktığında mesafesi kesin” iddiası neden bozulurdu?</li><li>M3’te CPU boştayken hiçbir görev gelmemişse zamanı nasıl ilerletirim?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("0 çıktı", row(graph([0, 1, 2, 3], [(0, 1), (0, 2), (2, 1), (1, 3)], directed=True, weights={(0, 1): 4, (0, 2): 1, (2, 1): 2, (1, 3): 1}, pos={0: (0.0, 0.5), 1: (0.55, 0.05), 2: (0.55, 0.95), 3: (1.0, 0.5)}, hl={0: "green"}, size=130), vec(["(1,2)", "(4,1)"], name="heap", show_size=False)), "0 kesinleşti (0). Komşular eklendi: 2 mesafe 1 ile, 1 mesafe 4 ile."),
+  ("2 çıktı", row(graph([0, 1, 2, 3], [(0, 1), (0, 2), (2, 1), (1, 3)], directed=True, weights={(0, 1): 4, (0, 2): 1, (2, 1): 2, (1, 3): 1}, pos={0: (0.0, 0.5), 1: (0.55, 0.05), 2: (0.55, 0.95), 3: (1.0, 0.5)}, hl={0: "green", 2: "green"}, size=130), vec(["(3,1)", "(4,1)"], name="heap", show_size=False)), "2 kesinleşti (1). 1 için yeni girdi (3, 1) eklendi. Eski (4, 1) heap’te kaldı."),
+  ("1 çıktı", row(graph([0, 1, 2, 3], [(0, 1), (0, 2), (2, 1), (1, 3)], directed=True, weights={(0, 1): 4, (0, 2): 1, (2, 1): 2, (1, 3): 1}, pos={0: (0.0, 0.5), 1: (0.55, 0.05), 2: (0.55, 0.95), 3: (1.0, 0.5)}, hl={0: "green", 2: "green", 1: "green"}, size=130), vec(["(4,1)", "(4,3)"], name="heap", hl={0: "red"}, show_size=False)), "1 mesafe 3 ile kesinleşti. Sonra çıkan (4, 1) eskimiş bir girdi: <code>dist[1] != -1</code>, atlanır."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab46.cpp", "enqueue", title="A — enqueue") }}
+{{ code("sol:lab46.cpp", "dijkstra", title="M1 — dijkstra") }}
+{{ code("sol:lab46.cpp", "primHeap", title="M2 — primHeap") }}
+{{ code("sol:lab46.cpp", "getOrder", title="M3 — getOrder") }}
+<ul><li><b>A.</b> <code>std::tuple</code> alan alan karşılaştırılıyor. Öncelikler eşitse <code>-arrivals</code> büyük olan, yani daha önce gelen tepeye çıkıyor.</li>
+<li><b>M1 ve M2.</b> Kod neredeyse aynı. Dijkstra heap’e <code>d + w</code> (yolun toplamı) koyuyor, Prim sadece <code>w</code> (tek kenar). Bu tek fark, en kısa yol ağacı ile minimum kapsayan ağacı ayırıyor.</li>
+<li><b>M3.</b> Görevler geliş zamanına göre sıralanıyor. <code>next</code> sıradaki gelecek görevi gösteriyor. CPU boşsa ve hazır görev yoksa zaman bir sonraki gelişe atlıyor.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Eskimiş girdileri silmek yerine atlamak (lazy deletion) <code>priority_queue</code>’da “anahtar azalt” işlemi olmadığı için gerekli. Heap en fazla <code>E</code> girdi tutar: <code>O(E log E) = O(E log V)</code>.</li></ul>
+<h3>Alternatif</h3>
+<p>Dijkstra’yı heap olmadan, her adımda en küçük mesafeli köşeyi diziyi tarayarak bulmak <code>O(V<sup>2</sup>)</code> sürer (Lab 35’teki Prim gibi). Yoğun graflarda bu da iyi bir seçim. Labwork 5’i sıralı listeyle yazmak doğru ama <code>enqueue</code> <code>O(n)</code> sürer. Bu labın “heap kullan” şartını <b>ihlal eder</b>.</p>
+{{ code("sol:lab46.cpp", "furthestBuilding", title="L46-X — furthestBuilding") }}
+<h2>Ezberden varyant · L46-V</h2>
+<div class="box tip"><span class="t">3 dakikada yaz</span><p><span class="tag opt">L46-V</span> <code>int lastStoneWeightPQ(const std::vector&lt;int&gt;&amp; stones)</code>: L43-X’in <code>std::priority_queue</code> ile yazılmış hâli.</p></div>
+<h2>12. hafta kontrol listesi</h2>
+<div class="box"><ul><li>Bir diziyi kâğıtta alttan üste heap’e çevirip, bir silme ve bir ekleme işleminin izini (0 ve 1 tabanlı) sürebiliyor musun?</li><li>Heapsort’un iki aşamasını ve neden kararlı olmadığını açıklayabiliyor musun?</li><li><code>priority_queue</code>’yu max, min ve kendi karşılaştırıcınla kurabiliyor musun? Dijkstra ile Prim arasındaki tek farkı söyleyebiliyor musun?</li></ul>
+<p>Sonra <b>C12</b> ve son proje <b>P06</b> (acil servis triyajı). Kampın sonu: <code>lab-camp/README.md</code>’deki tekrar planına göre zayıf olduğun haftaları yeniden çöz.</p></div>

@@ -1,0 +1,56 @@
+{{ header(12, 1, "The Slides' Max-Heap in an Array", "45 minutes · A–B 8 · M1 8 · M2 10 · M3 5 · M4 7 · testing 7",
+  "complete binary trees stored in arrays, the heap property, trickle up (insert), trickle down (rebuild a semiheap), delete the root, bottom-up heap construction in <code>O(n)</code>",
+  related=lc(1046, "last-stone-weight", "Last Stone Weight") + " (L43-X) · " + gfg("does-array-represent-heap/1", "Does array represent Heap"),
+  slides="<code>materials/slides/16-heaps.pptx</code> slides 2–4 (heap vs. BST, array implementation), 5–10 (delete and insert, drawn step by step), 11–15 (the class: <code>heapInsert</code>, <code>heapDelete</code>, <code>heapRebuild</code>), 22–24 (building a heap from an array) · <code>13-trees.pptx</code> slides 21–23 (complete trees in arrays)",
+  archive="Labwork 8 and 2017 Assignment 5 Q4 use a MIN-heap: they come in Lab 44", one="M2") }}
+
+<h2>1. Problem statement</h2>
+<p>A <b>max-heap</b> is a complete binary tree in which every node is <code>≥</code> its children; the largest item is the root. Because the tree is complete it fits into an array without gaps: the children of <code>i</code> are <code>2i+1</code> and <code>2i+2</code>, the parent is <code>(i−1)/2</code> (slide 4). Write the slides' three operations as functions on a <code>std::vector&lt;int&gt;</code>:</p>
+<ul><li><b>heapInsert</b> (M1, slide 13): put the item at the end, then swap it with its parent while it is larger (<i>trickle up</i>).</li>
+<li><b>heapRebuild</b> (M2, slide 15): the root of a <i>semiheap</i> may be too small; swap it with its <b>larger</b> child, and repeat from there (<i>trickle down</i>).</li>
+<li><b>heapDelete</b> (M3, slide 14): the root is the answer; the last item moves to the root, then <code>heapRebuild(0)</code>.</li>
+<li><b>buildHeap</b> (M4, slide 23): call <code>heapRebuild</code> for <code>index = n/2 − 1</code> down to 0 — the leaves are heaps already.</li></ul>
+<div class="fig">{{ row(tree(heap_tree([9, 8, 5, 1, 3, 2])), vec([9, 8, 5, 1, 3, 2], name="items", show_size=False)) }}<div class="cap">Insert 5 3 8 1 9 2 → <code>{9, 8, 5, 1, 3, 2}</code>: the tree and its array.</div></div>
+{{ code("lab:lab43.h", title="lab43.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_INS", ["keys inserted (M1)", "heap"], [
+    ([5, 3, 8, 1, 9, 2], [9, 8, 5, 1, 3, 2], "the drawing"),
+    ([1, 2, 3, 4, 5, 6, 7], [7, 4, 6, 1, 3, 2, 5], "increasing: every key trickles to the top"),
+    ([10, 20, 30], [30, 10, 20], "30 sits at index 2: its parent is the root"),
+    ([7, 7, 7], [7, 7, 7], "equal keys do not move (strict >)"),
+], widths=["30%", "30%", "35%"]) }}
+{{ cases("PDF_BUILD", ["array (M4)", "after buildHeap"], [
+    ([6, 3, 5, 9, 2, 10], [10, 9, 6, 3, 2, 5], "index 2, 1, 0"),
+    ([5, 3, 8, 1, 9, 2], [9, 5, 8, 1, 3, 2], "same keys as above, other heap than by inserting"),
+    ([1, 2, 3, 4, 5, 6, 7], [7, 5, 6, 4, 2, 1, 3], "sorted ascending: the worst input"),
+    ([4], [4], "one item"),
+], widths=["30%", "30%", "35%"]) }}
+<p>M3 deletes 9 and 8 from the drawing (<code>{8, 3, 5, 1, 2}</code>, then <code>{5, 3, 2, 1}</code>) and empties 200 random heaps (the deleted values must come out in decreasing order). Every function runs 200 random cases against the slides' code.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Heap, “en büyüğü hep elinin altında” tutan bir ağaç. BST gibi tam sıralı değil, sadece her ebeveyn çocuklarından büyük (slayt 3). Ağaç tam (complete) olduğu için dizide tutuluyor ve pointer’a gerek kalmıyor. Ekleme sondan yukarı, silme kökten aşağı tek bir yol izliyor: ikisi de <code>O(log n)</code>.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li><code>heapRebuild</code>’de neden <b>büyük</b> çocukla yer değiştiriyorum? Küçük çocukla değiştirsem ne bozulur?</li><li><code>buildHeap</code> neden <code>n/2 − 1</code>’den başlıyor, neden 0’dan değil? Yaprakların indeksleri hangi aralıkta?</li><li>Aynı anahtarları tek tek eklemek ile <code>buildHeap</code> neden farklı heap’ler veriyor? İkisi de doğru mu?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("sil: kök", row(tree(heap_tree([2, 8, 5, 1, 3]), hl={2: "red"}), vec([2, 8, 5, 1, 3], name="items", hl={0: "red"}, show_size=False)), "9 alındı. Son eleman 2 köke taşındı: kök yarı-heap (semiheap)."),
+  ("rebuild", row(tree(heap_tree([8, 2, 5, 1, 3]), hl={2: "red", 8: "green"}), vec([8, 2, 5, 1, 3], name="items", hl={1: "red"}, show_size=False)), "Büyük çocuk 8: yer değiştir. 2 şimdi indeks 1’de."),
+  ("bitti", row(tree(heap_tree([8, 3, 5, 1, 2]), hl={3: "green"}), vec([8, 3, 5, 1, 2], name="items", show_size=False)), "2’nin yeni çocukları (indeks 3 ve 4) 1 ve 3. Büyük olan 3 ile yer değiştir. 2 yaprak oldu, heap tamam."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab43.cpp", "heapInsert", title="M1 — heapInsert (slide 13)") }}
+{{ code("sol:lab43.cpp", "heapRebuild", title="M2 — heapRebuild (slide 15)") }}
+{{ code("sol:lab43.cpp", "heapDelete", title="M3 — heapDelete (slide 14)") }}
+{{ code("sol:lab43.cpp", "buildHeap", title="M4 — buildHeap (slide 23)") }}
+<ul><li><b>M1.</b> Slayttaki kodun aynısı. Tek fark, sabit dizi ve <code>MAX_HEAP</code> yerine <code>push_back</code> ile büyüyen bir vektör. Bu yüzden “heap dolu” durumu yok.</li>
+<li><b>M2.</b> Özyinelemeli, çünkü slayt da öyle. Bir <code>while</code> döngüsüyle de yazılabilir (Lab 44’te). <code>n</code> parametresi, heapsort’ta dizinin sonundaki sıralanmış bölgeyi dışarıda tutmak için var (Lab 45).</li>
+<li><b>M4.</b> Alttan üste kurmak <code>O(n)</code>: düğümlerin yarısı yaprak ve hiç iş yapmıyor, çeyreği en fazla 1 adım iniyor, vb. Tek tek eklemek ise <code>O(n log n)</code>.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Dizi temsili pointer kullanmıyor, kopyalaması kolay ve önbellek dostu. Tam ağaç her zaman <code>⌊log₂ n⌋ + 1</code> yükseklikte, bu yüzden en kötü durum da <code>O(log n)</code>. BST’de en kötü durum <code>O(n)</code>’dir.</li></ul>
+<h3>Alternatif</h3>
+<p>Kütüphanede <code>std::push_heap</code>/<code>std::pop_heap</code>/<code>std::make_heap</code> aynı işi yapıyor. <code>std::priority_queue</code> da bunların üstüne kurulmuş (Lab 45). Bu labda onları kullanmak, slayttaki fonksiyonları yazma amacını <b>ihlal eder</b>.</p>
+{{ code("sol:lab43.cpp", "lastStoneWeight", title="L43-X — lastStoneWeight") }}
+<h2>Ezberden varyant · L43-V</h2>
+<div class="box tip"><span class="t">3 dakikada yaz</span><p><span class="tag opt">L43-V</span> <code>std::vector&lt;int&gt; topK(std::vector&lt;int&gt; items, int k)</code>: heap’in en büyük k değeri. Parametre değerle geldiği için kopyadan k kez <code>heapDelete</code> yapabilirsin. <code>O(k log n)</code>.</p></div>

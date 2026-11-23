@@ -2,6 +2,8 @@
 
 > An open notebook for learning C++ from scratch — lecture notes, code examples, labs, and projects from CSE 211 at Yeditepe University, kept public for the students who come after.
 
+**CSE 211 tekrarına başla:** [12 haftalık lab kampı (46 lab, 11 soru seti, 6 proje, hepsi PDF + test)](lab-camp/README.md) · [Ders materyalleri ve arşiv çözümleri](materials/README.md) · [Vize kampı](practice/midterm-camp/README.md)
+
 ## Overview
 
 This repository is where I start learning **C++** from the ground up. It is the sister repository to [c-foundations](https://github.com/gorkemergune/c-foundations), and it continues the same idea: a public, continuously updated learning log built to serve both as a personal record of my progress and as a study aid for future students.
@@ -25,10 +27,15 @@ This repository is the second step in a broader undergraduate learning path focu
 
 ```
 cpp-foundations/
-
-...
-
-
+├── lab-camp/          # 12 haftalık lab kampı: haftalık PDF'ler, başlangıç dosyaları, testler, çözümler
+│   ├── week01 … week12/   # L01–L46 lablar, 11 soru seti (C01–C12), P01–P06 projeler
+│   ├── solutions/         # referans çözümler
+│   └── run.ps1, run.sh    # ./run.ps1 L01 ile derle ve test et
+un.ps1 L01  ile derle ve test et
+├── materials/         # CSE 211 slaytları (konu/sayfa dizini), labwork'ler, ödevler, pratik lablar,
+│                      # ders kodları, vize notları, C++ okuma notları; her soru için test edilen çözüm
+├── practice/
+│   └── midterm-camp/  # 30 soruluk vize kampı (linked list, stack, queue) ve testleri
 └── README.md
 ```
 

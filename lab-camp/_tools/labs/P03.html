@@ -1,0 +1,49 @@
+{{ header(8, 0, "Browser: History With Two Stacks, Downloads in a Queue", "90–120 minutes (about 80 lines of your own code)",
+  "two stacks as “past” and “future”, clearing a stack, reading a stack without changing it (work on a copy), a FIFO queue with partial progress on its front element",
+  related=lc(1472, "design-browser-history", "Design Browser History") + " (part B)",
+  slides="<code>09-stacks.ppt</code> 2–8 · <code>10-queues.ppt</code> 2–9",
+  archive="2021 Assignment 2 (undo with two stacks) · term project (undo stack of actions)",
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 8 · Mini project (after the mocks)", one="A") }}
+
+<h2>1. What you build</h2>
+<p>A tiny browser model. The <b>back</b> button and the <b>forward</b> button are two stacks: going back moves the current page onto the forward stack and takes the top of the back stack; visiting a new page empties the forward stack. Downloads are served first-come-first-served from a queue; each <code>tick</code> brings some megabytes of bandwidth, which the front download uses first.</p>
+{{ snippet('''
+> visit a
+back: home | current: a | forward: - | downloads: 0
+> visit b
+back: home a | current: b | forward: - | downloads: 0
+> back 1
+back: home | current: a | forward: b | downloads: 0
+> get big.iso 10
+back: home | current: a | forward: b | downloads: 1
+> tick 12
+finished: big.iso
+back: home | current: a | forward: b | downloads: 0
+''', title="main_demo.cpp after your tests pass", lang="text") }}
+{{ code("lab:browser.h", title="browser.h — given") }}
+
+<h2>2. Tests</h2>
+<table class="grid"><tr><th style="width:10%">Part</th><th>What is checked</th></tr>
+<tr><td>A</td><td>home page; after <code>visit("a")</code>, <code>visit("b")</code> the current page is <code>b</code></td></tr>
+<tr><td>B</td><td>the full LeetCode 1472 example (back/forward with step counts larger than the history); the exact <code>historyReport()</code> text; the report must not change the history</td></tr>
+<tr><td>C</td><td>files of 10, 1 and 3 MB: <code>tick(4)</code> finishes nothing, <code>tick(8)</code> finishes the first two and leaves 1 MB for the third, <code>tick(2)</code> finishes it; an empty queue returns nothing</td></tr></table>
+
+{{ banner("önce kendi tasarımını dene") }}
+<h2>Tasarım notları</h2>
+<ul><li><b>İki stack = geçmiş ve gelecek.</b> Geri giderken ayrıldığın sayfa ileri stack’ine gider. Yeni bir sayfa ziyaret etmek ileri stack’ini boşaltır, çünkü eski gelecek artık geçersiz. 2021 Assignment 2’deki undo stack’i, yeni bir yazı geldiğinde aynı nedenle boşaltılıyordu.</li>
+<li><b>Raporda kopya.</b> <code>historyReport() const</code> stack’leri değiştiremez. <code>std::stack</code>’in kopyası alınıp boşaltılıyor. Geri sayfaları en eskiden yeniye yazılmalı, stack ise en yeniyi tepede verir. Bu yüzden önce bir vektöre alıp tersten yazıyoruz.</li>
+<li><b>Kuyruğun önü değişebilir.</b> <code>downloads.front()</code> bir referans döndürür. Kalan boyutu doğrudan onun üzerinde azaltabiliriz. <code>pop()</code>’tan sonra o referans geçersiz olur ve kullanılmamalı.</li></ul>
+<div class="avoid">{{ steps([
+  ("visit a, b", row(stack(["home", "a"], name="back"), stack([], name="forward")), "current = b"),
+  ("back(1)", row(stack(["home"], name="back"), stack(["b"], name="forward")), "current = a"),
+  ("visit c", row(stack(["home", "a"], name="back"), stack([], name="forward")), "current = c. İleri stack’i boşaltıldı."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:browser.cpp", "visit", title="visit") }}
+{{ code("sol:browser.cpp", "back", title="back") }}
+{{ code("sol:browser.cpp", "historyReport", title="historyReport") }}
+{{ code("sol:browser.cpp", "tick", title="tick") }}
+<h3>Genişletme fikirleri</h3>
+<ul><li>Geçmişi sınırlı tut: en fazla 50 sayfa. Bunun için stack yerine L26’daki dairesel diziyi deque gibi kullanmak gerekir.</li><li>Öncelikli indirmeler: <code>std::queue</code> yerine 12. haftadaki heap ile <code>priority_queue</code>.</li><li>Bütün geçmişi bir dosyaya kaydet ve geri yükle (dönem projesindeki <code>open</code>/<code>save</code>).</li></ul>

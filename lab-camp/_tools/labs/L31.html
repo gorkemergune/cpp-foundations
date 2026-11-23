@@ -1,0 +1,49 @@
+{{ header(8, 3, "Midterm Mock C: Variants With Your Own Classes", "<b>50 minutes</b>, closed notes · Part A 15 · Part B 15 · Part C 15 · checking 5",
+  "the same midterm topics, one step away from what you practised: a different node of the circle, the camp's value-returning APIs, a different output queue",
+  slides="<code>08-linked-lists.ppt</code> 34–36 · <code>10-queues.ppt</code> 11–22",
+  archive="midterm notes: circular list with <code>last</code>, rotating triples, middle node → new queue", timed=True, one="A") }}
+<div class="box warn"><span class="t">Exam conditions</span><p>50-minute timer, only <code>mock31.cpp</code>. The point of this mock: you know the ideas, now the details changed. Read every contract twice before you write. Target 80 / 100.</p></div>
+<h2>Questions</h2>
+{{ code("lab:mock31.h", title="mock31.h — given (plus llstack.h and llqueue.h from Labs 22 and 26)") }}
+<h3>Part A (30 pts) — the node before last</h3>
+<p>Lab 19 deleted <code>last</code> itself. Now delete the node <b>before</b> <code>last</code>; <code>last</code> stays the same node.</p>
+{{ cases("PDF_BL", ["circle (first … last)", "return", "after"], [
+    ([1, 2, 3, 4], True, [1, 2, 4], "normal"),
+    ([1, 2], True, [2], "two nodes: the first goes, last points to itself"),
+    ([5], False, [5], "one node: nothing before last"),
+    ([], False, [], "empty"),
+], widths=["28%", "11%", "18%", "38%"]) }}
+<h3>Part B (35 pts) — alternate triples with the camp classes</h3>
+<p>Lab 27 with <code>LLQueue&lt;int&gt;</code> and <code>LLStack&lt;int&gt;</code>: <code>dequeue()</code> and <code>popFromStack()</code> return the value, and the queue has <code>size()</code>.</p>
+{{ cases("PDF_TRI", ["queue", "after"], [
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9], [3, 2, 1, 4, 5, 6, 9, 8, 7], "midterm example"),
+    ([0, 0, 1], [1, 0, 0], "zeros are values, not 'false'"),
+    ([1, 2, 3, 4, 5, 6, 7, 8], [3, 2, 1, 4, 5, 6, 7, 8], "incomplete last group"),
+], widths=["38%", "38%", "19%"]) }}
+<h3>Part C (35 pts) — middle node into an LLQueue</h3>
+{{ cases("PDF_MQ", ["list", "list = queue after"], [
+    ([1, 2, 3, 4, 5], [1, 2, 4, 5], "odd"),
+    ([1, 2, 3, 4], [1, 2, 4], "even: index 2"),
+    ([9], [], "one node"),
+    ([], [], "empty"),
+], widths=["30%", "30%", "35%"]) }}
+
+{{ banner("cevap anahtarı: süre bitmeden açma") }}
+<h2>Yaygın hatalar</h2>
+<table class="grid"><tr><th>Parça</th><th>Hata</th></tr>
+<tr><td>A</td><td>Lab 19’u ezberden yazıp <code>last</code>’ı silmek. İki düğümde döngünün <code>prev == last</code> ile başladığını gözden kaçırmak.</td></tr>
+<tr><td>B</td><td><code>while (int x = q.dequeue())</code> gibi değer döndüren <code>dequeue</code>’yu koşulda kullanmak. İlk 0’da döngü durur, testteki <code>0 0 1</code> satırı bunu yakalar. Döngüde <code>q.size()</code>’ı her turda okumak.</td></tr>
+<tr><td>C</td><td>Silmeden önce kuyruğa eklemek (orta eleman kuyruğa girer). Tek düğümde <code>head</code>’i <code>nullptr</code> yapmamak.</td></tr></table>
+<div class="avoid">{{ steps([
+  ("A: 1 2 3 4", ll([1, 2, 3, 4], labels={1: "prev", 2: "victim", 3: "last"}, circular=True, hl={2: "red"}), "prev, <code>prev-&gt;next-&gt;next == last</code> olana kadar yürür."),
+  ("sonra", ll([1, 2, 4], labels={2: "last"}, circular=True), "<code>prev-&gt;next = last; delete victim;</code>"),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Cevap anahtarı</h2>
+{{ code("sol:mock31.cpp", "deleteBeforeLast", title="Part A") }}
+{{ code("sol:mock31.cpp", "reverseAlternateTriplesLL", title="Part B") }}
+{{ code("sol:mock31.cpp", "deleteMiddleToLLQueue", title="Part C") }}
+<p><b>A</b>’da <code>prev = last</code> ile başlamak iki düğümlü çemberi özel kod yazmadan çözüyor. Kurban ilk düğüm, <code>prev</code> da <code>last</code> oluyor ve <code>last-&gt;next = last</code> kendiliğinden kuruluyor. <b>B</b>, Lab 27 ile aynı. Yalnızca API adları değişti. <b>C</b>, Lab 28’in <code>int</code> ve kamp kuyruğu ile yazılmış hâli.</p>
+<h2>8. hafta değerlendirmesi</h2>
+<div class="box"><p>Üç provada ortalama 80 ve üzerini aldıysan vizeye hazırsın. Değilse puan kaybettiğin konuların labını boş dosyadan tekrar yaz ve 48 saat sonra aynı provayı tekrar dene. Ardından bu haftanın projesi <b>P03</b>’e geç (stack + queue ile tarayıcı geçmişi ve indirme kuyruğu).</p></div>

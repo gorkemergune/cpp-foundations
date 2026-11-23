@@ -1,0 +1,48 @@
+{{ header(8, 1, "Midterm Mock A: Lists and Stacks", "<b>50 minutes</b>, closed notes, one sheet of paper · Part A 15 · Part B 10 · Part C 20 · checking 5",
+  "the midterm topics in new clothes: two stacks with the slides' API, <code>empty()</code>/<code>!empty()</code>, deleting the middle of a doubly linked list",
+  slides="<code>09-stacks.ppt</code> 2–22 · <code>08-linked-lists.ppt</code> 38–41",
+  archive="midterm notes: two stacks push/pop, <code>empty</code>/<code>!empty</code>, delete the middle node (all three, with a twist)", timed=True, one="C") }}
+<div class="box warn"><span class="t">Exam conditions</span><p>Do this mock only after Weeks 4–7. 50-minute timer, only <code>mock29.cpp</code>, no earlier labs open. When the time is up, run <code>.\run.ps1 L29</code> once. Each part is worth the points in the header; a part counts only if its tests are green. Target: 80 / 100.</p></div>
+
+<h2>Questions</h2>
+{{ code("lab:mock29.h", title="mock29.h — given") }}
+<h3>Part A (30 pts) — two stacks, slides' API</h3>
+<p>Move the top of <code>from</code> to <code>to</code> using only the slides' <code>Stack</code> operations. The slides' stack has a capacity (<code>MAX_STACK = 50</code>): if <code>to</code> is full, return <code>false</code> and <b>do not lose</b> the value — <code>from</code> must look exactly as before. The test fills <code>to</code> with 50 values to check this.</p>
+<h3>Part B (30 pts) — <code>empty()</code> or <code>!empty()</code>?</h3>
+<p>Count the values greater than <code>x</code>. The stack is a copy, so emptying it is fine. Use the right loop condition.</p>
+{{ cases("PDF_CA", ["stack (top first)", "x", "return"], [
+    ([5, 1, 8, 3], 4, 2, "normal"),
+    ([], 0, 0, "empty stack: the loop must not run"),
+    ([4, 4], 4, 0, "greater, not greater or equal"),
+    ([-1, -5], -3, 1, "negative values"),
+], widths=["30%", "10%", "12%", "43%"]) }}
+<h3>Part C (40 pts) — the middle of a doubly linked list</h3>
+<p>Same “middle” as Lab 18 (index <code>n/2</code>), but the list is doubly linked and given by <code>head</code> and <code>tail</code>. Thanks to <code>prev</code> you may stop <b>on</b> the middle node. Every <code>next</code>, every <code>prev</code>, <code>head</code> and <code>tail</code> must be right; the node must be deleted.</p>
+{{ cases("PDF_DM", ["list", "return", "after"], [
+    ([1, 2, 3, 4, 5], True, [1, 2, 4, 5], "odd length"),
+    ([1, 2, 3, 4], True, [1, 2, 4], "even length: index 2"),
+    ([1, 2], True, [1], "two nodes: the tail goes"),
+    ([7], True, [], "one node: head and tail become nullptr"),
+    ([], False, [], "empty"),
+], widths=["25%", "12%", "20%", "38%"]) }}
+
+{{ banner("cevap anahtarı: süre bitmeden açma") }}
+<h2>Puanlama ve yaygın hatalar</h2>
+<table class="grid"><tr><th>Parça</th><th>Puanı götüren hata</th></tr>
+<tr><td>A</td><td>Önce <code>from.pop(x)</code>, sonra <code>to.push(x)</code>: hedef doluysa değer kaybolur. Sıra şöyle olmalı: <code>getTop</code> ile oku, push et, başarılıysa pop et.</td></tr>
+<tr><td>B</td><td><code>while (st.empty())</code> dolu stack’te hiç çalışmaz. <code>top()</code>’ı kontrol etmeden çağırmak boş stack’te çöker.</td></tr>
+<tr><td>C</td><td><code>prev</code>’i güncellememek, <code>n = 1</code> ve <code>n = 2</code>’de <code>head</code>/<code>tail</code>’i unutmak.</td></tr></table>
+<div class="avoid">{{ steps([
+  ("C: n = 4", ll([1, 2, 3, 4], labels={0: "head", 2: "mid", 3: "tail"}, double=True, hl={2: "red"}), "slow, iki pointer döngüsü bitince indeks 2’de, yani tam ortada duruyor."),
+  ("sonuç", ll([1, 2, 4], labels={0: "head", 2: "tail"}, double=True), "<code>mid-&gt;prev-&gt;next = mid-&gt;next</code>, <code>mid-&gt;next-&gt;prev = mid-&gt;prev</code>"),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Cevap anahtarı</h2>
+{{ code("sol:mock29.cpp", "moveTopSlides", title="Part A") }}
+{{ code("sol:mock29.cpp", "countAbove", title="Part B") }}
+{{ code("sol:mock29.cpp", "deleteMiddleDLL", title="Part C") }}
+<ul><li><b>A.</b> Bu soru “işlemi geri alınabilir sırada yap” alışkanlığını ölçüyor. 2021 A2’deki undo ve dönem projesindeki <code>Action</code> fikriyle aynı.</li>
+<li><b>B.</b> Parametre değerle geldiği için kopya üzerinde çalışılıyor. Referansla gelseydi çağıranın stack’i boşalırdı. Lab 21’deki <code>maxKeep</code> gibi bir geri kurma gerekirdi.</li>
+<li><b>C.</b> Lab 18’deki “öncülü bul” zorunluluğu doubly listede ortadan kalkıyor. Karşılığında iki okun da (<code>next</code> ve <code>prev</code>) güncellenmesi gerekiyor.</li></ul>
+<p>Puanın 80’in altındaysa kaybettiğin parçanın labını (A: L23, B: L21, C: L17 ve L18) yarın boş dosyadan tekrar yaz.</p>

@@ -1,0 +1,53 @@
+{{ header(8, 2, "Midterm Mock B: Strings, Stacks, Queues", "<b>50 minutes</b>, closed notes · Part A 15 · Part B 12 · Part C 18 · checking 5",
+  "the midterm topics with harder input and the course's own APIs: numbers inside text, two slides' stacks, alternate groups with the slides' queue and stack",
+  slides="<code>09-stacks.ppt</code> 15–22 · <code>10-queues.ppt</code> 15–22",
+  archive="midterm notes: minimum number in a string, two strings reversed with two stacks, rotating groups of numbers", timed=True, one="B") }}
+<div class="box warn"><span class="t">Exam conditions</span><p>50-minute timer, only <code>mock30.cpp</code>. Grade with the points in the header; target 80 / 100.</p></div>
+<h2>Questions</h2>
+{{ code("lab:mock30.h", title="mock30.h — given") }}
+<h3>Part A (30 pts) — the smallest number inside a text</h3>
+<p>Lab 10 read a line of clean, space-separated numbers. Here the numbers are written inside other text: <code>"a12b-3c5"</code> contains 12, −3 and 5. A run of digits is one number; a <code>-</code> directly before the first digit makes it negative. Find the smallest; keep the “first number into a temp, then compare” idea.</p>
+{{ cases("PDF_MIN", ["s", "return", "out (777 = untouched)"], [
+    ("a12b-3c5", True, -3, "statement example"),
+    ("price: 40, discount 15", True, 15, "spaces and punctuation"),
+    ("5-3", True, -3, "the '-' belongs to the 3"),
+    ("x-y", False, 777, "a '-' without digits is not a number"),
+    ("", False, 777, "empty"),
+    ("007 and 8", True, 7, "leading zeros"),
+    ("-120-5", True, -120, "two negatives back to back"),
+], widths=["32%", "11%", "17%", "35%"]) }}
+<h3>Part B (30 pts) — two slides' stacks</h3>
+<p>Lab 23's question with the slides' <code>Stack</code> (<code>push</code>, <code>pop(item&amp;)</code>, <code>getTop</code>, <code>isEmpty</code>). Characters are stored as their codes.</p>
+{{ cases("PDF_REV", ["a", "b", "return"], [
+    ("stack", "kcats", True, "reverse"),
+    ("abc", "abc", False, "equal"),
+    ("ab", "bad", False, "different lengths"),
+    ("", "", True, "both empty"),
+], widths=["20%", "20%", "12%", "43%"]) }}
+<h3>Part C (40 pts) — alternate groups, course APIs</h3>
+<p>Lab 27's question, but the group size is a parameter <code>g</code> and the structures are the slides' <code>Queue</code> (no <code>size()</code>, so the number of values <code>n</code> is passed in) and one slides' <code>Stack</code>.</p>
+{{ cases("PDF_GRP", ["queue", "g", "after"], [
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9], 3, [3, 2, 1, 4, 5, 6, 9, 8, 7], "the midterm example"),
+    ([1, 2, 3, 4, 5, 6, 7, 8], 2, [2, 1, 3, 4, 6, 5, 7, 8], "g = 2"),
+    ([1, 2, 3, 4, 5], 4, [4, 3, 2, 1, 5], "one complete group"),
+    ([1, 2, 3], 4, [1, 2, 3], "no complete group"),
+    ([], 3, [], "empty"),
+], widths=["30%", "7%", "30%", "28%"]) }}
+<p>Plus 200 random queues with <code>g</code> = 1 … 4.</p>
+
+{{ banner("cevap anahtarı: süre bitmeden açma") }}
+<h2>Yaygın hatalar</h2>
+<table class="grid"><tr><th>Parça</th><th>Hata</th></tr>
+<tr><td>A</td><td>Her rakamı ayrı bir sayı sanmak (12 → 1 ve 2). <code>-</code>’yi rakam öncesine bakmadan ele almak (<code>"x-y"</code>). <code>temp</code>’i 0 ile başlatmak: hepsi pozitifse cevap yanlış olur.</td></tr>
+<tr><td>B</td><td>Uzunluk kontrolünü unutmak. <code>b</code>’yi baştan push etmek: o zaman iki stack ancak <code>a == b</code> iken eşleşir.</td></tr>
+<tr><td>C</td><td>Ders kuyruğunda <code>size()</code> olmadığı için döngüyü <code>while (!q.isEmpty())</code> ile kurmak. Eleman arkaya eklendiği için kuyruk hiç boşalmaz ve döngü sonsuza gider. <code>n</code> parametresi tam bu yüzden verildi.</td></tr></table>
+
+<div class="page-break"></div>
+<h2>Cevap anahtarı</h2>
+{{ code("sol:mock30.cpp", "minNumberInText", title="Part A") }}
+{{ code("sol:mock30.cpp", "areReversesSlides", title="Part B") }}
+{{ code("sol:mock30.cpp", "reverseAlternateGroupsSlides", title="Part C") }}
+<ul><li><b>A</b>, Lab 10’daki <code>temp</code> kalıbı ile C03’teki <code>myAtoi</code>’nin rakam toplama kalıbının birleşimi.</li>
+<li><b>B</b>’de <code>while (sa.pop(x) &amp;&amp; sb.pop(y))</code> iki stack’i birlikte boşaltıyor. Uzunluklar eşit olduğu için ikisi aynı anda bitiyor.</li>
+<li><b>C</b>’de Lab 27’deki <code>std::</code> çağrılarının yerini ders API’si aldı: <code>q.front(); q.pop();</code> yerine <code>q.dequeue(x)</code>, <code>st.top(); st.pop();</code> yerine <code>st.pop(x)</code>.</li></ul>
+<p>80’in altında kaldıysan: A için Lab 10 ve C03, B için Lab 23, C için Lab 27.</p>

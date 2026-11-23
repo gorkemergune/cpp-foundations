@@ -190,7 +190,7 @@ def graph(nodes, edges, directed=False, pos=None, hl=None, labels=None, edge_hl=
 
 # --------------------------------------------------------------------------- binary tree
 
-def tree(t, hl=None, notes=None, dx=34, dy=48, r=15, empty_text="(empty)"):
+def tree(t, hl=None, notes=None, dx=34, dy=48, r=15, empty_text="(empty)", font_size=None):
     """t: nested tuples (value, left, right) with None for missing children, or None.
     hl: {value: color}; notes: {value: "text under the node"}"""
     hl, notes = hl or {}, notes or {}
@@ -209,11 +209,12 @@ def tree(t, hl=None, notes=None, dx=34, dy=48, r=15, empty_text="(empty)"):
 
     walk(t, 0)
     pos = {}
+    pad = max(20, r + 4)                    # room for big nodes at the edges
     for i, (v, d, node) in enumerate(order):
-        pos[id(node)] = (20 + i * dx, 20 + d * dy)
+        pos[id(node)] = (pad + i * dx, pad + d * dy)
     maxd = max(d for _, d, _ in order)
-    W = 40 + (len(order) - 1) * dx
-    Hh = 40 + maxd * dy + (12 if notes else 0)
+    W = 2 * pad + (len(order) - 1) * dx
+    Hh = 2 * pad + maxd * dy + (12 if notes else 0)
     s = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{Hh}" viewBox="0 0 {W} {Hh}" {FONT}>', _defs(u)]
 
     def edges(node):
@@ -234,7 +235,7 @@ def tree(t, hl=None, notes=None, dx=34, dy=48, r=15, empty_text="(empty)"):
         x, y = pos[id(node)]
         fill = PAL[hl[v]] if v in hl else PAL["cell"]
         s.append(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}" stroke="{PAL["line"]}" stroke-width="1.4"/>')
-        s.append(f'<text x="{x}" y="{y + 4.5}" text-anchor="middle" font-size="{12 if len(str(v)) > 2 else 13}">{esc(v)}</text>')
+        s.append(f'<text x="{x}" y="{y + 4.5}" text-anchor="middle" font-size="{font_size or (12 if len(str(v)) > 2 else 13)}">{esc(v)}</text>')
         if v in notes:
             s.append(f'<text x="{x}" y="{y + r + 12}" text-anchor="middle" font-size="10" fill="{PAL["accent"]}">{esc(notes[v])}</text>')
     s.append("</svg>")

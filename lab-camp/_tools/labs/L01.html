@@ -1,0 +1,191 @@
+<div class="course">CSE 211 · Data Structures · Lab Camp — Week 1 · Day 1</div>
+<h1>Lab 01 — First Steps with <code>std::vector</code>: Running Totals</h1>
+<table class="meta">
+<tr><td class="k">Estimated time</td><td>35 minutes · warm-up 10 · exercises A–B 8 · main problem 12 · testing 5</td></tr>
+<tr><td class="k">Topic</td><td><code>std::vector&lt;int&gt;</code>, <code>push_back</code>, <code>size</code>, <code>[]</code>, range-for, compiling a C++ file, passing a vector <em>by value</em></td></tr>
+<tr><td class="k">Files</td><td><code>lab01.h</code> (given, do not edit) · <code>lab01.cpp</code> (you write) · <code>warmup.cpp</code> · <code>tests/test_lab01.cpp</code></td></tr>
+<tr><td class="k">Run the tests</td><td><code>cd lab-camp</code> then <code>.\run.ps1 L01</code> · one question: <code>.\run.ps1 L01 L01-M</code></td></tr>
+<tr><td class="k">Related problems</td><td><a href="https://leetcode.com/problems/running-sum-of-1d-array/">LeetCode 1480 · Running Sum of 1d Array</a> (main problem, adapted) · <a href="https://leetcode.com/problems/concatenation-of-array/">LeetCode 1929 · Concatenation of Array</a> (optional L01-X)</td></tr>
+</table>
+
+<h2>1. Problem statement</h2>
+<p>A wallet application stores the <b>change</b> of a user's balance for each day: a deposit is a positive number, a payment is a negative number, a quiet day is <code>0</code>. The balance starts at <code>0</code>. The app needs the balance <b>at the end of every day</b> to draw a chart.</p>
+<p>Write <code>runningTotals</code>. It receives the daily changes in a <code>std::vector&lt;int&gt;</code> and returns a <b>new</b> vector of the same length whose element <code>i</code> is the sum of the changes from day <code>0</code> to day <code>i</code>, both included.</p>
+<p><b>Example scenario.</b> The changes for four days are <code>{3, -1, 4, 0}</code>. After day 0 the balance is 3, after day 1 it is 2, after day 2 it is 6 and after day 3 it is still 6. The function returns <code>{3, 2, 6, 6}</code>.</p>
+
+<h2>2. Given code</h2>
+<p>The header declares every function of this lab. Your definitions go in <code>lab01.cpp</code>, which already contains each function with a <code>TODO();</code> line. Delete that line and write the body.</p>
+{{ code("lab:lab01.h", title="lab01.h — given") }}
+
+<div class="box sig"><span class="t">Function you complete (main problem, L01-M)</span>
+{{ snippet("std::vector<int> runningTotals(std::vector<int> changes);") }}
+<p class="small">The parameter is passed <b>by value</b>: the function receives its own copy of the caller's vector. Changing <code>changes</code> inside the function cannot change the caller's vector. (Lab 02 shows how to avoid this copy.)</p></div>
+
+<h3>Functions and tools you may use</h3>
+<table class="grid">
+<tr><th style="width:30%">Call</th><th>Meaning</th></tr>
+<tr><td><code>v.size()</code></td><td>number of elements (type <code>size_t</code>, an unsigned integer)</td></tr>
+<tr><td><code>v[i]</code></td><td>element <code>i</code>, valid for <code>0 &lt;= i &lt; v.size()</code>; no bounds check</td></tr>
+<tr><td><code>v.push_back(x)</code></td><td>appends <code>x</code> at the end; size grows by one</td></tr>
+<tr><td><code>v.back()</code>, <code>v.empty()</code></td><td>last element (only if not empty) · <code>true</code> when the size is 0</td></tr>
+<tr><td><code>for (int x : v)</code></td><td>range-for: <code>x</code> is a copy of each element in order</td></tr>
+</table>
+<div class="box rule"><span class="t">Lab rules</span>
+<ul><li>Do not include <code>&lt;numeric&gt;</code> (<code>std::accumulate</code>, <code>std::partial_sum</code>) in L01-A and L01-M. The loop is the exercise.</li>
+<li>Return a vector with exactly <code>changes.size()</code> elements. Do not print anything; the tests read the return value.</li></ul></div>
+
+<h3>Input, output, constraints</h3>
+<table class="grid">
+<tr><td style="width:22%"><b>Input</b></td><td><code>changes</code>: <code>0 &lt;= n &lt;= 10<sup>4</sup></code> integers, each <code>-10<sup>4</sup> &lt;= changes[i] &lt;= 10<sup>4</sup></code> (every total fits in <code>int</code>).</td></tr>
+<tr><td><b>Return value</b></td><td>a vector <code>r</code> with <code>r.size() == n</code> and <code>r[i] = changes[0] + … + changes[i]</code>. For <code>n = 0</code> return an empty vector.</td></tr>
+<tr><td><b>Complexity</b></td><td><code>O(n)</code> time. Do not re-add the prefix for every <code>i</code> (that would be <code>O(n<sup>2</sup>)</code>).</td></tr>
+</table>
+
+<h2>3. Warm-up (10 min)</h2>
+<p>Open <code>warmup.cpp</code>. <b>Write the five output lines on paper first</b>, then compile and run it. Compare line by line.</p>
+{{ code("lab:warmup.cpp", title="warmup.cpp") }}
+{{ snippet("g++ -std=c++17 -Wall warmup.cpp -o warmup.exe\n.\\warmup.exe", title="PowerShell, inside the lab folder", lang="text") }}
+
+<h2>4. Exercises before the main problem</h2>
+<p><span class="tag req">L01-A</span> <code>int sumAll(std::vector&lt;int&gt; v)</code> — return the sum of all elements; an empty vector gives <code>0</code>.</p>
+{{ cases("PDF_SUM", ["v", "return"], [
+    ([4, -1, 7], 10, "normal"),
+    ([], 0, "empty vector"),
+    ([-5], -5, "single negative element"),
+    ([2, 2, 2, 2], 8, "repeated values"),
+], widths=["40%", "20%", "35%"]) }}
+<p><span class="tag req">L01-B</span> <code>std::vector&lt;int&gt; evensOnly(std::vector&lt;int&gt; v)</code> — return the even elements in their original order. <code>0</code> and negative even numbers are even.</p>
+{{ cases("PDF_EVENS", ["v", "return"], [
+    ([5, 2, -4, 7, 0], [2, -4, 0], "keeps order, 0 and -4 are even"),
+    ([], [], "empty vector"),
+    ([1, 3, -3], [], "no even element"),
+    ([6, 6, 1, 6], [6, 6, 6], "repeated values stay repeated"),
+], widths=["35%", "25%", "35%"]) }}
+
+<h2>5. Worked example (main problem)</h2>
+<p>Input <code>changes = {3, -1, 4, 0}</code>. Keep one running variable <code>total</code> and one result vector <code>r</code>.</p>
+<table class="grid">
+<tr><th>step <code>i</code></th><th><code>changes[i]</code></th><th><code>total</code> after the step</th><th><code>r</code> after <code>push_back(total)</code></th></tr>
+<tr><td>start</td><td>–</td><td><code>0</code></td><td><code>{}</code></td></tr>
+<tr><td>0</td><td><code>3</code></td><td><code>3</code></td><td><code>{3}</code></td></tr>
+<tr><td>1</td><td><code>-1</code></td><td><code>2</code></td><td><code>{3, 2}</code></td></tr>
+<tr><td>2</td><td><code>4</code></td><td><code>6</code></td><td><code>{3, 2, 6}</code></td></tr>
+<tr><td>3</td><td><code>0</code></td><td><code>6</code></td><td><code>{3, 2, 6, 6}</code> → returned</td></tr>
+</table>
+
+<h2>6. Tests for L01-M</h2>
+<p>These rows are run by <code>.\run.ps1 L01</code>, followed by 200 random inputs compared with <code>std::partial_sum</code>. One more test calls the function and checks that the caller's vector is unchanged.</p>
+{{ cases("PDF_RUNNING", ["changes", "expected return"], [
+    ([3, -1, 4, 0], [3, 2, 6, 6], "example from the statement"),
+    ([], [], "empty input → empty result (not {0})"),
+    ([7], [7], "single day"),
+    ([-2, -3, -5], [-2, -5, -10], "only payments: totals go down"),
+    ([0, 0, 0], [0, 0, 0], "quiet days"),
+    ([5, -5, 5, -5], [5, 0, 5, 0], "balance returns to 0"),
+    ([10000, 10000, -10000], [10000, 20000, 10000], "limits of the constraints"),
+], widths=["38%", "30%", "27%"]) }}
+
+<h3>Optional extension · L01-X (LeetCode 1929)</h3>
+<p><span class="tag opt">L01-X</span> <code>std::vector&lt;int&gt; getConcatenation(std::vector&lt;int&gt; nums)</code> returns a vector of length <code>2n</code>: <code>nums</code> followed by <code>nums</code> again. On LeetCode the parameter is <code>vector&lt;int&gt;&amp; nums</code> (a reference, Lab 02); here it is a copy, so you may grow <code>nums</code> itself. Watch out: the loop must not depend on a size that keeps growing.</p>
+{{ cases("PDF_CONCAT", ["nums", "expected return"], [
+    ([1, 2, 1], [1, 2, 1, 1, 2, 1], "LeetCode example 1"),
+    ([], [], "empty"),
+    ([9], [9, 9], "single element"),
+], widths=["35%", "35%", "25%"]) }}
+
+<!-- ====================================================================== -->
+<div class="page-break"></div>
+<div class="lang-banner">Türkçe anlatım ve görsel inceleme <small>· önce İngilizce soruyu kendin çözmeyi dene</small></div>
+
+<h2>Soru ne istiyor?</h2>
+<p>Elinde günlük bakiye değişimleri var. Her gün için o güne kadarki <b>toplam bakiyeyi</b> içeren <b>yeni bir vektör</b> döndüreceksin. Çıktının uzunluğu girişin uzunluğuyla aynı olmalı. Boş girişte boş vektör dön. <code>{0}</code> döndürmek yanlış. Fonksiyon ekrana bir şey yazmayacak, testler dönüş değerine bakıyor.</p>
+<p>Bu ilk ödevde amaç algoritma değil, C++ sözdizimini yerleştirmek. Vektörü tanımlıyorsun, dolaşıyorsun, sonuna ekliyorsun ve fonksiyondan döndürüyorsun. Testler hazır. <code>lab01.cpp</code> içindeki <code>TODO();</code> satırını silip gövdeyi yazınca <code>.\run.ps1 L01</code> sonucu gösterir.</p>
+
+<h3>C ve Python’dan gelirken</h3>
+<table class="grid">
+<tr><th style="width:24%">İş</th><th style="width:25%">C</th><th style="width:22%">Python</th><th>C++ (<code>std::vector</code>)</th></tr>
+<tr><td>Tanımla</td><td><code>int a[4] = {3,-1,4,0};</code></td><td><code>a = [3,-1,4,0]</code></td><td><code>vector&lt;int&gt; a = {3, -1, 4, 0};</code></td></tr>
+<tr><td>Boyut</td><td>ayrıca tutulur (<code>n</code>)</td><td><code>len(a)</code></td><td><code>a.size()</code></td></tr>
+<tr><td>Sona ekle</td><td>yok (sabit boyut)</td><td><code>a.append(x)</code></td><td><code>a.push_back(x)</code></td></tr>
+<tr><td>Son elemanı sil</td><td>yok</td><td><code>a.pop()</code> değer döndürür</td><td><code>a.pop_back()</code> <b>değer döndürmez</b></td></tr>
+<tr><td>Fonksiyona ver</td><td>pointer gider, kopya yok</td><td>aynı liste nesnesi gider</td><td><code>vector&lt;int&gt; v</code> parametresi <b>tam kopya</b> alır</td></tr>
+<tr><td>Dolaş</td><td><code>for (i=0;i&lt;n;i++)</code></td><td><code>for x in a:</code></td><td><code>for (int x : a)</code> veya indeksle</td></tr>
+</table>
+<p>Son iki satır en çok hata yapılan yer. Python’da listeyi fonksiyona verip içinde değiştirirsen çağıran da değişikliği görür. C++’ta <code>vector&lt;int&gt; v</code> parametresi bir kopyadır ve çağıranın vektörü değişmez. Testteki “caller's vector after the call” satırı bunu kontrol ediyor. <code>size()</code> işaretsiz <code>size_t</code> döndürür. <code>int i</code> ile karşılaştırırsan <code>-Wall</code> uyarı verebilir. Bu yüzden döngüde <code>size_t i</code> kullan.</p>
+
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span>
+<ol><li>Sonuç vektörünü baştan <code>n</code> elemanlı mı kuracağım, yoksa boş başlatıp <code>push_back</code> mi yapacağım? İkisini karıştırırsam uzunluk ne olur?</li>
+<li>Her <code>i</code> için önceki toplamı yeniden hesaplamak zorunda mıyım, yoksa bir değişkende taşıyabilir miyim?</li>
+<li><code>n = 0</code> olduğunda döngüm hiç çalışmazsa ne döner? Bu doğru cevap mı?</li></ol></div>
+
+<h3>Isınma programının çıktısı</h3>
+<p>Kâğıda yazdığın tahminle karşılaştır. 4. satırda <code>pop_back()</code> son <code>4</code>’ü sildi. <code>back()</code> artık <code>7</code>. 5. satırda indeksle yazılan döngü <code>w</code>’nun kendisini değiştirdi.</p>
+{{ run("lab:warmup.cpp") }}
+
+<div class="avoid"><h3>Görsel iz: sonuç vektörü nasıl büyüyor?</h3>
+<p>Beyaz kutular dolu elemanlar, kesikli gri kutular ayrılmış ama henüz kullanılmayan yer (<b>capacity</b>). <code>size()</code> kullandığın eleman sayısı, <code>capacity()</code> yeniden yer ayırmadan sığabilecek eleman sayısı. Aşağıdaki kapasiteler bu bilgisayardaki GCC’nin değerleri. Kapasitenin nasıl büyüyeceğini standart belirlemez. Sen yalnızca <code>size()</code>’a güven.</p>
+{{ steps([
+  ("başlangıç", vec([], cap=0, name="r"), "<code>vector&lt;int&gt; r;</code> size=0. <code>r[0]</code> henüz yok, yazmak tanımsız davranış."),
+  ("i = 0", vec([3], cap=1, name="r", hl={0: "green"}), "total = 0 + 3 = 3 → <code>push_back(3)</code>"),
+  ("i = 1", vec([3, 2], cap=2, name="r", hl={1: "green"}), "total = 3 + (−1) = 2. Kapasite doldu, vektör daha büyük yer ayırıp elemanları taşıdı."),
+  ("i = 2", vec([3, 2, 6], cap=4, name="r", hl={2: "green"}), "total = 6. Kapasite 4 oldu. Bir boş yer var."),
+  ("i = 3", vec([3, 2, 6, 6], cap=4, name="r", hl={3: "green"}), "total = 6. Kapasitede yer vardı, taşıma olmadı."),
+]) }}
+</div>
+<div class="box warn"><span class="t">Sık hata: hem boyut ver hem push_back yap</span>
+<p><code>vector&lt;int&gt; r(n);</code> vektörü <code>n</code> tane <code>0</code> ile başlatır. Arkasından <code>push_back</code> yaparsan sonuç <code>2n</code> uzunlukta olur ve ilk yarısı sıfırdır. İki yoldan birini seç. Ya <code>r(n)</code> kurup <code>r[i] = total</code> yaz, ya da boş <code>r</code> kurup <code>push_back</code> yap.</p></div>
+
+<!-- ====================================================================== -->
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+<h3>L01-A ve L01-B</h3>
+{{ code("sol:lab01.cpp", "sumAll", title="sumAll") }}
+{{ code("sol:lab01.cpp", "evensOnly", title="evensOnly") }}
+<ul>
+<li><code>for (int x : v)</code> her elemanın bir kopyasını <code>x</code>’e koyar. Burada yalnızca okuduğumuz için kopya sorun değil.</li>
+<li><code>vector&lt;int&gt; result;</code> boş başlar. <code>push_back</code> sırayı korur, yani elemanlar girişteki sırayla eklenir.</li>
+<li>C++’ta negatif sayının modu negatif olabilir: <code>-3 % 2 == -1</code>. Bu yüzden tek sayı testini <code>x % 2 == 1</code> ile yazarsan <code>-3</code>’ü kaçırırsın. Çift testi <code>x % 2 == 0</code> her iki işarette de doğru çalışır.</li>
+</ul>
+
+<h3>L01-M · runningTotals</h3>
+{{ code("sol:lab01.cpp", "runningTotals", title="runningTotals") }}
+<ul>
+<li><b><code>int total = 0;</code></b> Önceki günlerin toplamını taşıyan değişken bu. Her adımda yalnızca bugünkü değişimi ekliyoruz. Bu yüzden toplam süre <code>O(n)</code>.</li>
+<li><b><code>size_t i</code></b> <code>changes.size()</code> ile aynı türde. <code>-Wall</code> işaretli ve işaretsiz karşılaştırma uyarısı vermez.</li>
+<li><b><code>result.push_back(total)</code></b> Sonuç her adımda bir büyür. Döngü bitince <code>result.size() == changes.size()</code>.</li>
+<li><b><code>return result;</code></b> Vektörü değerle döndürmek C++’ta normaldir. Derleyici kopyalamak yerine taşır. Pointer ya da <code>new</code> gerekmez.</li>
+</ul>
+
+<h3>Neden bu yolu seçtik?</h3>
+<ul>
+<li><b>İzinli işlemler.</b> Yalnızca <code>size</code>, <code>[]</code> ve <code>push_back</code> kullandık. <code>&lt;numeric&gt;</code> yasak olduğu için toplamı elle taşıdık.</li>
+<li><b>Sıra.</b> Sonuçta <code>i</code>. eleman <code>i</code>. günün bakiyesi. Döngü soldan sağa gittiği ve sona eklediği için sıra kendiliğinden korunuyor.</li>
+<li><b>Maliyet.</b> Zaman <code>O(n)</code>. Ek bellek sonuç vektörü için <code>O(n)</code>. Parametre değerle geldiği için çağrı anında bir <code>O(n)</code> kopya daha oluşuyor. Lab 02’de <code>const&amp;</code> ile bu kopyayı kaldıracağız.</li>
+</ul>
+
+<h3>Alternatif çözümler</h3>
+<p><b>Kopyanın kendisini değiştirmek.</b> Parametre zaten bizim kopyamız. Onu yerinde dönüştürüp döndürebiliriz. Bu, LeetCode 1480’deki yerinde çözümün aynısı. Ek sonuç vektörü gerekmez. Lab kurallarına uyar.</p>
+{{ code("sol:alternatives.cpp", "inPlace", title="alternatives.cpp — runningTotalsInPlace") }}
+<p><b>Standart kütüphane.</b> <code>std::partial_sum</code> aynı işi tek satırda yapar. Ancak bu lab <code>&lt;numeric&gt;</code> başlığını yasakladığı için <b>“Do not include &lt;numeric&gt;” kuralını ihlal eder</b>. Testler bu fonksiyonu kendi kontrolleri için kullanıyor.</p>
+{{ code("sol:alternatives.cpp", "stl", title="alternatives.cpp — runningTotalsSTL") }}
+
+<h3>L01-X · neden “sabit n” gerekiyor?</h3>
+{{ snippet('''
+// WRONG: undefined behaviour
+for (int x : nums) {
+    nums.push_back(x);  // the vector grows while range-for is walking it
+}
+''', title="Hatalı") }}
+{{ code("sol:lab01.cpp", "getConcatenation", title="Doğru") }}
+<p>Range-for, vektörün iç belleğini gösteren iterator’larla dolaşır. <code>push_back</code> kapasiteyi aşınca vektör yeni bir yere taşınır ve iterator’lar geçersiz kalır. Sonuç çökme, sonsuz döngü ya da rastgele değerler olabilir. Doğru sürüm, başlangıç boyutunu bir kez <code>n</code>’ye kaydedip indeksle çalışıyor.</p>
+
+<h2>Ezberden varyant · L01-V</h2>
+<div class="box tip"><span class="t">Kodlara bakmadan 5 dakikada yaz</span>
+<p><span class="tag opt">L01-V</span> <code>std::vector&lt;int&gt; runningMax(std::vector&lt;int&gt; v)</code>: <code>result[i]</code>, <code>v[0..i]</code> arasındaki en büyük değer olsun. Yapı <code>runningTotals</code> ile aynı. Yalnızca taşınan değer toplam yerine maksimum. Boş vektörde ilk elemanı nereden alacağını düşün. Test: <code>.\run.ps1 L01 L01-V</code></p></div>
+{{ cases("PDF_RUNMAX", ["v", "expected return"], [
+    ([2, 5, 1, 7, 3], [2, 5, 5, 7, 7], "normal"),
+    ([], [], "empty"),
+    ([-4, -9, -1], [-4, -4, -1], "all negative: do not start the maximum at 0"),
+    ([3, 3, 3], [3, 3, 3], "repeated values"),
+], widths=["35%", "30%", "30%"]) }}
+<p class="small muted">Bitirdiğinde: <code>.\run.ps1 L01</code> çıktısında A, B ve M yeşil olmalı. X ve V isteğe bağlı. Yarın Lab 02’de aynı vektörleri referansla (<code>&amp;</code>, <code>const&amp;</code>) alıp yerinde değiştireceksin.</p>

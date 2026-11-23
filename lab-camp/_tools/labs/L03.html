@@ -1,0 +1,188 @@
+<div class="course">CSE 211 · Data Structures · Lab Camp — Week 1 · Day 3</div>
+<h1>Lab 03 — Two Indexes: Reversing Alternate Groups of Three</h1>
+<table class="meta">
+<tr><td class="k">Estimated time</td><td>45 minutes · warm-up 7 · exercises A–B 13 · main problem 15 · testing 10</td></tr>
+<tr><td class="k">Topic</td><td>two indexes moving toward each other, <code>std::swap</code>, inclusive ranges, loop bounds for groups, the <code>size_t</code> underflow trap</td></tr>
+<tr><td class="k">Files</td><td><code>lab03.h</code> (given) · <code>lab03.cpp</code> (you write) · <code>warmup.cpp</code> · <code>tests/test_lab03.cpp</code></td></tr>
+<tr><td class="k">Run the tests</td><td><code>.\run.ps1 L03</code> · one question: <code>.\run.ps1 L03 L03-M</code></td></tr>
+<tr><td class="k">Midterm topics</td><td>“sayıları döndürme: <code>1 2 3 4 5 6 7 8 9 → 3 2 1 4 5 6 9 8 7</code>” (main problem, vector version) · “iki stringin birbirinin tersi olup olmadığı” (L03-B, vector version)</td></tr>
+<tr><td class="k">Related problems</td><td><a href="https://www.geeksforgeeks.org/problems/reverse-array-in-groups0255/1">GeeksforGeeks · Reverse Array in Groups</a> (optional L03-X) · <a href="https://leetcode.com/problems/reverse-string/">LeetCode 344 · Reverse String</a> (same two-index idea)</td></tr>
+</table>
+
+<h2>1. Problem statement</h2>
+<p>A sensor sends its readings in packets of three. Because of a wiring mistake, the 1st, 3rd, 5th, … packet arrives <b>in reverse order</b>, while the 2nd, 4th, … packets are correct. Your job is to repair the stream <b>in place</b>: reverse every alternate complete packet of three, starting with the first one.</p>
+<p>A packet is complete only if all three of its readings arrived. An incomplete packet at the end of the stream is left exactly as it is, even if its position says “reverse”.</p>
+<p><b>Example scenario.</b> The stream <code>{1, 2, 3, 4, 5, 6, 7, 8, 9}</code> has three packets: <code>[1 2 3]</code>, <code>[4 5 6]</code>, <code>[7 8 9]</code>. Packets 0 and 2 are reversed, packet 1 stays: the result is <code>{3, 2, 1, 4, 5, 6, 9, 8, 7}</code>. For <code>{1, 2, 3, 4, 5, 6, 7, 8}</code> the third packet <code>[7 8]</code> is incomplete, so the result is <code>{3, 2, 1, 4, 5, 6, 7, 8}</code>.</p>
+<div class="box rule"><span class="t">Assumptions added for this lab</span>
+<p class="small">The midterm note only gives the example <code>1…9 → 3 2 1 4 5 6 9 8 7</code>. This lab fixes the missing rules: groups are counted from the front, groups 0, 2, 4, … are reversed, an incomplete last group never changes, and the work is done in the same vector. In Week 7 the same question comes back with a queue and one helper stack.</p></div>
+
+<h2>2. Given code</h2>
+{{ code("lab:lab03.h", title="lab03.h — given") }}
+<div class="box sig"><span class="t">Function you complete (main problem, L03-M)</span>
+{{ snippet("void reverseAlternateTriples(std::vector<int>& v);") }}
+<p class="small">You may call your own <code>reverseRange</code> from L03-A inside it. If you do and L03-A is not written yet, the test runner prints “needs L03-A first”.</p></div>
+
+<h3>Functions you may call</h3>
+<table class="grid">
+<tr><th style="width:32%">Call</th><th>Meaning</th></tr>
+<tr><td><code>v.size()</code>, <code>v[i]</code></td><td>number of elements, element <code>i</code></td></tr>
+<tr><td><code>std::swap(x, y)</code> (<code>&lt;utility&gt;</code>)</td><td>exchanges two values; works on elements: <code>swap(v[i], v[j])</code></td></tr>
+<tr><td><code>reverseRange(v, lo, hi)</code></td><td>your own function from L03-A</td></tr>
+<tr><td><code>std::reverse</code>, <code>&lt;algorithm&gt;</code>, a second vector</td><td><b>not allowed</b> in A, M, X, V</td></tr>
+</table>
+
+<h3>Input, output, constraints</h3>
+<table class="grid">
+<tr><td style="width:22%"><b>Input</b></td><td><code>0 &lt;= v.size() &lt;= 10<sup>5</sup></code>; values are any <code>int</code>; duplicates are possible.</td></tr>
+<tr><td><b>Output</b></td><td>no return value; the caller's vector after the call is checked.</td></tr>
+<tr><td><b>Complexity</b></td><td><code>O(n)</code> time, <code>O(1)</code> extra memory.</td></tr>
+</table>
+
+<h2>3. Warm-up (7 min)</h2>
+<p>Predict the five output lines, then compile and run. Line 1 is the most important line of this lab.</p>
+{{ code("lab:warmup.cpp", title="warmup.cpp") }}
+
+<h2>4. Exercises before the main problem</h2>
+<p><span class="tag req">L03-A</span> <code>void reverseRange(std::vector&lt;int&gt;&amp; v, int lo, int hi)</code> — reverse <code>v[lo..hi]</code>, both ends included, using two indexes and <code>swap</code>. If <code>lo &lt; 0</code>, <code>hi &gt;= size</code> or <code>lo &gt;= hi</code>, do nothing.</p>
+{{ cases("PDF_RANGE", ["v (before)", "lo", "hi", "v (after)"], [
+    ([1, 2, 3, 4, 5], 1, 3, [1, 4, 3, 2, 5], "inner part"),
+    ([1, 2, 3, 4, 5, 6], 0, 5, [6, 5, 4, 3, 2, 1], "whole vector, even length"),
+    ([1, 2, 3], 0, 2, [3, 2, 1], "odd length: the middle stays"),
+    ([1, 2, 3], 2, 2, [1, 2, 3], "lo == hi: one element"),
+    ([1, 2, 3], 2, 0, [1, 2, 3], "lo > hi"),
+    ([1, 2, 3], -1, 2, [1, 2, 3], "lo out of range"),
+    ([1, 2, 3], 0, 3, [1, 2, 3], "hi == size is out of range"),
+    ([], 0, 0, [], "empty vector"),
+], widths=["24%", "7%", "7%", "24%", "33%"]) }}
+<p><span class="tag req">L03-B</span> <code>bool isReverseOf(const std::vector&lt;int&gt;&amp; a, const std::vector&lt;int&gt;&amp; b)</code> — <code>true</code> if <code>b</code> is <code>a</code> read backwards. Lengths must match. Two empty vectors are reverses of each other.</p>
+{{ cases("PDF_ISREV", ["a", "b", "return"], [
+    ([1, 2, 3], [3, 2, 1], True, "normal"),
+    ([1, 2, 3], [1, 2, 3], False, "equal is not reversed"),
+    ([1, 2, 1], [1, 2, 1], True, "a palindrome is its own reverse"),
+    ([1, 2], [2, 1, 0], False, "different lengths"),
+    ([], [], True, "both empty"),
+    ([5], [5], True, "single element"),
+], widths=["22%", "22%", "12%", "39%"]) }}
+
+<h2>5. Worked example</h2>
+<p>Group <code>g</code> occupies indexes <code>3g, 3g+1, 3g+2</code>. Only even <code>g</code> are reversed, so the start indexes are <code>0, 6, 12, …</code>. A group starting at <code>s</code> is complete when <code>s + 2 &lt;= n − 1</code>, i.e. <code>s + 2 &lt; n</code>. For <code>n = 10</code>, <code>{1, …, 10}</code>:</p>
+<table class="grid">
+<tr><th>start <code>s</code></th><th>group</th><th><code>s + 2 &lt; n</code>?</th><th>action</th><th>vector after the step</th></tr>
+<tr><td>0</td><td>0: <code>[1 2 3]</code></td><td>2 &lt; 10 yes</td><td>reverse</td><td><code>{3, 2, 1, 4, 5, 6, 7, 8, 9, 10}</code></td></tr>
+<tr><td>6</td><td>2: <code>[7 8 9]</code></td><td>8 &lt; 10 yes</td><td>reverse</td><td><code>{3, 2, 1, 4, 5, 6, 9, 8, 7, 10}</code></td></tr>
+<tr><td>12</td><td>4: (none)</td><td>14 &lt; 10 no</td><td>stop</td><td>— returned as is</td></tr>
+</table>
+
+<h2>6. Tests for L03-M</h2>
+{{ cases("PDF_TRIPLES", ["v (before)", "v (after)"], [
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9], [3, 2, 1, 4, 5, 6, 9, 8, 7], "midterm example"),
+    ([], [], "n = 0"),
+    ([1, 2], [1, 2], "n = 2: no complete group"),
+    ([1, 2, 3], [3, 2, 1], "n = 3: exactly one group"),
+    ([1, 2, 3, 4, 5, 6], [3, 2, 1, 4, 5, 6], "n = 6: second group stays"),
+    ([1, 2, 3, 4, 5, 6, 7, 8], [3, 2, 1, 4, 5, 6, 7, 8], "n = 8: group 2 is incomplete"),
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [3, 2, 1, 4, 5, 6, 9, 8, 7, 10], "n = 10"),
+    ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], [3, 2, 1, 4, 5, 6, 9, 8, 7, 10, 11, 12, 13], "n = 13: group 4 incomplete"),
+    ([5, 5, 1, 2, 2, 2], [1, 5, 5, 2, 2, 2], "duplicates"),
+], widths=["37%", "37%", "21%"]) }}
+<p>After the rows, 200 random vectors (length 0–20) are compared with a <code>std::reverse</code> version.</p>
+
+<h3>Optional extension · L03-X (GeeksforGeeks)</h3>
+<p><span class="tag opt">L03-X</span> <code>void reverseInGroups(std::vector&lt;int&gt;&amp; arr, int k)</code> — reverse <b>every</b> group of <code>k</code> consecutive elements; the last group may be shorter and is reversed too. <code>k &gt;= 1</code>. (On the site the vector may hold <code>long long</code>; the idea is identical.)</p>
+{{ cases("PDF_GROUPS", ["arr (before)", "k", "arr (after)"], [
+    ([1, 2, 3, 4, 5], 3, [3, 2, 1, 5, 4], "site example 1"),
+    ([5, 6, 8, 9], 5, [9, 8, 6, 5], "k > n: the whole array"),
+    ([1, 2, 3, 4, 5, 6, 7, 8], 3, [3, 2, 1, 6, 5, 4, 8, 7], "shorter last group"),
+    ([1, 2, 3], 1, [1, 2, 3], "k = 1: nothing moves"),
+    ([], 2, [], "empty"),
+], widths=["28%", "7%", "28%", "32%"]) }}
+
+<!-- ====================================================================== -->
+<div class="page-break"></div>
+<div class="lang-banner">Türkçe anlatım ve görsel inceleme <small>· önce İngilizce soruyu kendin çözmeyi dene</small></div>
+
+<h2>Soru ne istiyor?</h2>
+<p>Vize notundaki <b>“sayıları döndürme”</b> sorusu bu. Dizi üçerli gruplara ayrılıyor. 0., 2., 4. … grupların içi ters çevriliyor, aradaki gruplar aynen kalıyor. Son grup eksikse, yani üç elemanı yoksa, hiç dokunulmuyor. İş aynı vektör üzerinde yapılacak. Yeni vektör kurmak yasak. Dönüş değeri yok, testler çağrıdan sonraki vektöre bakıyor.</p>
+<p>Notta yalnızca örnek vardı. Grupların baştan sayılması, eksik grubun korunması ve yerinde çalışma bu kamp için konan varsayımlar. Sınavda benzer bir soru gelirse önce bu üç noktayı sözleşme olarak kâğıda yaz.</p>
+<p><b>L03-B</b>, vize notundaki “iki string birbirinin tersi mi?” sorusunun vektör hâli. 3. haftada <code>std::string</code> ile, 6. haftada iki stack ile aynı soruyu tekrar çözeceksin.</p>
+
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span>
+<ol><li>Üç elemanlı bir grubu ters çevirmek için kaç takas gerekir? Ortadaki eleman nereye gider?</li>
+<li>Döngü değişkenini grup numarası üzerinden mi yürüteyim, başlangıç indeksi üzerinden mi? Hangisinde “eksik grup” koşulu daha kolay yazılır?</li>
+<li><code>n = 0</code> ya da <code>n = 2</code> iken döngü koşulum ilk adımda yanlış oluyor mu?</li></ol></div>
+
+<h3>Isınma programının çıktısı ve <code>size_t</code> tuzağı</h3>
+{{ run("lab:warmup.cpp") }}
+<p>1. satır C’den gelen biri için sürpriz olabilir. <code>e.size()</code> işaretsiz bir <code>size_t</code> ve 0’dan 1 çıkarınca <b>−1 değil, en büyük 64 bitlik sayı</b> çıkıyor. <code>for (size_t i = 0; i &lt; v.size() - 1; i++)</code> gibi bir döngü boş vektörde durmaz ve dizinin dışına okur. Python’da <code>len(v) - 1</code> için bu sorun yok, çünkü Python tam sayıları işaretsiz değildir. Çözüm 2. satırda: önce <code>int n = v.size();</code> yap, sonra <code>n - 1</code> kullan. Bu lab boyunca ve sonraki bütün ödevlerde bu alışkanlığı koru.</p>
+{{ code("sol:alternatives.cpp", "sizeTrap", title="alternatives.cpp — boş vektörde taşan döngü (çağrılmıyor)") }}
+
+<div class="avoid">
+<h3>Görsel iz: iki indeksle <code>reverseRange(v, 0, 5)</code></h3>
+{{ steps([
+  ("başlangıç", vec([1, 2, 3, 4, 5, 6], name="v", ptr={"lo": 0, "hi": 5}), "lo &lt; hi, takas et."),
+  ("1. takas", vec([6, 2, 3, 4, 5, 1], name="v", hl={0: "green", 5: "green"}, ptr={"lo": 1, "hi": 4}), "<code>swap(v[0], v[5])</code>, sonra <code>lo++</code>, <code>hi--</code>."),
+  ("2. takas", vec([6, 5, 3, 4, 2, 1], name="v", hl={1: "green", 4: "green"}, ptr={"lo": 2, "hi": 3}), "<code>swap(v[1], v[4])</code>."),
+  ("3. takas", vec([6, 5, 4, 3, 2, 1], name="v", hl={2: "green", 3: "green"}, ptr={"hi": 2, "lo": 3}), "lo = 3, hi = 2. <code>lo &lt; hi</code> yanlış, dur. 6 eleman için 3 takas yeterli."),
+]) }}
+</div>
+<div class="avoid">
+<h3>Görsel iz: <code>reverseAlternateTriples</code></h3>
+{{ steps([
+  ("n = 9", vec([1, 2, 3, 4, 5, 6, 7, 8, 9], name="v", groups=[(0, 2, "grup 0: çevir", "red"), (3, 5, "grup 1: kalsın", "gray"), (6, 8, "grup 2: çevir", "red")]), "Başlangıçlar s = 0, 6. Her ikisinde de s + 2 &lt; 9."),
+  ("s = 0", vec([3, 2, 1, 4, 5, 6, 7, 8, 9], name="v", hl={0: "green", 2: "green"}, arrows=[(0, 2), (2, 0)]), "Üç elemanı çevirmek için uçları takas etmek yeter. Ortadaki 2 yerinde kalır."),
+  ("s = 6", vec([3, 2, 1, 4, 5, 6, 9, 8, 7], name="v", hl={6: "green", 8: "green"}, arrows=[(6, 8), (8, 6)]), "s = 12 için 14 &lt; 9 yanlış, döngü biter."),
+  ("n = 8", vec([3, 2, 1, 4, 5, 6, 7, 8], name="v", groups=[(0, 2, "çevrildi", "green"), (3, 5, "kalsın", "gray"), (6, 7, "eksik: dokunma", "gray")]), "s = 6 için 8 &lt; 8 yanlış. Eksik grup <code>[7 8]</code> aynen kalır."),
+]) }}
+</div>
+
+<!-- ====================================================================== -->
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+<h3>L03-A · reverseRange</h3>
+{{ code("sol:lab03.cpp", "reverseRange", title="reverseRange") }}
+<ul>
+<li><b>Geçersiz aralık</b> en başta yakalanıyor. <code>hi &gt;= (int)v.size()</code> karşılaştırmasında boyutu <code>int</code>’e çevirdik. Bu sayede negatif <code>hi</code> işaretsiz sayıya dönüşmez.</li>
+<li><b>İki indeks.</b> <code>lo</code> ve <code>hi</code> birbirine doğru yürür. Her takas iki elemanı son yerine koyar. Toplam takas sayısı <code>(hi − lo + 1) / 2</code>.</li>
+<li><code>lo</code> ve <code>hi</code> değerle geçirilen <code>int</code> parametreler. Fonksiyon içinde değiştirmek serbest, çağıranı etkilemez.</li>
+</ul>
+<h3>L03-B · isReverseOf</h3>
+{{ code("sol:lab03.cpp", "isReverseOf", title="isReverseOf") }}
+<p><code>a.size() != b.size()</code> iki <code>size_t</code>’yi karşılaştırdığı için güvenli. Uzunluklar eşitse <code>b[n − 1 − i]</code>, <code>a[i]</code>’nin aynadaki karşılığı. İlk uyuşmazlıkta <code>false</code> döndüğümüz için gereksiz karşılaştırma yapılmıyor.</p>
+
+<h3>L03-M · reverseAlternateTriples</h3>
+{{ code("sol:lab03.cpp", "reverseAlternateTriples", title="reverseAlternateTriples") }}
+<ul>
+<li><b><code>start += 6</code></b> bir grubu çevirip bir grubu atlıyor. Grup numarasıyla <code>for (g = 0; …; g += 2)</code> yazıp <code>start = 3 * g</code> hesaplamak da doğru. Burada indeks üzerinden yürümek daha kısa.</li>
+<li><b><code>start + 2 &lt; n</code></b> grubun son elemanı vektörün içinde mi diye bakar. Eksik grup için döngü hiç girmez, böylece “eksikse dokunma” kuralı ayrı bir <code>if</code> gerektirmez.</li>
+<li><b>Tek takas.</b> <code>[a b c]</code> → <code>[c b a]</code>: yalnızca uçlar yer değiştirir. Genel bir grup boyu için <code>reverseRange</code> çağrılır. Aşağıdaki alternatif bunu gösteriyor.</li>
+</ul>
+
+<h3>Neden bu yolu seçtik?</h3>
+<ul>
+<li><b>İzinli işlemler.</b> Yalnızca <code>size</code>, <code>[]</code> ve <code>swap</code>. Yeni vektör yok, <code>std::reverse</code> yok.</li>
+<li><b>Korunan sıra.</b> Çevrilmeyen gruplar ve eksik son grup indeksleriyle birlikte aynen kalıyor. Çevrilen grubun ortası da yerinde.</li>
+<li><b>Maliyet.</b> Her 6 elemanda bir takas var. Zaman <code>O(n)</code>, hatta yaklaşık <code>n/6</code> takas. Ek bellek <code>O(1)</code>.</li>
+</ul>
+
+<h3>Alternatif çözümler</h3>
+<p><b>Genel grup boyu, L03-A’yı kullanarak.</b> Kurallara uyar. Grup boyu sınavda 3 yerine 4 olursa yalnızca bir sayı değişir.</p>
+{{ code("sol:alternatives.cpp", "general", title="alternatives.cpp — reverseAlternateGroups") }}
+<p><b>STL ile.</b> <code>std::reverse(first, last)</code> yarı açık <code>[first, last)</code> aralığını çevirir. Bu yüzden <code>start + 3</code> veriyoruz. Doğru çalışır ama bu labın <b>“std::reverse / &lt;algorithm&gt; kullanma” kuralını ihlal eder</b>. Dikkat: STL aralıkları sondan bir öteyi gösterir, bizim <code>reverseRange</code> ise iki ucu da dahil eder. Sınavda hangi sözleşmenin verildiğini mutlaka oku.</p>
+{{ code("sol:alternatives.cpp", "stl", title="alternatives.cpp — std::reverse ile") }}
+<p><b>Haftalar sonra: queue + stack.</b> 7. haftada aynı soru, elemanlar bir queue’da olacak şekilde gelecek. O zaman indeks olmayacak. Her grubun üç elemanını queue’dan çıkarıp bir stack’e atacak, stack’ten geri queue’ya yazacaksın. Bu labdaki grup sayma mantığı aynen kalacak.</p>
+
+<h3>L03-X · her grubu çevirme</h3>
+{{ code("sol:lab03.cpp", "reverseInGroups", title="reverseInGroups") }}
+<p>Fark iki noktada: atlama yok (<code>start += k</code>) ve kısa son grup da çevriliyor. Bunun için <code>end</code>, <code>n − 1</code> ile sınırlanıyor. M sorusuyla X sorusunun sözleşmeleri farklı. Benzer görünen iki soruyu karıştırmamak için sınır durumlarını yan yana yaz.</p>
+
+<h2>Ezberden varyant · L03-V</h2>
+<div class="box tip"><span class="t">Kodlara bakmadan 5 dakikada yaz</span>
+<p><span class="tag opt">L03-V</span> <code>void reverseFirstK(std::vector&lt;int&gt;&amp; v, int k)</code>: ilk <code>k</code> elemanı çevir. <code>k &lt;= 0</code> ya da <code>k &gt; size</code> ise hiçbir şey yapma. Bu sözleşme eski kamptaki <b>QU-8</b> sorusuyla aynı. Orada aynı işi queue ve stack ile yapacaksın. <code>.\run.ps1 L03 L03-V</code></p></div>
+{{ cases("PDF_FIRSTK", ["v (before)", "k", "v (after)"], [
+    ([1, 2, 3, 4, 5], 3, [3, 2, 1, 4, 5], "normal"),
+    ([1, 2, 3], 3, [3, 2, 1], "k == size"),
+    ([1, 2, 3], 4, [1, 2, 3], "k > size: nothing"),
+    ([1, 2, 3], 0, [1, 2, 3], "k = 0: nothing"),
+    ([], 1, [], "empty"),
+], widths=["26%", "7%", "26%", "36%"]) }}
+<p class="small muted">Bitirdiğinde: A, B ve M yeşil olmalı. Yarın Lab 04, bu haftanın süreli mini labı. Döndürmeyi bu labdaki <code>reverseRange</code> ile kuracaksın. Bu yüzden onu bir kez de ezberden yaz.</p>

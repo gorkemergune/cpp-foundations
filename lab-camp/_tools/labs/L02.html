@@ -1,0 +1,215 @@
+<div class="course">CSE 211 · Data Structures · Lab Camp — Week 1 · Day 2</div>
+<h1>Lab 02 — References: Removing and Inserting Inside a Vector</h1>
+<table class="meta">
+<tr><td class="k">Estimated time</td><td>45 minutes · warm-up 8 · exercises A–B 7 · main problem (two functions) 22 · testing 8</td></tr>
+<tr><td class="k">Topic</td><td>pass by value vs. <code>&amp;</code> vs. <code>const&amp;</code>, <code>int&amp;</code> in range-for, <code>size</code> vs. <code>capacity</code>, <code>reserve</code>/<code>resize</code>, <code>at()</code> vs. <code>[]</code>, shifting elements by index</td></tr>
+<tr><td class="k">Files</td><td><code>lab02.h</code> (given) · <code>lab02.cpp</code> (you write) · <code>warmup.cpp</code> · <code>tests/test_lab02.cpp</code></td></tr>
+<tr><td class="k">Run the tests</td><td><code>.\run.ps1 L02</code> · one question: <code>.\run.ps1 L02 L02-M1</code></td></tr>
+<tr><td class="k">Related problems</td><td><a href="https://leetcode.com/problems/remove-element/">LeetCode 27 · Remove Element</a> (optional L02-X)</td></tr>
+</table>
+
+<h2>1. Problem statement</h2>
+<p>A music player keeps the current playlist as a <code>std::vector&lt;int&gt;</code> of song IDs. The user can <b>remove the song at a position</b> and <b>insert a song at a position</b>. The playlist object is owned by the caller, so your functions must change <b>the caller's vector</b>, not a copy of it.</p>
+<p>The lab restricts you to the operations a fixed-size array would also have, plus one slot added or removed at the end. You therefore have to <b>shift elements yourself</b>. This is exactly what <code>erase</code> and <code>insert</code> do inside the library, and it is the core move of every array-based data structure in this course (array stack, circular queue, heap).</p>
+<p><b>Example scenario.</b> The playlist is <code>{4, 7, 2, 9}</code>. <code>removeAt(v, 1)</code> removes song 7 and the playlist becomes <code>{4, 2, 9}</code>. Then <code>insertAt(v, 1, 7)</code> puts it back: <code>{4, 7, 2, 9}</code>. <code>removeAt(v, 4)</code> returns <code>false</code> because there is no position 4, and the playlist does not change.</p>
+
+<h2>2. Given code</h2>
+{{ code("lab:lab02.h", title="lab02.h — given") }}
+<div class="box sig"><span class="t">Functions you complete (main problem)</span>
+{{ snippet('''
+bool removeAt(std::vector<int>& v, int index);            // L02-M1
+bool insertAt(std::vector<int>& v, int index, int value); // L02-M2
+''') }}
+<p class="small"><code>std::vector&lt;int&gt;&amp; v</code> is a <b>reference</b>: <code>v</code> is another name for the caller's vector. No copy is made and every change is visible to the caller. <code>const std::vector&lt;int&gt;&amp;</code> (L02-B) is also a reference without a copy, but the compiler rejects any change through it.</p></div>
+
+<h3>Functions you may call</h3>
+<table class="grid">
+<tr><th style="width:30%">Call</th><th>Meaning</th><th style="width:22%">Allowed in M1, M2, V</th></tr>
+<tr><td><code>v.size()</code>, <code>v[i]</code></td><td>number of elements · element <code>i</code> (no bounds check)</td><td>yes</td></tr>
+<tr><td><code>v.push_back(x)</code></td><td>append at the end (size + 1)</td><td>yes</td></tr>
+<tr><td><code>v.pop_back()</code></td><td>remove the last element (size − 1). Returns <b>nothing</b> (<code>void</code>). Undefined on an empty vector.</td><td>yes</td></tr>
+<tr><td><code>v.back()</code></td><td>the last element. Undefined on an empty vector.</td><td>yes</td></tr>
+<tr><td><code>v.at(i)</code></td><td>element <code>i</code>, throws <code>std::out_of_range</code> if <code>i</code> is invalid</td><td>yes</td></tr>
+<tr><td><code>v.erase(…)</code>, <code>v.insert(…)</code>, <code>&lt;algorithm&gt;</code></td><td>library shifting</td><td><b>no</b></td></tr>
+</table>
+<div class="box rule"><span class="t">Lab rules</span>
+<ul><li>Work on <code>v</code> itself. Do not build a second vector and copy it back.</li>
+<li>For an invalid index return <code>false</code> and leave <code>v</code> <b>exactly</b> as it was (same elements, same size).</li>
+<li><code>removeAt</code>: valid indexes are <code>0 … size−1</code>. <code>insertAt</code>: valid indexes are <code>0 … size</code>; <code>index == size</code> appends.</li></ul></div>
+
+<h3>Input, output, constraints</h3>
+<table class="grid">
+<tr><td style="width:22%"><b>Input</b></td><td><code>0 &lt;= v.size() &lt;= 10<sup>4</sup></code>; <code>index</code> is any <code>int</code> (it may be negative or too large); <code>value</code> is any <code>int</code>.</td></tr>
+<tr><td><b>Output</b></td><td>return value <code>true</code>/<code>false</code> and the caller's vector after the call. Nothing is printed.</td></tr>
+<tr><td><b>Complexity</b></td><td><code>O(n − index)</code> element moves, <code>O(1)</code> extra memory.</td></tr>
+</table>
+
+<h2>3. Warm-up (8 min)</h2>
+<p>Predict the nine output lines of <code>warmup.cpp</code> on paper, then compile and run it. Pay attention to lines 1–4 (copy or not?) and 5–7 (size or capacity?).</p>
+{{ code("lab:warmup.cpp", title="warmup.cpp") }}
+
+<h2>4. Exercises before the main problem</h2>
+<p><span class="tag req">L02-A</span> <code>void addToEach(std::vector&lt;int&gt;&amp; v, int d)</code> — add <code>d</code> to every element of the caller's vector. The test checks the caller's vector after the call (there is no return value).</p>
+{{ cases("PDF_ADD", ["v (before)", "d", "v (after)"], [
+    ([1, 2, 3], 10, [11, 12, 13], "the caller sees the change"),
+    ([], 5, [], "empty vector"),
+    ([-1], 1, [0], "single element"),
+], widths=["28%", "10%", "28%", "29%"]) }}
+<p><span class="tag req">L02-B</span> <code>int indexOf(const std::vector&lt;int&gt;&amp; v, int x)</code> — index of the first <code>x</code>, or <code>-1</code>.</p>
+{{ cases("PDF_INDEX", ["v", "x", "return"], [
+    ([4, 7, 2, 7], 7, 1, "first of two matches"),
+    ([4, 7], 5, -1, "not found"),
+    ([], 3, -1, "empty vector"),
+    ([9], 9, 0, "match at index 0 (not to be confused with 'false')"),
+], widths=["28%", "10%", "14%", "43%"]) }}
+
+<h2>5. Worked example</h2>
+<p><b><code>removeAt({4, 7, 2, 9}, 1)</code></b>: the index is valid (<code>0 &lt;= 1 &lt; 4</code>). Copy every element after position 1 one step to the left: <code>v[1] = v[2]</code> → <code>{4, 2, 2, 9}</code>, <code>v[2] = v[3]</code> → <code>{4, 2, 9, 9}</code>. The last slot is now a duplicate; <code>pop_back()</code> → <code>{4, 2, 9}</code>. Return <code>true</code>.</p>
+<p><b><code>insertAt({4, 2, 9}, 1, 7)</code></b>: valid (<code>0 &lt;= 1 &lt;= 3</code>). First make room: <code>push_back(7)</code> → <code>{4, 2, 9, 7}</code>. Then copy right, <b>starting from the back</b>: <code>v[3] = v[2]</code> → <code>{4, 2, 9, 9}</code>, <code>v[2] = v[1]</code> → <code>{4, 2, 2, 9}</code>. Finally <code>v[1] = 7</code> → <code>{4, 7, 2, 9}</code>. Return <code>true</code>.</p>
+
+<h2>6. Tests</h2>
+<p>Each row checks the return value <b>and</b> the vector after the call. After the rows, 200 random cases (including invalid indexes) are compared with <code>erase</code>/<code>insert</code>.</p>
+<p><span class="tag req">L02-M1</span> <code>removeAt</code></p>
+{{ cases("PDF_REMOVE", ["v (before)", "index", "return", "v (after)"], [
+    ([4, 7, 2, 9], 1, True, [4, 2, 9], "middle element"),
+    ([4, 7, 2, 9], 0, True, [7, 2, 9], "first element"),
+    ([4, 7, 2, 9], 3, True, [4, 7, 2], "last element: no shifting"),
+    ([5], 0, True, [], "single element → empty"),
+    ([], 0, False, [], "empty vector: nothing to remove"),
+    ([4, 7, 2], -1, False, [4, 7, 2], "negative index"),
+    ([4, 7, 2], 3, False, [4, 7, 2], "index == size is invalid here"),
+    ([7, 7, 7], 1, True, [7, 7], "duplicates: exactly one is removed"),
+], widths=["22%", "9%", "10%", "22%", "32%"]) }}
+<p><span class="tag req">L02-M2</span> <code>insertAt</code></p>
+{{ cases("PDF_INSERT", ["v (before)", "index", "value", "return", "v (after)"], [
+    ([4, 2, 9], 1, 7, True, [4, 7, 2, 9], "middle"),
+    ([4, 2, 9], 0, 1, True, [1, 4, 2, 9], "front: everything shifts"),
+    ([4, 2, 9], 3, 5, True, [4, 2, 9, 5], "index == size: append"),
+    ([], 0, 8, True, [8], "empty vector, index 0"),
+    ([], 1, 8, False, [], "empty vector, index 1"),
+    ([4, 2], -1, 8, False, [4, 2], "negative index"),
+    ([3, 3], 1, 3, True, [3, 3, 3], "value equal to its neighbours"),
+], widths=["18%", "8%", "8%", "9%", "20%", "32%"]) }}
+
+<h3>Optional extension · L02-X (LeetCode 27)</h3>
+<p><span class="tag opt">L02-X</span> <code>int removeElement(std::vector&lt;int&gt;&amp; nums, int val)</code> — LeetCode's own signature. Move every element different from <code>val</code> to the front of <code>nums</code> and return their count <code>k</code>. Only <code>nums[0 … k−1]</code> is checked; what stays after position <code>k−1</code> does not matter. LeetCode accepts any order of the kept elements; this lab version requires the <b>original order</b>. Target: one pass, <code>O(1)</code> extra memory, no <code>erase</code>.</p>
+{{ cases("PDF_REMOVE_ELEM", ["nums", "val", "k", "nums[0..k-1]"], [
+    ([3, 2, 2, 3], 3, 2, [2, 2], "LeetCode example 1"),
+    ([0, 1, 2, 2, 3, 0, 4, 2], 2, 5, [0, 1, 3, 0, 4], "LeetCode example 2, order kept"),
+    ([], 1, 0, [], "empty"),
+    ([1, 1], 1, 0, [], "everything removed"),
+], widths=["30%", "8%", "8%", "22%", "27%"]) }}
+
+<!-- ====================================================================== -->
+<div class="page-break"></div>
+<div class="lang-banner">Türkçe anlatım ve görsel inceleme <small>· önce İngilizce soruyu kendin çözmeyi dene</small></div>
+
+<h2>Soru ne istiyor?</h2>
+<p>İki fonksiyon yazacaksın. <code>removeAt</code> verilen konumdaki elemanı siler ve arkasındakileri bir adım <b>sola</b> kaydırır. <code>insertAt</code> verilen konuma yeni bir eleman koyar ve o konumdan itibaren her şeyi bir adım <b>sağa</b> kaydırır. İkisi de çağıranın vektörünü değiştirir. Bu yüzden parametre <code>vector&lt;int&gt;&amp;</code>. Geçersiz indekste <code>false</code> dönecek ve vektöre <b>hiç dokunmayacaksın</b>. Testler hem dönüş değerini hem çağrıdan sonraki vektörü kontrol ediyor.</p>
+<p>Lab, <code>erase</code> ve <code>insert</code> kullanmanı yasaklıyor. Kaydırmayı sen yazacaksın. Dizi tabanlı stack, circular queue ve heap’te aynı kaydırma ve indeks mantığını tekrar kullanacağız.</p>
+
+<h3>Değer, referans, const referans</h3>
+<table class="grid">
+<tr><th style="width:30%">Parametre</th><th style="width:20%">Kopya var mı?</th><th style="width:22%">Çağıran değişikliği görür mü?</th><th>Ne zaman?</th></tr>
+<tr><td><code>vector&lt;int&gt; v</code></td><td>evet, <code>O(n)</code></td><td>hayır</td><td>Fonksiyon kendi kopyasıyla oynayacaksa (Lab 01)</td></tr>
+<tr><td><code>vector&lt;int&gt;&amp; v</code></td><td>hayır</td><td><b>evet</b></td><td>Fonksiyonun işi çağıranın vektörünü değiştirmekse</td></tr>
+<tr><td><code>const vector&lt;int&gt;&amp; v</code></td><td>hayır</td><td>değiştiremez, derleme hatası</td><td>Yalnızca okuyacaksan. Labda varsayılan seçim bu.</td></tr>
+</table>
+<p>C’deki karşılığı <code>int* a</code> ile <code>const int* a</code> gibi düşünebilirsin. Farkı şu: referans hiçbir zaman <code>NULL</code> olamaz, başka bir nesneye yeniden bağlanamaz ve kullanırken <code>*</code> ya da <code>-&gt;</code> yazmazsın. Python’dan geliyorsan <code>&amp;</code> parametresi Python’daki liste davranışına benzer. Değerle geçirme ise <code>v.copy()</code> ile çağırmak gibidir.</p>
+<div class="fig">
+{{ steps([
+  ("byValue(a)", vec([1, 2, 3], name="a (main)") + vec([100, 2, 3], name="v (kopya)", hl={0: "yellow"}), "Fonksiyon kendi kopyasını değiştirdi. Fonksiyon bitince kopya yok oldu. <code>a[0]</code> hâlâ 1."),
+  ("byRef(a)", vec([100, 2, 3], name="a ≡ v", hl={0: "yellow"}), "Tek vektör, iki isim var. Değişiklik doğrudan <code>a</code> üzerinde yapıldı."),
+]) }}
+</div>
+
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span>
+<ol><li>Sağa kaydırırken döngüyü baştan mı sona mı, sondan mı başa mı yürütmeliyim? Yanlış yönde ne kaybolur?</li>
+<li><code>insertAt</code>’te yer açmak için <code>push_back</code> içine ne koymalıyım? Boş vektörde <code>back()</code> çağırırsam ne olur?</li>
+<li>Geçersiz indeksi fonksiyonun <b>en başında</b> mı yakalamalıyım, yoksa vektörü değiştirdikten sonra mı?</li></ol></div>
+
+<h3>Isınma programının çıktısı</h3>
+{{ run("lab:warmup.cpp") }}
+<p>Derleyici programı derledi ama <code>x = 0</code> satırı için uyarı verdi: “variable 'x' set but not used”. Kopyaya yazılan değer hiçbir yerde kullanılmıyor. <code>-Wall</code> uyarılarını her zaman oku. Labda bu tür bir uyarı çoğu zaman bir hatanın işaretidir. 3. satırda <code>int x</code> kopya olduğu için hiçbir şey değişmedi. 4. satırda <code>int&amp; x</code> elemanın kendisi. 5–7. satırlarda <code>reserve</code> yalnızca kapasiteyi artırır, <code>size</code> 0 kalır ve <code>b[0]</code>’a yazmak hâlâ yasaktır. <code>resize</code> ise elemanları gerçekten oluşturur. Küçültmek kapasiteyi geri vermez.</p>
+{{ steps([
+  ("reserve(10)", vec([], cap=10, name="b", cw=26), "Yer ayrıldı ama eleman yok. <code>b[0]</code> tanımsız davranış."),
+  ("resize(3)", vec([0, 0, 0], cap=10, name="b", cw=26, hl={0: "green", 1: "green", 2: "green"}), "Üç eleman oluştu, değerleri 0."),
+  ("resize(1)", vec([0], cap=10, name="b", cw=26), "Boyut 1. Kapasite 10 kaldı."),
+]) }}
+
+<div class="avoid">
+<h3>Görsel iz: <code>removeAt({4, 7, 2, 9}, 1)</code></h3>
+{{ steps([
+  ("başlangıç", vec([4, 7, 2, 9], name="v", hl={1: "red"}, ptr={"index": 1}), "Silinecek eleman 7. İndeks geçerli: 0 ≤ 1 < 4."),
+  ("i = 1", vec([4, 2, 2, 9], name="v", hl={1: "yellow"}, arrows=[(2, 1)]), "<code>v[1] = v[2]</code>. 7’nin üzerine yazıldı, silinmesi bu adımda oldu."),
+  ("i = 2", vec([4, 2, 9, 9], name="v", hl={2: "yellow"}, arrows=[(3, 2)]), "<code>v[2] = v[3]</code>. Döngü <code>i &lt; n − 1</code> olduğu için burada durur."),
+  ("pop_back()", vec([4, 2, 9], name="v"), "Sondaki kopya 9 atıldı. size = 3, dönüş <code>true</code>."),
+]) }}
+</div>
+<div class="avoid">
+<h3>Görsel iz: <code>insertAt({4, 2, 9}, 1, 7)</code></h3>
+{{ steps([
+  ("push_back(7)", vec([4, 2, 9, 7], name="v", hl={3: "green"}, ptr={"index": 1}), "Önce yer aç. Boyut 4 oldu. Sondaki 7 geçici, birazdan üzerine yazılacak."),
+  ("i = 3", vec([4, 2, 9, 9], name="v", hl={3: "yellow"}, arrows=[(2, 3)]), "<code>v[3] = v[2]</code>. Sağa kaydırma <b>sondan</b> başlar."),
+  ("i = 2", vec([4, 2, 2, 9], name="v", hl={2: "yellow"}, arrows=[(1, 2)]), "<code>v[2] = v[1]</code>. Döngü <code>i &gt; index</code> iken çalışır."),
+  ("v[1] = 7", vec([4, 7, 2, 9], name="v", hl={1: "green"}), "Boşalan konuma yeni değer yazıldı."),
+]) }}
+</div>
+
+<!-- ====================================================================== -->
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+<h3>L02-A ve L02-B</h3>
+{{ code("sol:lab02.cpp", "addToEach", title="addToEach") }}
+{{ code("sol:lab02.cpp", "indexOf", title="indexOf") }}
+<ul>
+<li><code>for (int&amp; x : v)</code> ifadesinde <code>x</code> elemanın kendisi. <code>x += d</code> doğrudan vektöre yazar. <code>&amp;</code> unutulursa test “caller's vector” satırında başarısız olur.</li>
+<li><code>(int)v.size()</code> ile işaretsiz boyutu <code>int</code>’e çeviriyoruz, çünkü <code>i</code> bir <code>int</code>. Bu çeviri karşılaştırmadaki <code>-Wsign-compare</code> uyarısını da kaldırır.</li>
+</ul>
+
+<h3>L02-M1 · removeAt</h3>
+{{ code("sol:lab02.cpp", "removeAt", title="removeAt") }}
+<ul>
+<li><b>Önce doğrula.</b> <code>index &lt; 0 || index &gt;= n</code> ise vektöre hiç dokunmadan <code>false</code> dönüyoruz. Boş vektörde <code>n = 0</code> olduğundan her indeks geçersiz sayılır.</li>
+<li><b><code>int n = v.size();</code></b> Boyutu bir kez <code>int</code> olarak alıyoruz. <code>v.size() - 1</code> boş vektörde 0’dan küçük olmaz, çok büyük bir sayıya döner (Lab 03’te göreceksin). <code>n - 1</code> ise güvenli.</li>
+<li><b>Sola kaydırma ileri yürür.</b> <code>v[i] = v[i + 1]</code> yazarken <code>v[i + 1]</code> henüz değişmemiştir, bu yüzden hiçbir değer kaybolmaz.</li>
+<li><b><code>pop_back()</code></b> sondaki kopyayı atar. Dönüş tipi <code>void</code> olduğu için <code>int x = v.pop_back();</code> derlenmez. Önce <code>back()</code> ile oku, sonra <code>pop_back()</code> ile sil. Stack ve queue haftalarında aynı ayrımı <code>top()</code>/<code>pop()</code> ve <code>front()</code>/<code>pop()</code> çiftlerinde göreceksin.</li>
+</ul>
+
+<h3>L02-M2 · insertAt</h3>
+{{ code("sol:lab02.cpp", "insertAt", title="insertAt") }}
+<ul>
+<li><b><code>index &gt; n</code></b> geçersiz, <code>index == n</code> geçerli. Sona ekleme de bir eklemedir. <code>removeAt</code>’teki koşulla farkı tek karakter: <code>&gt;=</code> yerine <code>&gt;</code>.</li>
+<li><b><code>push_back(value)</code></b> yer açmanın en güvenli yolu. <code>push_back(v.back())</code> yazsaydık boş vektörde <code>back()</code> tanımsız davranış olurdu. <code>index == n</code> iken döngü hiç çalışmaz ve değer zaten doğru yerdedir.</li>
+<li><b>Sağa kaydırma geriye yürür.</b> <code>i = n</code>’den başlayıp <code>index + 1</code>’e kadar iniyoruz.</li>
+</ul>
+<div class="box warn"><span class="t">Sık hata: sağa kaydırırken ileri yürümek</span>
+<p>Aşağıdaki döngü <code>{4, 2, 9, 9}</code> üzerinde <code>index = 1</code> için <code>{4, 2, 2, 2}</code> üretir. İlk adım <code>v[2]</code>’nin üzerine 2 yazar ve 9 kaybolur. Sonraki adım bu 2’yi tekrar kopyalar. Bu davranış <code>alternatives.cpp</code> içinde <code>assert</code> ile doğrulandı.</p>
+{{ code("sol:alternatives.cpp", "wrongShift", title="alternatives.cpp — hatalı yön") }}</div>
+
+<h3>Neden bu yolu seçtik?</h3>
+<ul>
+<li><b>İzinli fonksiyonlar.</b> <code>size</code>, <code>[]</code>, <code>push_back</code> ve <code>pop_back</code>. Hepsi vektörün sonunu değiştirir. Ortadaki her değişikliği kaydırmayla yaptık.</li>
+<li><b>Korunan sıra.</b> Silinen ve eklenen eleman dışındaki elemanların göreli sırası değişmiyor. Testlerdeki <code>erase</code>/<code>insert</code> karşılaştırması bunu kontrol ediyor.</li>
+<li><b>Maliyet.</b> Kaydırma <code>n − index</code> adım sürer. En kötü durum <code>index = 0</code> için <code>O(n)</code>, sondaki işlem için <code>O(1)</code>. Ek bellek <code>O(1)</code>. <code>push_back</code> nadiren yeniden yer ayırabilir. Ortalamada yine <code>O(1)</code>.</li>
+<li><b>Geçersiz girdi.</b> Kontrol en başta yapıldığı için yanlış indeks vektörü yarı değişmiş bırakamaz.</li>
+</ul>
+
+<h3>Alternatif: standart kütüphane</h3>
+{{ code("sol:alternatives.cpp", "stl", title="alternatives.cpp — erase / insert") }}
+<p>Kısa ve doğru, maliyeti de aynı: <code>O(n − index)</code>. Bu sürüm <b>“erase/insert kullanma” kuralını ihlal eder</b>. Labın amacı kaydırmayı senin yazman. Kural olmayan bir sınavda ya da LeetCode’da bu sürümü kullanabilirsin. <code>v.begin() + index</code> bir iterator. Iterator’ı şimdilik “konumu gösteren işaretçi” olarak düşün. Linked list haftasında farkı göreceğiz.</p>
+
+<h3>L02-X · iki indeksli sıkıştırma</h3>
+{{ code("sol:lab02.cpp", "removeElement", title="removeElement (LeetCode 27)") }}
+<p><code>i</code> okuma, <code>k</code> yazma konumu. Tutulan her eleman <code>k</code>’ya yazılır ve <code>k</code> bir artar. Bu tek geçişte <code>O(n)</code> ile biter. Her eşleşmede <code>removeAt</code> çağırsaydık en kötü durum <code>O(n<sup>2</sup>)</code> olurdu. Lab 04’teki <code>moveZeroes</code> aynı kalıbı kullanıyor.</p>
+
+<h2>Ezberden varyant · L02-V</h2>
+<div class="box tip"><span class="t">Kodlara bakmadan 7 dakikada yaz</span>
+<p><span class="tag opt">L02-V</span> <code>bool moveToFront(std::vector&lt;int&gt;&amp; v, int index)</code>: <code>v[index]</code>’i 0. konuma taşı. Önündeki elemanlar bir adım sağa kayar. Geçersiz indekste <code>false</code> dön. İpucu: taşınacak değeri önce bir değişkende sakla. Kaydırmanın yönünü kendin seç. <code>.\run.ps1 L02 L02-V</code></p></div>
+{{ cases("PDF_MOVE", ["v (before)", "index", "return", "v (after)"], [
+    ([4, 7, 2, 9], 2, True, [2, 4, 7, 9], "middle element to the front"),
+    ([4, 7, 2, 9], 0, True, [4, 7, 2, 9], "already at the front"),
+    ([4, 7], 2, False, [4, 7], "index == size"),
+    ([], 0, False, [], "empty"),
+], widths=["24%", "9%", "10%", "24%", "28%"]) }}
+<p class="small muted">Bitirdiğinde: <code>.\run.ps1 L02</code> çıktısında A, B, M1 ve M2 yeşil olmalı. Yarın Lab 03’te iki indeksle ters çevirme yapacak ve vize notundaki “sayıları üçerli döndürme” sorusunu vektör üzerinde çözeceksin.</p>

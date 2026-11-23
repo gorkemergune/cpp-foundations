@@ -1,0 +1,70 @@
+{{ header(1, 0, "Thinking Problems on Vectors", "60–90 minutes in total (20–30 per problem); do one problem per sitting if you like",
+  "prefix/suffix products, two pointers with a proof, in-place index placement (cyclic sort)",
+  related=lc(238, "product-of-array-except-self", "Product of Array Except Self") + " · " + lc(11, "container-with-most-water", "Container With Most Water") + " · " + lc(41, "first-missing-positive", "First Missing Positive"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 1 · Challenge set (after Lab 04)", one="A") }}
+<p>These three problems are harder than the labs. They are “medium” and “hard” on LeetCode because the obvious solution is too slow or uses too much memory. The signatures are LeetCode's (with <code>const&amp;</code> where the input is only read), so after the tests pass here you can submit the same body on the site.</p>
+
+<h2>C01-A · Product of Array Except Self (medium)</h2>
+<p>Return a vector where element <code>i</code> is the product of every element of <code>nums</code> <b>except</b> <code>nums[i]</code>. You may <b>not</b> use division (it fails when there are zeros) and the algorithm must be <code>O(n)</code>.</p>
+{{ snippet("std::vector<int> productExceptSelf(const std::vector<int>& nums);") }}
+<p>Constraints: <code>2 &lt;= n &lt;= 10<sup>5</sup></code>, <code>-30 &lt;= nums[i] &lt;= 30</code>, every product fits in <code>int</code>.</p>
+{{ cases("PDF_PROD", ["nums", "return"], [
+    ([1, 2, 3, 4], [24, 12, 8, 6], "LeetCode example 1"),
+    ([-1, 1, 0, -3, 3], [0, 0, 9, 0, 0], "LeetCode example 2: one zero"),
+    ([0, 0, 5], [0, 0, 0], "two zeros: everything is 0"),
+    ([2, 3], [3, 2], "n = 2"),
+], widths=["35%", "35%", "25%"]) }}
+
+<h2>C01-B · Container With Most Water (medium)</h2>
+<p><code>height[i]</code> is a vertical line at <code>x = i</code>. Two lines and the x-axis form a container; it holds <code>min(height[i], height[j]) · (j − i)</code> water. Return the maximum over all pairs in <code>O(n)</code> (the <code>O(n<sup>2</sup>)</code> pair loop is too slow for <code>n = 10<sup>5</sup></code>).</p>
+{{ snippet("int maxArea(const std::vector<int>& height);") }}
+{{ cases("PDF_WATER", ["height", "return"], [
+    ([1, 8, 6, 2, 5, 4, 8, 3, 7], 49, "LeetCode example 1: lines 1 and 8"),
+    ([1, 1], 1, "LeetCode example 2"),
+    ([4, 3, 2, 1, 4], 16, "the two ends"),
+    ([0, 2], 0, "a zero line"),
+], widths=["45%", "15%", "35%"]) }}
+
+<h2>C01-C · First Missing Positive (hard)</h2>
+<p>Return the smallest positive integer that does not occur in <code>nums</code>. <code>O(n)</code> time and <code>O(1)</code> extra memory: no sorting (<code>O(n log n)</code>), no second array or set. You may reorder <code>nums</code>.</p>
+{{ snippet("int firstMissingPositive(std::vector<int>& nums);") }}
+{{ cases("PDF_MISSING", ["nums", "return"], [
+    ([1, 2, 0], 3, "LeetCode example 1"),
+    ([3, 4, -1, 1], 2, "LeetCode example 2"),
+    ([7, 8, 9, 11, 12], 1, "LeetCode example 3"),
+    ([], 1, "empty"),
+    ([1, 1, 2, 2], 3, "duplicates"),
+], widths=["40%", "15%", "40%"]) }}
+<p>Every problem also runs 200 random inputs against a brute-force answer.</p>
+
+{{ banner("önce her soruyla en az 20 dakika uğraş") }}
+<h2>İpuçları (çözüm sonraki sayfada)</h2>
+<div class="box q"><span class="t">C01-A</span><ol><li><code>i</code> için cevap = (soldaki her şeyin çarpımı) × (sağdaki her şeyin çarpımı). Bu iki değeri her <code>i</code> için tekrar hesaplamadan nasıl taşırım?</li><li>Ayrı bir “sol çarpımlar” dizisi kurmadan sonuç dizisini önce sol, sonra sağ çarpımlarla doldurabilir miyim?</li></ol></div>
+<div class="box q"><span class="t">C01-B</span><ol><li>İki uçtan başlarsam genişlik en büyük. Daha iyi bir cevap için hangi çizgiyi bırakmam gerekir: kısa olanı mı, uzun olanı mı? Neden diğerini bırakmak hiçbir zaman işe yaramaz?</li></ol></div>
+<div class="box q"><span class="t">C01-C</span><ol><li>Cevap her zaman <code>1 … n+1</code> arasında. Neden?</li><li>Dizinin kendisini bir “var/yok” tablosu gibi kullanabilir miyim? <code>v</code> değeri hangi indekse ait olmalı?</li></ol></div>
+<div class="avoid"><h3>Görsel: C01-B’de iki işaretçi</h3>
+{{ steps([
+  ("adım 1", vec([1, 8, 6, 2, 5, 4, 8, 3, 7], name="h", ptr={"lo": 0, "hi": 8}, show_size=False), "min(1, 7) × 8 = 8. Kısa olan 1. 1’i kullanan her kap en çok 1 yüksekliğinde ve daha dar olur, bu yüzden lo++."),
+  ("adım 2", vec([1, 8, 6, 2, 5, 4, 8, 3, 7], name="h", ptr={"lo": 1, "hi": 8}, hl={1: "green", 8: "green"}, show_size=False), "min(8, 7) × 7 = <b>49</b>. Kısa olan 7, bu yüzden hi--."),
+  ("sonra", vec([1, 8, 6, 2, 5, 4, 8, 3, 7], name="h", ptr={"lo": 1, "hi": 6}, show_size=False), "Hiçbir kap 49’u geçmez. Toplam n − 1 adımda biter."),
+]) }}</div>
+<div class="avoid"><h3>Görsel: C01-C’de “herkes evine”</h3>
+{{ steps([
+  ("başlangıç", vec([3, 4, -1, 1], name="nums", show_size=False), "1 değeri indeks 0’a, 3 değeri indeks 2’ye ait. −1 ve n’den büyük değerler yerinde kalır."),
+  ("yerleştirme", vec([1, -1, 3, 4], name="nums", hl={0: "green", 2: "green", 3: "green"}, show_size=False), "Takaslar bitince 1, 3 ve 4 kendi yerinde."),
+  ("tarama", vec([1, -1, 3, 4], name="nums", hl={1: "red"}, ptr={"i": 1}, show_size=False), "İndeks 1’de 2 yok, cevap 2."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+<h3>C01-A</h3>
+{{ code("sol:challenge01.cpp", "productExceptSelf", title="productExceptSelf") }}
+<p>Birinci döngüden sonra <code>result[i]</code> soldaki elemanların çarpımını tutuyor. İkinci döngü sağdan gelip sağdaki çarpımla çarpıyor. İki geçiş <code>O(n)</code> sürüyor. Sonuç dizisi dışında ek bellek <code>O(1)</code>. Bölmeyle çözmek (toplam çarpım / <code>nums[i]</code>) sıfır olduğunda çöker. Tek sıfırlı ve iki sıfırlı girdiler testlerde bu yüzden var.</p>
+<h3>C01-B</h3>
+{{ code("sol:challenge01.cpp", "maxArea", title="maxArea") }}
+<p><b>Neden doğru?</b> <code>height[lo] &lt; height[hi]</code> ise <code>lo</code>’yu kullanan her kap, <code>hi</code>’den daha yakın bir partnerle kurulur. Yüksekliği en çok <code>height[lo]</code>, genişliği daha küçük olur. Yani <code>lo</code>’nun bundan iyi bir kabı yok ve güvenle atılabilir. Bu bir “açgözlü seçim + kanıt” örneği. Mülakatlarda kanıtı da sorarlar. Kaba kuvvet <code>O(n<sup>2</sup>)</code> çalışır ama <code>n = 10<sup>5</sup></code> için 5·10<sup>9</sup> çift eder.</p>
+<h3>C01-C</h3>
+{{ code("sol:challenge01.cpp", "firstMissingPositive", title="firstMissingPositive") }}
+<ul><li><b>Cevap 1 … n+1 arasında.</b> <code>n</code> elemanla en fazla <code>1 … n</code> değerlerinin hepsi bulunabilir. O durumda cevap <code>n+1</code>. Bu aralığın dışındaki değerler cevabı etkilemez.</li>
+<li><b>Neden O(n)?</b> İç <code>while</code> iç içe görünüyor ama her takas bir değeri kalıcı olarak evine koyuyor. En fazla <code>n</code> takas olur. <code>nums[nums[i] − 1] != nums[i]</code> koşulu tekrarlarda sonsuz döngüyü önlüyor.</li>
+<li><b>Alternatif.</b> <code>std::set</code> ya da <code>vector&lt;bool&gt; seen(n + 2)</code> ile <code>O(n)</code> zaman, <code>O(n)</code> bellek. Doğru çalışır ama sorunun “<code>O(1)</code> extra memory” kuralını ihlal eder. Sıralayıp taramak da <code>O(n log n)</code> sürdüğü için kuralı ihlal eder.</li></ul>

@@ -1,0 +1,200 @@
+<div class="course">CSE 211 · Data Structures · Lab Camp — Week 1 · Day 4 · Timed lab</div>
+<h1>Lab 04 — Timed Lab: Compacting and Rotating a Vector</h1>
+<table class="meta">
+<tr><td class="k">Time limit</td><td><b>50 minutes</b>, closed notes · Part A 10 · Part B 12 · Part C 18 · final compile and test 10</td></tr>
+<tr><td class="k">Topic</td><td>everything from Labs 01–03: <code>const&amp;</code> vs. <code>&amp;</code>, building a new vector, in-place index work, <code>%</code> for wrapping indexes, two-index reversal</td></tr>
+<tr><td class="k">Files</td><td><code>lab04.h</code> (given) · <code>lab04.cpp</code> (you write) · <code>tests/test_lab04.cpp</code></td></tr>
+<tr><td class="k">Run the tests</td><td><code>.\run.ps1 L04</code> · one part: <code>.\run.ps1 L04 L04-C</code></td></tr>
+<tr><td class="k">Related problems</td><td><a href="https://leetcode.com/problems/move-zeroes/">LeetCode 283 · Move Zeroes</a> (Part A, same signature) · <a href="https://leetcode.com/problems/rotate-array/">LeetCode 189 · Rotate Array</a> (optional L04-X) · <a href="https://www.geeksforgeeks.org/problems/rotate-array-by-n-elements-1587115621/1">GeeksforGeeks · Rotate Array</a> (left rotation, like Parts B–C)</td></tr>
+</table>
+<div class="box warn"><span class="t">Exam conditions</span>
+<p>Start a 50-minute timer. Work only in <code>lab04.cpp</code>. Do not open Labs 01–03, the solutions folder or the Turkish pages of this PDF until the timer ends. Compile early: a file that does not compile scores 0 in a real lab. When the time is up, run <code>.\run.ps1 L04</code> once and grade yourself with the table in Section 6.</p></div>
+
+<h2>1. Problem statement</h2>
+<p>A photo app shows a ring of thumbnails. The thumbnails are stored in a <code>std::vector&lt;int&gt;</code> of image IDs, where <code>0</code> marks a deleted image. You implement three operations of the gallery:</p>
+<ol>
+<li><b>Part A — compact.</b> Move every deleted image (<code>0</code>) to the end, keeping the order of the remaining images.</li>
+<li><b>Part B — preview.</b> Return a <b>new</b> vector that shows the ring rotated <b>left</b> by <code>k</code> positions. The gallery itself must not change.</li>
+<li><b>Part C — commit.</b> Rotate the gallery itself left by <code>k</code> positions, <b>without a second vector</b>.</li>
+</ol>
+<p>Rotating left by one moves every element one position to the left and the first element to the end: <code>{1, 2, 3, 4}</code> → <code>{2, 3, 4, 1}</code>. Rotating by <code>k</code> repeats this <code>k</code> times. Rotating by <code>n</code> (the size) gives the original vector back, so <code>k</code> may be reduced modulo <code>n</code>.</p>
+<p><b>Example scenario.</b> The gallery is <code>{1, 2, 3, 4, 5, 6}</code> and the user swipes twice. <code>rotatedCopy(g, 2)</code> returns <code>{3, 4, 5, 6, 1, 2}</code> while <code>g</code> stays <code>{1, 2, 3, 4, 5, 6}</code>. After <code>rotateLeft(g, 2)</code>, <code>g</code> itself is <code>{3, 4, 5, 6, 1, 2}</code>.</p>
+
+<h2>2. Given code</h2>
+{{ code("lab:lab04.h", title="lab04.h — given") }}
+<div class="box sig"><span class="t">Functions you complete</span>
+{{ snippet('''
+void moveZeroes(std::vector<int>& nums);                         // Part A  L04-A
+std::vector<int> rotatedCopy(const std::vector<int>& v, int k);  // Part B  L04-B
+void rotateLeft(std::vector<int>& v, int k);                     // Part C  L04-C
+void reverseRange(std::vector<int>& v, int lo, int hi);          // helper in lab04.cpp
+''') }}
+<p class="small"><code>lab04.cpp</code> also contains an empty helper <code>reverseRange</code> (not in the header, not tested on its own). Write it again from memory if your Part C uses it.</p></div>
+
+<h3>Rules for each part</h3>
+<table class="grid">
+<tr><th style="width:12%">Part</th><th style="width:44%">Allowed</th><th>Not allowed / required</th></tr>
+<tr><td>A</td><td><code>size</code>, <code>[]</code>, assignment, <code>std::swap</code></td><td>no second vector; order of non-zero elements kept; <code>O(n)</code></td></tr>
+<tr><td>B</td><td><code>size</code>, <code>[]</code>, <code>push_back</code>, a new result vector</td><td><code>v</code> is <code>const&amp;</code>: the compiler rejects changes; no <code>% 0</code> on an empty vector</td></tr>
+<tr><td>C</td><td><code>size</code>, <code>[]</code>, <code>std::swap</code>, your <code>reverseRange</code></td><td>no second vector (<code>O(1)</code> extra memory); the test checks that <code>v</code> keeps its storage; target <code>O(n)</code> time</td></tr>
+<tr><td>all</td><td>—</td><td><code>&lt;algorithm&gt;</code> (<code>std::rotate</code>, <code>std::reverse</code>), <code>erase</code>, <code>insert</code></td></tr>
+</table>
+
+<h3>Input, output, constraints</h3>
+<table class="grid">
+<tr><td style="width:22%"><b>Input</b></td><td><code>0 &lt;= n &lt;= 10<sup>5</sup></code>; <code>0 &lt;= k &lt;= 10<sup>9</sup></code> (<code>k</code> can be much larger than <code>n</code>); values are any <code>int</code>.</td></tr>
+<tr><td><b>Output</b></td><td>A and C: the caller's vector after the call. B: the returned vector; the input must be unchanged.</td></tr>
+<tr><td><b>Complexity</b></td><td>all parts <code>O(n)</code> time. A and C <code>O(1)</code> extra memory; B <code>O(n)</code> for the result.</td></tr>
+</table>
+
+<h2>3. Worked example</h2>
+<p><b>Part A</b> on <code>{0, 1, 0, 3, 12}</code>: the non-zero elements in order are <code>1, 3, 12</code>; there are two zeros. Result <code>{1, 3, 12, 0, 0}</code>.</p>
+<p><b>Part B</b> on <code>v = {1, 2, 3, 4, 5, 6}</code>, <code>k = 8</code>: <code>n = 6</code>, so <code>k % n = 2</code>. Position <code>i</code> of the result holds <code>v[(i + 2) % 6]</code>:</p>
+<table class="grid">
+<tr><th><code>i</code></th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+<tr><th><code>(i + 2) % 6</code></th><td>2</td><td>3</td><td>4</td><td>5</td><td>0</td><td>1</td></tr>
+<tr><th>result[i]</th><td>3</td><td>4</td><td>5</td><td>6</td><td>1</td><td>2</td></tr>
+</table>
+
+<h2>4. Tests</h2>
+<p><span class="tag req">L04-A</span> <code>moveZeroes</code></p>
+{{ cases("PDF_ZEROES", ["nums (before)", "nums (after)"], [
+    ([0, 1, 0, 3, 12], [1, 3, 12, 0, 0], "LeetCode example 1"),
+    ([0], [0], "LeetCode example 2"),
+    ([], [], "empty"),
+    ([1, 2, 3], [1, 2, 3], "no zeros: unchanged"),
+    ([0, 0, 1], [1, 0, 0], "zeros at the front"),
+    ([-1, 0, -1], [-1, -1, 0], "negative numbers are not zero"),
+], widths=["32%", "32%", "31%"]) }}
+<p><span class="tag req">L04-B</span> <code>rotatedCopy</code> and <span class="tag req">L04-C</span> <code>rotateLeft</code> run the <b>same rows</b>. For B the test also checks that the input is unchanged; for C it checks that <code>v</code> still uses the same storage.</p>
+{{ cases("PDF_ROTATE", ["v", "k", "result (B: returned, C: v after)"], [
+    ([1, 2, 3, 4, 5, 6], 2, [3, 4, 5, 6, 1, 2], "statement example"),
+    ([1, 2, 3], 0, [1, 2, 3], "k = 0"),
+    ([1, 2, 3], 3, [1, 2, 3], "k = n: full circle"),
+    ([1, 2, 3, 4], 6, [3, 4, 1, 2], "k > n: same as k % n = 2"),
+    ([], 4, [], "empty: must not compute k % 0"),
+    ([7], 5, [7], "single element"),
+    ([1, 1, 2], 1, [1, 2, 1], "duplicates"),
+    ([1, 2, 3, 4, 5], 1000000000, [1, 2, 3, 4, 5], "huge k: 10^9 % 5 = 0, loop k times = too slow"),
+], widths=["24%", "13%", "28%", "30%"]) }}
+<p>Each part also runs 200 random cases (<code>k</code> from 0 to 25) compared with <code>std::rotate</code>.</p>
+
+<h3>Optional · L04-X (LeetCode 189) and L04-V</h3>
+<p><span class="tag opt">L04-X</span> <code>void rotateRight(std::vector&lt;int&gt;&amp; nums, int k)</code> — LeetCode 189 calls it <code>rotate</code> and rotates <b>right</b>: <code>{1, 2, 3, 4}</code>, <code>k = 1</code> → <code>{4, 1, 2, 3}</code>. Reuse Part C.</p>
+{{ cases("PDF_RIGHT", ["nums (before)", "k", "nums (after)"], [
+    ([1, 2, 3, 4, 5, 6, 7], 3, [5, 6, 7, 1, 2, 3, 4], "LeetCode example 1"),
+    ([-1, -100, 3, 99], 2, [3, 99, -1, -100], "LeetCode example 2"),
+    ([1, 2], 5, [2, 1], "k > n"),
+    ([1], 0, [1], "single, k = 0"),
+], widths=["30%", "7%", "30%", "28%"]) }}
+
+<h2>5. Self-grading (fill in when the timer ends)</h2>
+<table class="grid">
+<tr><th>Item</th><th style="width:12%">Points</th><th>Full points when</th></tr>
+<tr><td>Part A</td><td>25</td><td>L04-A green; one pass or two passes, no second vector</td></tr>
+<tr><td>Part B</td><td>30</td><td>L04-B green, including the empty and huge-<code>k</code> rows</td></tr>
+<tr><td>Part C</td><td>35</td><td>L04-C green with <code>O(n)</code> time; 20 points if correct but <code>O(n·k)</code></td></tr>
+<tr><td>Clean compile</td><td>10</td><td>no warnings in <code>lab04.cpp</code> with <code>-Wall -Wextra</code></td></tr>
+</table>
+<p class="small muted">Target: at least 80. Below 80, solve the failed part again tomorrow from an empty function before you start Week 2.</p>
+
+<!-- ====================================================================== -->
+<div class="page-break"></div>
+<div class="lang-banner">Türkçe anlatım ve görsel inceleme <small>· süre bitmeden bu sayfaya geçme</small></div>
+
+<h2>Soru ne istiyor?</h2>
+<p>Üç parça var ve her biri bu haftanın bir dersini tekrar ediyor:</p>
+<ul>
+<li><b>A, Lab 02’nin iki indeksli sıkıştırması.</b> Sıfır olmayanları sırayla öne yaz, kalan yeri sıfırla doldur. LeetCode imzası aynen kullanılıyor.</li>
+<li><b>B, Lab 01’in yeni vektör kurması.</b> Giriş <code>const&amp;</code> olduğu için yanlışlıkla değiştirmeye çalışırsan kod derlenmez. Asıl iş indeksi <code>%</code> ile başa sarmak.</li>
+<li><b>C, Lab 03’ün iki indeksli ters çevirmesi.</b> İkinci vektör yasak olduğundan, döndürmeyi üç ters çevirmeyle yapacaksın.</li>
+</ul>
+
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span>
+<ol><li><code>n = 0</code> iken <code>k % n</code> ne yapar? Bu kontrolü fonksiyonun neresine koymalıyım?</li>
+<li>Sola bir adım döndürmeyi <code>k</code> kez tekrarlarsam <code>k = 10<sup>9</sup></code> için kaç işlem yaparım? <code>k</code>’yı neden önce <code>n</code>’ye göre küçültmeliyim?</li>
+<li>Sonuçta 0. konuma hangi eleman gelmeli? Bu sorunun cevabı B’deki indeks formülünü verir.</li></ol></div>
+
+<h3>Görsel iz: Part B’de indeks eşlemesi</h3>
+<p><code>result[i] = v[(i + k) % n]</code>, <code>k = 2</code>. Sonucun 0. kutusu girişin 2. kutusundan gelir. Sarı kutular <code>%</code> ile başa saran elemanlar: girişin ilk iki elemanı sonucun son iki konumuna gider.</p>
+{{ steps([
+  ("v (değişmez)", vec([1, 2, 3, 4, 5, 6], name="v", hl={0: "yellow", 1: "yellow"}), "<code>const&amp;</code>: yalnızca okunur."),
+  ("result", vec([3, 4, 5, 6, 1, 2], name="res", hl={4: "yellow", 5: "yellow"}), "i = 4 → (4+2)%6 = 0, i = 5 → (5+2)%6 = 1. Sarı kutular başa saran elemanlar."),
+]) }}
+
+<div class="avoid">
+<h3>Görsel iz: Part C’de üç ters çevirme (<code>k = 2</code>)</h3>
+{{ steps([
+  ("başlangıç", vec([1, 2, 3, 4, 5, 6], name="v", groups=[(0, 1, "ilk k", "blue"), (2, 5, "kalan n−k", "gray")]), "Hedef <code>{3, 4, 5, 6, 1, 2}</code>. İki blok yer değiştirecek: [1 2] ve [3 4 5 6]."),
+  ("1) [0, k−1]", vec([2, 1, 3, 4, 5, 6], name="v", hl={0: "green", 1: "green"}), "<code>reverseRange(v, 0, 1)</code>. İlk blok kendi içinde ters çevrildi."),
+  ("2) [k, n−1]", vec([2, 1, 6, 5, 4, 3], name="v", hl={2: "green", 3: "green", 4: "green", 5: "green"}), "<code>reverseRange(v, 2, 5)</code>. İkinci blok kendi içinde ters çevrildi."),
+  ("3) [0, n−1]", vec([3, 4, 5, 6, 1, 2], name="v", groups=[(0, 3, "eski ikinci blok", "green"), (4, 5, "eski ilk blok", "blue")]), "<code>reverseRange(v, 0, 5)</code>. Hepsini çevirince bloklar yer değiştirir. Her bloğun içi ikinci kez çevrildiği için doğru sıraya döner."),
+]) }}
+</div>
+<p>Neden çalışıyor? Diziyi <code>AB</code> diye iki bloğa ayır (A ilk <code>k</code> eleman). Hedef <code>BA</code>. Ters çevirmeyi <code>ʳ</code> ile gösterirsek <code>(AʳBʳ)ʳ = BA</code> olur. Tamamını ters çevirmek blokların sırasını değiştirir ve içlerini de bir kez daha ters çevirir. Bu yüzden içleri önceden bir kez ters çevirmek gerekiyor.</p>
+
+<!-- ====================================================================== -->
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+<h3>Part A · moveZeroes</h3>
+{{ code("sol:lab04.cpp", "moveZeroes", title="moveZeroes") }}
+<p>İlk döngü Lab 02’deki <code>removeElement</code> ile aynı. <code>k</code> yazma konumu. İkinci döngü kalan <code>n − k</code> konumu sıfırlar. Toplam <code>O(n)</code>, ek bellek <code>O(1)</code>. Tek döngülü sürüm <code>swap(nums[k], nums[i])</code> ile de yazılabilir. İkisi de kurallara uyar.</p>
+
+<h3>Part B · rotatedCopy</h3>
+{{ code("sol:lab04.cpp", "rotatedCopy", title="rotatedCopy") }}
+<ul>
+<li><b><code>if (n == 0)</code></b> önce gelir. Tam sayıyı sıfıra bölmek ya da sıfıra göre mod almak C++’ta tanımsız davranıştır. Testler çoğu zaman programın çökmesiyle karşılaşır.</li>
+<li><b><code>k = k % n</code></b> sonrasında <code>i + k</code> en çok <code>2n − 2</code> olur, taşma riski yok. <code>k</code>’yı küçültmeden <code>i + k</code> yazsaydık <code>k = 10<sup>9</sup></code> için bile sonuç <code>int</code>’e sığardı, ancak küçültmek alışkanlık olmalı.</li>
+<li>Parametre <code>const vector&lt;int&gt;&amp;</code> olduğundan kopya yok ve giriş korunuyor. Sonuç değerle döndürülüyor.</li>
+</ul>
+
+<h3>Part C · rotateLeft</h3>
+{{ code("sol:lab04.cpp", "reverseRange", title="reverseRange (yardımcı)") }}
+{{ code("sol:lab04.cpp", "rotateLeft", title="rotateLeft") }}
+<ul>
+<li><b>Sınır durumları önce.</b> Boş vektör ve <code>k % n == 0</code> için hiçbir şey yapılmıyor. <code>k = 0</code> iken <code>reverseRange(v, 0, -1)</code> zaten bir şey yapmazdı ama erken dönüş niyeti açık gösteriyor.</li>
+<li><b>Maliyet.</b> Her eleman toplam iki kez takas edilir. Zaman <code>O(n)</code>, ek bellek <code>O(1)</code>. Test, vektörün bellek adresinin (<code>v.data()</code>) değişmediğini de kontrol ediyor.</li>
+</ul>
+
+<h3>Neden bu yolu seçtik?</h3>
+<ul>
+<li><b>İzinli fonksiyonlar.</b> B’de yalnızca <code>push_back</code> ve indeks. C’de yalnızca <code>swap</code>. <code>&lt;algorithm&gt;</code> kullanılmadı.</li>
+<li><b>Korunan sıra.</b> A’da sıfır olmayanların sırası, B’de girişin kendisi, C’de iki bloğun iç sırası korunuyor.</li>
+<li><b>Maliyet karşılaştırması.</b> Aşağıdaki tablo üç C çözümünü karşılaştırıyor. Yalnızca üç ters çevirme hem <code>O(n)</code> zaman hem <code>O(1)</code> bellek veriyor.</li>
+</ul>
+<table class="grid">
+<tr><th>Yöntem</th><th>Zaman</th><th>Ek bellek</th><th>Part C kuralına uyar mı?</th></tr>
+<tr><td>Üç ters çevirme</td><td><code>O(n)</code></td><td><code>O(1)</code></td><td>evet</td></tr>
+<tr><td><code>k</code> kez birer adım döndürme</td><td><code>O(n·k)</code></td><td><code>O(1)</code></td><td>doğru ama yavaş. <code>k % n</code> yapılmazsa 10<sup>9</sup> satırında zaman aşımı olur.</td></tr>
+<tr><td>Geçici vektöre kopyalayıp geri yazma</td><td><code>O(n)</code></td><td><code>O(n)</code></td><td><b>hayır</b>, “second vector” yasağını ihlal eder</td></tr>
+<tr><td><code>std::rotate</code></td><td><code>O(n)</code></td><td><code>O(1)</code></td><td><b>hayır</b>, <code>&lt;algorithm&gt;</code> yasağını ihlal eder</td></tr>
+</table>
+{{ code("sol:alternatives.cpp", "byOne", title="alternatives.cpp — birer adım (yavaş)") }}
+{{ code("sol:alternatives.cpp", "copyBack", title="alternatives.cpp — ikinci vektörle (kural dışı)") }}
+<p><code>v = tmp;</code> kopya atamasıdır. <code>v</code>’nin elemanları <code>tmp</code>’ninkilerle değiştirilir. Kapasite yetiyorsa aynı bellek yeniden kullanılır, bu yüzden test bu çözümü her zaman yakalayamaz. Yine de lab kuralını ihlal ediyor. Sınavda okuyan asistan bunu görür.</p>
+{{ code("sol:alternatives.cpp", "stl", title="alternatives.cpp — std::rotate (kural dışı)") }}
+
+<h3>L04-X · sağa döndürme</h3>
+{{ code("sol:lab04.cpp", "rotateRight", title="rotateRight") }}
+<p>Sağa <code>k</code> döndürmek, sola <code>n − k</code> döndürmekle aynıdır. Dıştaki <code>% n</code>, <code>k % n == 0</code> iken <code>n − 0 = n</code> çıkmasını önler. <code>rotateLeft</code> bunu zaten ele aldığı için zorunlu değil, ama niyeti gösteriyor.</p>
+
+<h2>Ezberden varyant · L04-V</h2>
+<div class="box tip"><span class="t">Kodlara bakmadan 6 dakikada yaz</span>
+<p><span class="tag opt">L04-V</span> <code>bool isRotation(const std::vector&lt;int&gt;&amp; a, const std::vector&lt;int&gt;&amp; b)</code>: <code>b</code>, <code>a</code>’nın herhangi bir sola döndürmesi mi? Kendi <code>rotatedCopy</code> fonksiyonunu ve vektörlerin <code>==</code> karşılaştırmasını kullanabilirsin. <code>O(n<sup>2</sup>)</code> yeterli. <code>.\run.ps1 L04 L04-V</code></p></div>
+{{ cases("PDF_ISROT", ["a", "b", "return"], [
+    ([1, 2, 3, 4], [3, 4, 1, 2], True, "rotation by 2"),
+    ([1, 2, 3], [1, 3, 2], False, "same elements, not a rotation"),
+    ([], [], True, "both empty"),
+    ([1, 2], [1, 2, 3], False, "different lengths"),
+    ([1, 1, 2], [1, 2, 1], True, "duplicates"),
+    ([1, 2, 3], [1, 2, 3], True, "k = 0 counts"),
+], widths=["24%", "24%", "12%", "35%"]) }}
+
+<h2>1. haftanın kontrol listesi</h2>
+<div class="box"><ul>
+<li>Boş bir dosyada <code>#include &lt;vector&gt;</code> ile başlayıp vektör tanımlayabiliyor, <code>push_back</code>, <code>size</code>, <code>[]</code> ve range-for ile çalışan bir programı <code>g++ -std=c++17 -Wall</code> ile uyarısız derleyebiliyor musun?</li>
+<li>Bir fonksiyonun parametresini <code>vector&lt;int&gt;</code>, <code>vector&lt;int&gt;&amp;</code> ve <code>const vector&lt;int&gt;&amp;</code> arasından gerekçesiyle seçebiliyor musun?</li>
+<li><code>reserve</code> ile <code>resize</code>, <code>size</code> ile <code>capacity</code>, <code>at</code> ile <code>[]</code> ve <code>pop_back</code>’in değer döndürmemesi arasındaki farkları açıklayabiliyor musun?</li>
+<li>Sola ve sağa kaydırmada döngünün yönünü doğru seçebiliyor musun? İki indeksle ters çevirmeyi ve <code>size_t</code> tuzağını açıklayabiliyor musun?</li>
+</ul>
+<p>Hepsine “evet” diyebiliyorsan 2. haftaya, C tipi diziler ve <code>std::array</code> konusuna geç. Diyemediğin madde için ilgili labın ezberden varyantını bir kez daha çöz.</p></div>

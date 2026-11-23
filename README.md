@@ -4,11 +4,11 @@
 
 ## Start Here
 
-| | What it is | Open |
-| --- | --- | --- |
-| 🧪 **Lab Camp** | 12 weeks of CSE 211: 46 PDF labs, 11 challenge sets, 6 small projects — each with starter files, tests and step-by-step solutions | [lab-camp/README.md](lab-camp/README.md) · [first lab (PDF)](lab-camp/week01/L01-vector-first-steps/L01-vector-first-steps.pdf) |
-| 📦 **Course materials** | the CSE 211 slides with a topic/slide index, labworks, assignments, practice labs, lecture code and midterm notes — every question with a compiled, tested solution | [materials/README.md](materials/README.md) · [slide index](materials/slides/README.md) |
-| 🎯 **Midterm camp** | 30 questions on linked lists, stacks and queues with the same test runner | [practice/midterm-camp/README.md](practice/midterm-camp/README.md) |
+|                      | What it is                                                                                                                                                          | Open                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+|  **Lab Camp**        | 12 weeks of CSE 211: 46 PDF labs, 11 challenge sets, 6 small projects — each with starter files, tests and step-by-step solutions                                   | [lab-camp/README.md](lab-camp/README.md) · [first lab (PDF)](lab-camp/week01/L01-vector-first-steps/L01-vector-first-steps.pdf) |
+| **Course materials** | the CSE 211 slides with a topic/slide index, labworks, assignments, practice labs, lecture code and midterm notes — every question with a compiled, tested solution | [materials/README.md](materials/README.md) · [slide index](materials/slides/README.md)                                          |
+| **Midterm camp**     | 30 questions on linked lists, stacks and queues with the same test runner                                                                                           | [practice/midterm-camp/README.md](practice/midterm-camp/README.md)                                                              |
 
 <details>
 <summary><b>How do I start? (click)</b></summary>
@@ -32,10 +32,10 @@ The repository is at an early stage. Right now it collects the weekly lecture no
 
 This repository is the second step in a broader undergraduate learning path focused on low-level and systems programming.
 
-| Course               | Institution         | Status      | Repository                                                    |
-| -------------------- | ------------------- | ----------- | ------------------------------------------------------------- |
+| Course               | Institution         | Status      | Repository                                                     |
+| -------------------- | ------------------- | ----------- | -------------------------------------------------------------- |
 | Programming with C   | Yeditepe University | Completed   | [c-foundations](https://github.com/gorkemergune/c-foundations) |
-| Programming with C++ | Yeditepe University | In progress | this repository                                               |
+| Programming with C++ | Yeditepe University | In progress | this repository                                                |
 
 ---
 

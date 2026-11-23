@@ -1,5 +1,5 @@
 // Mini Project 03 · the finished program:
-//   g++ -std=c++17 -Wall main_demo.cpp browser.cpp -o browser.exe
+//   g++ -std=c++17 -Wall -I../../framework main_demo.cpp browser.cpp -o browser.exe
 //   Commands: visit <url> | back <n> | forward <n> | get <file> <MB> | tick <MB> | quit
 #include <iostream>
 #include <sstream>

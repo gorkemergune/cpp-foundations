@@ -1,5 +1,5 @@
 // Mini Project 05 · the finished program:
-//   g++ -std=c++17 -Wall main_demo.cpp phonebook.cpp -o phonebook.exe
+//   g++ -std=c++17 -Wall -I../../framework main_demo.cpp phonebook.cpp -o phonebook.exe
 //   Commands: add <name> <phone> | find <name> | del <name> | list <prefix> | save | quit
 #include <fstream>
 #include <iostream>

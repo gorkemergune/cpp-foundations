@@ -1,5 +1,5 @@
 // Mini Project 02 · the finished program:
-//   g++ -std=c++17 -Wall main_demo.cpp playlist.cpp -o playlist.exe
+//   g++ -std=c++17 -Wall -I../../framework main_demo.cpp playlist.cpp -o playlist.exe
 //   Commands: add <seconds> <title> | next | prev | remove <title> | up <title> | quit
 #include <iostream>
 #include <sstream>

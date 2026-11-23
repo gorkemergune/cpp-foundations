@@ -1,5 +1,5 @@
 // Mini Project 01 · the finished program. Build it once your tests are green:
-//   g++ -std=c++17 -Wall main_demo.cpp gradebook.cpp -o gradebook.exe
+//   g++ -std=c++17 -Wall -I../../framework main_demo.cpp gradebook.cpp -o gradebook.exe
 //   Get-Content grades.txt | .\gradebook.exe      (or type lines, then Ctrl+Z, Enter)
 #include <iostream>
 

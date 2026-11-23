@@ -1,5 +1,5 @@
 // Mini Project 04 · the finished program:
-//   g++ -std=c++17 -Wall main_demo.cpp metro.cpp -o metro.exe
+//   g++ -std=c++17 -Wall -I../../framework main_demo.cpp metro.cpp -o metro.exe
 //   metro.txt: one line per metro line, "M1 Gar Carsi Kampus ..."
 //   Commands: route <from> <to> | near <station> <k> | quit
 #include <fstream>

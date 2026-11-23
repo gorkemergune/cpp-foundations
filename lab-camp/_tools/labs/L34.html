@@ -1,0 +1,49 @@
+{{ header(9, 3, "Topological Sorting and Cycles", "45 minutes · A–B 10 · M1 13 · M2 10 · M3 7 · testing 5",
+  "directed acyclic graphs, the slides' <code>topSort1</code>, Kahn's algorithm with a queue, detecting a cycle with a three-colour DFS",
+  related=lc(1557, "minimum-number-of-vertices-to-reach-all-nodes", "Minimum Number of Vertices to Reach All Nodes") + " (L34-X) · " + gfg("topological-sort/1", "Topological sort") + " · " + gfg("detect-cycle-in-a-directed-graph/1", "Detect cycle in a directed graph"),
+  slides="<code>materials/slides/12-graphs.pptx</code> slides 31–35 (topological order, applications, <code>topSort1</code>)",
+  archive="2021 Assignment 3 (directed graph class) · the C09 challenge LeetCode 207 builds on M2", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>In a directed graph, a <b>topological order</b> lists every vertex so that every edge <code>u → v</code> goes from left to right — think of courses and their prerequisites. It exists exactly when the graph has no directed cycle.</p>
+<p>The slides give <code>topSort1</code> (slide 35): repeat <code>n</code> times — choose a vertex with no successors, add it to the <b>front</b> of the list, remove it and its edges. If at some step every remaining vertex has a successor, there is a cycle. To make the answer unique this lab always chooses the <b>smallest</b> such vertex (M1). Then write Kahn's algorithm, which works from the other end with in-degrees and a queue (M2), and a cycle test with DFS colours (M3).</p>
+<p><b>Example.</b> <code>0→1, 0→2, 1→3, 2→3, 3→4</code>. <code>topSort1</code>: 4 has no successor → <code>[4]</code>; then 3 → <code>[3, 4]</code>; now 1 and 2 qualify, take 1 → <code>[1, 3, 4]</code>; then 2 → <code>[2, 1, 3, 4]</code>; then 0 → <code>[0, 2, 1, 3, 4]</code>.</p>
+<div class="fig">{{ graph([0, 1, 2, 3, 4], [(0, 1), (0, 2), (1, 3), (2, 3), (3, 4)], directed=True, pos={0: (0.0, 0.5), 1: (0.3, 0.1), 2: (0.3, 0.9), 3: (0.65, 0.5), 4: (1.0, 0.5)}, size=200) }}<div class="cap">The example DAG.</div></div>
+{{ code("lab:lab34.h", title="lab34.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_TS", ["graph (adjacency list)", "topSort1", "cycle?"], [
+    ([[1, 2], [3], [3], [4], []], [0, 2, 1, 3, 4], False, "the example"),
+    ([[], [], []], [2, 1, 0], False, "no edges: 0 is chosen first, ends up last"),
+    ([[], [0], [1]], [2, 1, 0], False, "chain 2 → 1 → 0"),
+    ([[1], [2], [0]], [], True, "cycle 0 → 1 → 2 → 0"),
+    ([[1], [2], [1], []], [], True, "3 can be removed, then the 1 ⇄ 2 cycle blocks"),
+], widths=["33%", "20%", "10%", "32%"]) }}
+<p>M1 must match these exactly; M2 may return any valid order (it is checked with a validator) and <code>{}</code> for a cycle; M3 returns the last column. A, B, M1, M2 and M3 also run 200 random directed graphs each.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Topolojik sıra bir “önce bu, sonra şu” listesi. <code>topSort1</code> listeyi sondan başa kuruyor: hiçbir şeyin önünde olmayan (halefi olmayan) köşe en sona gidebilir. Kahn ise baştan kuruyor: hiçbir şeyin arkasında olmayan (giriş derecesi 0) köşe en başa gidebilir. Döngüde böyle bir köşe hiç oluşmaz. İki algoritma da döngüyü bu sayede yakalıyor.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li><code>topSort1</code>’de bir köşeyi silince hangi köşelerin halef sayısı azalır: onun komşularının mı, ona kenar verenlerin mi?</li><li>Kahn’da bir köşe kuyruğa ne zaman girer? Döngüdeki köşeler neden hiç girmez?</li><li>DFS’te gri bir köşeye tekrar rastlamak neden döngü demek? Siyah bir köşeye rastlamak neden döngü değil?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("Kahn başlangıç", row(graph([0, 1, 2, 3, 4], [(0, 1), (0, 2), (1, 3), (2, 3), (3, 4)], directed=True, pos={0: (0.0, 0.5), 1: (0.3, 0.1), 2: (0.3, 0.9), 3: (0.65, 0.5), 4: (1.0, 0.5)}, labels={0: "in 0", 1: "in 1", 2: "in 1", 3: "in 2", 4: "in 1"}, hl={0: "yellow"}, size=150), vec([0], name="q", ptr={"front": 0}, show_size=False)), "Giriş derecesi 0 olan tek köşe 0."),
+  ("0 çıktı", row(graph([0, 1, 2, 3, 4], [(0, 1), (0, 2), (1, 3), (2, 3), (3, 4)], directed=True, pos={0: (0.0, 0.5), 1: (0.3, 0.1), 2: (0.3, 0.9), 3: (0.65, 0.5), 4: (1.0, 0.5)}, labels={1: "in 0", 2: "in 0", 3: "in 2", 4: "in 1"}, hl={0: "green", 1: "yellow", 2: "yellow"}, size=150), vec([1, 2], name="q", ptr={"front": 0}, show_size=False)), "1 ve 2’nin dereceleri 0’a indi, ikisi de kuyruğa girdi. 3, iki öncülü de çıkınca girecek."),
+  ("döngü", graph([0, 1, 2], [(0, 1), (1, 2), (2, 0)], directed=True, hl={0: "red", 1: "red", 2: "red"}, labels={0: "in 1", 1: "in 1", 2: "in 1"}, size=120), "Hiçbir köşenin giriş derecesi 0 değil: Kahn hiç başlayamaz, sonuç <code>{}</code>."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab34.cpp", "topSort1", title="M1 — topSort1") }}
+{{ code("sol:lab34.cpp", "topSortKahn", title="M2 — topSortKahn") }}
+{{ code("sol:lab34.cpp", "cycleFrom", title="M3 — cycleFrom (helper)") }}
+{{ code("sol:lab34.cpp", "hasCycle", title="M3 — hasCycle") }}
+<ul><li><b>M1</b>, slaytı aynen izliyor. <code>successors[u]</code>, u’nun hâlâ grafta duran halef sayısı. <code>v</code> silinince <code>v</code>’ye kenar veren her köşenin sayısı bir azalıyor. Bunu bulmak için bütün listeler taranıyor.</li>
+<li><b>M2</b>, sonunda <code>order.size() != n</code> kontrolüyle döngüyü yakalıyor: döngüdeki köşelerin giriş derecesi hiçbir zaman 0’a inmez.</li>
+<li><b>M3</b>: beyaz = hiç girilmedi, gri = şu an yolun üstünde, siyah = bitti. Gri köşeye giden kenar, yolun içine geri dönen bir kenar, yani döngü. Siyah köşeye giden kenar ise daha önce bitmiş bir dala gidiyor (karodaki 0 → 2 → 3 gibi). İki renkle (görüldü/görülmedi) karo da yanlışlıkla döngü sayılırdı.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li><code>topSort1</code> slayttaki algoritma ve sınavda “slayttaki algoritmayı yaz” diye sorulabilir. Ama her adımda halefsiz köşeyi aramak ve kenarları silmek <code>O(V·(V + E))</code> tutar. Kahn her köşeyi ve kenarı bir kez işler: <code>O(V + E)</code>. Gerçek kodda tercih edilen Kahn.</li></ul>
+<h3>Alternatif</h3>
+<p>DFS ile topolojik sıra: bir köşe siyaha döndüğünde (bütün halefleri bittiğinde) listenin <b>başına</b> eklenir. Bu, <code>topSort1</code>’in “halefsiz olanı başa koy” fikrinin <code>O(V + E)</code> hâli. M3’ün <code>cycleFrom</code>’una bir satır eklemek yeterli.</p>
+{{ code("sol:lab34.cpp", "findSmallestSetOfVertices", title="L34-X — LC 1557") }}
+<h2>Ezberden varyant · L34-V</h2>
+<div class="box tip"><span class="t">4 dakikada yaz</span><p><span class="tag opt">L34-V</span> <code>AdjList reverseGraph(const AdjList&amp; g)</code>: her kenarı ters çevir. Listeleri artan tutmak için dış döngüyü <code>u</code> = 0, 1, 2 … sırasıyla yürüt.</p></div>

@@ -1,0 +1,61 @@
+{{ header(9, 2, "Breadth-First and Depth-First Traversal", "45 minutes · A–B 12 · M1 10 · M2–M3 13 · testing 10",
+  "BFS with a queue, DFS recursively and with a stack, the visited array, shortest paths in edges, connected components",
+  related=lc(1971, "find-if-path-exists-in-graph", "Find if Path Exists in Graph") + " (L33-X) · " + gfg("bfs-traversal-of-graph/1", "BFS of graph") + " · " + gfg("depth-first-traversal-for-a-graph/1", "DFS of Graph"),
+  slides="<code>materials/slides/12-graphs.pptx</code> slides 24–30 (depth-first: recursive 27, iterative 28; breadth-first 29–30)",
+  archive="2021 Assignment 3 (<code>performBFS</code>, <code>pathExists</code>, all paths) · <code>materials/assignments/2021-fall/a3-directed-graph/solution/intDrGraph.h</code>", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>A traversal visits every vertex reachable from <code>start</code> exactly once. <b>BFS</b> uses a queue and visits the graph in rings: first <code>start</code>, then all its neighbours, then their neighbours. <b>DFS</b> goes as deep as possible before it backs up; it is naturally recursive, and the recursion can be replaced by an explicit stack. Neighbours are taken in list order (ascending), so every order is unique.</p>
+<p>Write BFS (A), recursive DFS (B), then the iterative DFS that produces <b>exactly the same order</b> as B (M1), BFS distances (M2) and the number of connected components (M3).</p>
+<p><b>Example.</b> Undirected graph <code>0–1, 0–2, 1–3, 2–3</code>, start 0: BFS <code>0 1 2 3</code>, DFS <code>0 1 3 2</code> (from 1 the DFS goes to 3 before it ever returns to 0 for the 2).</p>
+<div class="fig">{{ graph([0, 1, 2, 3], [(0, 1), (0, 2), (1, 3), (2, 3)], pos={0: (0.5, 0.05), 1: (0.1, 0.5), 2: (0.9, 0.5), 3: (0.5, 0.95)}, size=150) }}<div class="cap">The example graph (a square).</div></div>
+{{ code("lab:lab33.h", title="lab33.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_TR", ["graph (adjacency list)", "start", "BFS", "DFS"], [
+    ([[1, 2], [0, 3], [0, 3], [1, 2]], 0, [0, 1, 2, 3], [0, 1, 3, 2], "the square"),
+    ([[1, 3], [0, 3, 5], [3, 5], [0, 1, 2, 4], [3], [1, 2]], 0, [0, 1, 3, 5, 2, 4], [0, 1, 3, 2, 5, 4], "Labwork 6 graph"),
+    ([[1, 3], [0, 3, 5], [3, 5], [0, 1, 2, 4], [3], [1, 2]], 2, [2, 3, 5, 0, 1, 4], [2, 3, 0, 1, 5, 4], "Labwork 6, start 2"),
+    ([[1], [], [0]], 0, [0, 1], [0, 1], "directed: 2 cannot be reached"),
+    ([[]], 0, [0], [0], "one vertex"),
+], widths=["34%", "8%", "17%", "17%", "19%"]) }}
+{{ cases("PDF_DIST", ["graph", "start", "distances"], [
+    ([[1], [0, 2], [1], []], 0, [0, 1, 2, -1], "path 0-1-2, vertex 3 alone"),
+    ([[1, 2], [0, 3], [0, 3], [1, 2]], 3, [2, 1, 1, 0], "the square from 3"),
+    ([[1], [2], [0]], 1, [2, 0, 1], "directed cycle"),
+], widths=["35%", "8%", "22%", "30%"]) }}
+{{ cases("PDF_CC", ["graph (undirected)", "components"], [
+    ([[1], [0], [3], [2], []], 3, "0-1, 2-3, 4 alone"),
+    ([[1, 2], [0, 3], [0, 3], [1, 2]], 1, "the square"),
+    ([[], [], []], 3, "no edges"),
+], widths=["40%", "15%", "40%"]) }}
+<p>A, B, M1 and M2 also run 200 random graphs (directed and undirected) each; M3 200 undirected ones.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>İki gezinti aynı iskeleti paylaşıyor: bir “bekleyenler” yapısı ve bir <code>seen</code> dizisi. BFS’te bu yapı bir kuyruk (önce gelen önce işlenir, halka halka ilerler), DFS’te bir stack ya da özyineleme (en son bulunan önce işlenir, derine gider). Ağaçlardan farkı döngüler: <code>seen</code> olmadan kare grafta 0 → 1 → 0 → 1 … sonsuza kadar döner.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>BFS’te köşeyi kuyruğa eklerken mi, kuyruktan çıkarırken mi işaretlemeliyim? Diğer seçenekte ne olur?</li><li>Yinelemeli DFS komşuları neden <b>ters</b> sırayla push ediyor? Düz sırayla hangi sıra çıkar?</li><li>Yinelemeli DFS’te bir köşe stack’e iki kez girebilir mi? Bu bir hata mı?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("BFS adım 1", row(graph([0, 1, 2, 3], [(0, 1), (0, 2), (1, 3), (2, 3)], pos={0: (0.5, 0.05), 1: (0.1, 0.5), 2: (0.9, 0.5), 3: (0.5, 0.95)}, hl={0: "green", 1: "yellow", 2: "yellow"}, size=110), vec([1, 2], name="q", ptr={"front": 0}, show_size=False)), "0 ziyaret edildi, komşuları 1 ve 2 kuyrukta."),
+  ("BFS adım 2", row(graph([0, 1, 2, 3], [(0, 1), (0, 2), (1, 3), (2, 3)], pos={0: (0.5, 0.05), 1: (0.1, 0.5), 2: (0.9, 0.5), 3: (0.5, 0.95)}, hl={0: "green", 1: "green", 3: "yellow", 2: "yellow"}, size=110), vec([2, 3], name="q", ptr={"front": 0}, show_size=False)), "1 çıktı. 3 kuyruğa girdi, 2 hâlâ önde."),
+  ("DFS", row(graph([0, 1, 2, 3], [(0, 1), (0, 2), (1, 3), (2, 3)], pos={0: (0.5, 0.05), 1: (0.1, 0.5), 2: (0.9, 0.5), 3: (0.5, 0.95)}, hl={0: "green", 1: "green", 3: "green", 2: "yellow"}, edge_hl={(0, 1), (1, 3)}, size=110), stack([2, 2], name="stack")), "Yinelemeli DFS: 0, 1, 3 çıktı. 2 stack’te iki kez var (alttaki 0’dan, üstteki 3’ten). Üstteki çıkınca 2 ziyaret edilir, alttaki sonra <code>seen</code> olduğu için atlanır."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab33.cpp", "bfsOrder", title="A — bfsOrder") }}
+{{ code("sol:lab33.cpp", "dfsVisit", title="B — dfsVisit (helper)") }}
+{{ code("sol:lab33.cpp", "dfsOrder", title="B — dfsOrder") }}
+{{ code("sol:lab33.cpp", "dfsIterative", title="M1 — dfsIterative") }}
+<ul><li><b>A.</b> Kuyruğa eklerken işaretlemek, aynı köşenin kuyruğa iki kez girmesini engeller. Çıkarırken işaretlersen sıra yine doğru çıkar, ama kuyruk <code>O(E)</code> büyüyebilir.</li>
+<li><b>M1.</b> Recursive sırayı aynen elde etmek için köşe stack’ten <b>çıkarken</b> işaretleniyor ve komşular ters sırada push ediliyor. Böylece en küçük komşu tepede kalıyor. Slayt 28’deki “ilk ziyaret edilmemiş komşuya git, yoksa pop et” sürümü de aynı sırayı verir, ama komşu listesinde nerede kaldığını hatırlaması gerekir.</li></ul>
+{{ code("sol:lab33.cpp", "distances", title="M2 — distances") }}
+{{ code("sol:lab33.cpp", "countComponents", title="M3 — countComponents") }}
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Her köşe bir kez kuyruğa/stack’e giriyor, her kenar bir kez (yönsüzde iki kez) inceleniyor: <code>O(V + E)</code> süre, <code>O(V)</code> ek bellek. Matrisle aynı gezinti <code>O(V<sup>2</sup>)</code> olurdu.</li>
+<li><b>M2</b>’de <code>dist</code> dizisi hem mesafeyi hem “görüldü” bilgisini tutuyor (-1 = görülmedi). BFS halka halka ilerlediği için bir köşeye ilk ulaşıldığı yol en kısa yol.</li></ul>
+<h3>Alternatif</h3>
+<p><b>M2</b>’yi DFS ile yazmak yanlış sonuç verir: DFS bir köşeye ilk olarak uzun bir yoldan ulaşabilir (karede 0 → 1 → 3 → 2 sırasında 2’nin mesafesi 3 çıkar, doğrusu 1). <b>M3</b> için union-find (birleşim-bul) da kullanılabilir. Testler onu referans olarak kullanıyor, ama ders kapsamında değil.</p>
+{{ code("sol:lab33.cpp", "validPath", title="L33-X — validPath") }}
+<h2>Ezberden varyant · L33-V</h2>
+<div class="box tip"><span class="t">5 dakikada yaz</span><p><span class="tag opt">L33-V</span> <code>std::vector&lt;int&gt; reachable(const AdjList&amp; g, int start)</code>: <code>start</code>’tan ulaşılabilen köşeler, artan sırada. Gezinti sırası önemli değil, stack ya da kuyruk kullanabilirsin.</p></div>

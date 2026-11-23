@@ -1,0 +1,56 @@
+{{ header(9, 4, "Spanning Trees and Prim's Algorithm", "45 minutes · A–B 10 · M1 20 · M2 5 · testing 10",
+  "spanning trees from DFS and BFS, weighted graphs as matrices, the minimum spanning tree, Prim's algorithm with <code>best</code>/<code>from</code> arrays",
+  related=lc(1584, "min-cost-to-connect-all-points", "Min Cost to Connect All Points") + " (L35-X) · " + gfg("minimum-spanning-tree/1", "Minimum Spanning Tree"),
+  slides="<code>materials/slides/12-graphs.pptx</code> slides 36–38 (spanning trees, cycles), 39–45 (minimum spanning tree, Prim and its trace), 46 (applications)",
+  archive="no archive question uses Prim; the final exam usually asks for a trace on paper (do the drawing below by hand first)", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>A <b>spanning tree</b> of a connected undirected graph keeps all <code>n</code> vertices and exactly <code>n − 1</code> of the edges, with no cycle. A DFS or a BFS from any vertex produces one: the edges used to reach each vertex for the first time (A, B). In a weighted graph the <b>minimum spanning tree</b> (MST) is the spanning tree with the smallest total weight.</p>
+<p><b>Prim</b> (slides 40–45) grows the MST from a start vertex: at every step it adds the cheapest edge that leaves the tree, together with the new vertex. Return the edges in the order they are added, as <code>(tree vertex, new vertex)</code> (M1), and the total weight (M2). If the graph is not connected, Prim gets stuck: return <code>{}</code> / <code>-1</code>. All test weights are different, so the answer is unique.</p>
+<div class="fig">{{ graph([0, 1, 2, 3, 4], [(0, 1), (0, 3), (1, 2), (1, 3), (1, 4), (2, 4), (3, 4)], weights={(0, 1): 2, (0, 3): 6, (1, 2): 3, (1, 3): 8, (1, 4): 5, (2, 4): 7, (3, 4): 9}, edge_hl={(0, 1), (1, 2), (1, 4), (0, 3)}, pos={0: (0.0, 0.25), 1: (0.5, 0.08), 2: (1.0, 0.25), 3: (0.1, 0.95), 4: (0.85, 0.95)}, size=210) }}<div class="cap">The lab graph; its MST (weight 2 + 3 + 5 + 6 = 16) is drawn in colour.</div></div>
+{{ code("lab:lab35.h", title="lab35.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_SP", ["graph", "start", "DFS tree edges", "BFS tree edges"], [
+    ([[1, 2], [0, 3], [0, 3], [1, 2]], 0, [(0, 1), (1, 3), (3, 2)], [(0, 1), (0, 2), (1, 3)], "the square"),
+    ([[1, 3], [0, 3, 5], [3, 5], [0, 1, 2, 4], [3], [1, 2]], 0, [(0, 1), (1, 3), (3, 2), (2, 5), (3, 4)], [(0, 1), (0, 3), (1, 5), (3, 2), (3, 4)], "Labwork 6"),
+    ([[1], [0], []], 0, [(0, 1)], [(0, 1)], "2 is not reached"),
+    ([[]], 0, [], [], "one vertex"),
+], widths=["27%", "7%", "24%", "24%", "13%"]) }}
+{{ cases("PDF_PRIM", ["weight matrix", "start", "Prim edges", "MST weight"], [
+    ([[0, 2, 0, 6, 0], [2, 0, 3, 8, 5], [0, 3, 0, 0, 7], [6, 8, 0, 0, 9], [0, 5, 7, 9, 0]], 0, [(0, 1), (1, 2), (1, 4), (0, 3)], 16, "the lab graph"),
+    ([[0, 2, 0, 6, 0], [2, 0, 3, 8, 5], [0, 3, 0, 0, 7], [6, 8, 0, 0, 9], [0, 5, 7, 9, 0]], 2, [(2, 1), (1, 0), (1, 4), (0, 3)], 16, "same graph from 2: same tree"),
+    ([[0, 1, 3], [1, 0, 2], [3, 2, 0]], 0, [(0, 1), (1, 2)], 3, "triangle: the 3 is left out"),
+    ([[0, 4, 0], [4, 0, 0], [0, 0, 0]], 0, [], -1, "not connected"),
+    ([[0]], 0, [], 0, "one vertex: no edge needed"),
+], widths=["38%", "7%", "25%", "9%", "16%"]) }}
+<p>M1 and M2 also run 200 random weighted graphs (connected or not), compared with a brute-force Prim and with Kruskal's algorithm.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Kapsayan ağaç, grafın bütün köşelerini döngüsüz bağlayan iskelet. DFS ve BFS bunu zaten üretiyor: bir köşeye ilk ulaştığın kenarı not etmen yeterli. Ağırlıklı grafta en ucuz iskeleti Prim buluyor. Ağacı tek köşeden başlatıyor ve her adımda ağaçtan dışarı çıkan en ucuz kenarı ekliyor.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>Bir kenar zaten ağaçta olan iki köşeyi bağlıyorsa onu eklemek neden yanlış?</li><li>Her adımda bütün <code>(u, v)</code> çiftlerine bakmak kaç işlem eder? <code>best[v]</code> dizisi bunu nasıl azaltıyor?</li><li>Graf bağlantılı değilse Prim nerede takılır?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("başlangıç", graph([0, 1, 2, 3, 4], [(0, 1), (0, 3), (1, 2), (1, 3), (1, 4), (2, 4), (3, 4)], weights={(0, 1): 2, (0, 3): 6, (1, 2): 3, (1, 3): 8, (1, 4): 5, (2, 4): 7, (3, 4): 9}, pos={0: (0.0, 0.25), 1: (0.5, 0.08), 2: (1.0, 0.25), 3: (0.1, 0.95), 4: (0.85, 0.95)}, hl={0: "green"}, labels={1: "best 2", 3: "best 6"}, size=150), "Ağaç = {0}. Dışarı çıkan kenarlar 0–1 (2) ve 0–3 (6)."),
+  ("1 eklendi", graph([0, 1, 2, 3, 4], [(0, 1), (0, 3), (1, 2), (1, 3), (1, 4), (2, 4), (3, 4)], weights={(0, 1): 2, (0, 3): 6, (1, 2): 3, (1, 3): 8, (1, 4): 5, (2, 4): 7, (3, 4): 9}, pos={0: (0.0, 0.25), 1: (0.5, 0.08), 2: (1.0, 0.25), 3: (0.1, 0.95), 4: (0.85, 0.95)}, hl={0: "green", 1: "green"}, edge_hl={(0, 1)}, labels={2: "best 3", 3: "best 6", 4: "best 5"}, size=150), "1 yeni kenarlar getirdi: 2 (3), 4 (5). 3 için 1–3 (8), 6’dan pahalı olduğu için best değişmedi."),
+  ("sonuç", graph([0, 1, 2, 3, 4], [(0, 1), (0, 3), (1, 2), (1, 3), (1, 4), (2, 4), (3, 4)], weights={(0, 1): 2, (0, 3): 6, (1, 2): 3, (1, 3): 8, (1, 4): 5, (2, 4): 7, (3, 4): 9}, pos={0: (0.0, 0.25), 1: (0.5, 0.08), 2: (1.0, 0.25), 3: (0.1, 0.95), 4: (0.85, 0.95)}, hl={0: "green", 1: "green", 2: "green", 3: "green", 4: "green"}, edge_hl={(0, 1), (1, 2), (1, 4), (0, 3)}, size=150), "Sırayla 1–2 (3), 1–4 (5), 0–3 (6). Toplam 16."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab35.cpp", "dfsTreeVisit", title="A — dfsTreeVisit (helper)") }}
+{{ code("sol:lab35.cpp", "bfsTreeEdges", title="B — bfsTreeEdges") }}
+{{ code("sol:lab35.cpp", "prim", title="M1 — prim") }}
+{{ code("sol:lab35.cpp", "mstWeight", title="M2 — mstWeight") }}
+<ul><li><b>M1.</b> <code>best[x]</code>, x’i ağaca bağlayan şimdiye kadarki en ucuz kenarın ağırlığı. <code>from[x]</code> o kenarın ağaçtaki ucu. Yeni bir köşe eklenince yalnızca onun kenarları <code>best</code>’i düşürebilir, bu yüzden her adımda tek satır taranıyor.</li>
+<li><code>from[x] == -1</code> olan köşeye hiçbir ağaç köşesinden kenar yok. Seçilecek köşe kalmamışsa graf bağlantılı değil demektir.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li><code>best</code>/<code>from</code> dizileriyle Prim <code>O(V<sup>2</sup>)</code> çalışıyor, bu da matris temsiliyle uyumlu. Her adımda bütün çiftleri taramak <code>O(V<sup>3</sup>)</code> olurdu (testlerdeki referans çözüm öyle). Listede ve <code>priority_queue</code> ile <code>O(E log V)</code> sürüm 12. haftanın konusu.</li></ul>
+<h3>Alternatif</h3>
+<p><b>Kruskal</b>: bütün kenarları ağırlığa göre sırala, döngü oluşturmayanları ekle. Döngü kontrolü için union-find gerekir. Slaytlarda yok, testler M2’yi Kruskal ile doğruluyor. Ağırlıklar farklı olduğunda iki algoritma aynı ağacı bulur, sadece kenarların sırası farklıdır.</p>
+{{ code("sol:lab35.cpp", "minCostConnectPoints", title="L35-X — LC 1584 (Prim on a complete graph)") }}
+<h2>Ezberden varyant · L35-V</h2>
+<div class="box tip"><span class="t">6 dakikada yaz</span><p><span class="tag opt">L35-V</span> <code>bool isTree(const AdjList&amp; g)</code>: tam <code>n − 1</code> kenar ve bağlantılı. Kenar sayısı = liste boyutlarının toplamı / 2.</p></div>
+<h2>9. hafta kontrol listesi</h2>
+<div class="box"><ul><li>Matris ve listeyi birbirine çevirip maliyetlerini karşılaştırabiliyor musun?</li><li>BFS’i kuyrukla, DFS’i hem özyinelemeyle hem stack’le yazabiliyor musun? Hangisi en kısa yolu verir?</li><li><code>topSort1</code>’i ve Kahn’ı yazıp, döngüyü nasıl yakaladıklarını açıklayabiliyor musun? Prim’in izini kâğıtta sürebiliyor musun?</li></ul>
+<p>Sonra <b>C09</b>, ardından <b>P04</b> (metro rota planlayıcısı).</p></div>

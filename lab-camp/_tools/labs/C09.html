@@ -1,0 +1,46 @@
+{{ header(9, 0, "Thinking Problems on Graphs", "60–100 minutes in total",
+  "recognising a graph inside a story: prerequisites as a directed graph, a grid as a graph, two-colouring with BFS",
+  related=lc(207, "course-schedule", "Course Schedule") + " · " + lc(994, "rotting-oranges", "Rotting Oranges") + " · " + lc(785, "is-graph-bipartite", "Is Graph Bipartite?"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 9 · Challenge set (after Lab 35)", one="A") }}
+{{ code("lab:challenge09.h", title="challenge09.h — given") }}
+<h2>C09-A · Course Schedule (medium)</h2>
+<p>Courses are vertices, a prerequisite <code>{a, b}</code> is an edge <code>b → a</code>. All courses can be finished exactly when this directed graph has no cycle.</p>
+{{ cases("PDF_CF", ["n", "prerequisites", "possible?"], [
+    (2, [[1, 0]], True, "LeetCode example 1"),
+    (2, [[1, 0], [0, 1]], False, "LeetCode example 2: a cycle"),
+    (3, [], True, "no prerequisites"),
+    (4, [[1, 0], [2, 1], [3, 2], [1, 3]], False, "cycle 1 → 2 → 3 → 1 behind course 0"),
+    (1, [[0, 0]], False, "a course that requires itself"),
+], widths=["7%", "40%", "12%", "36%"]) }}
+<h2>C09-B · Rotting Oranges (medium)</h2>
+<p>The grid is a graph: every cell is a vertex, joined to its 4 neighbours. All rotten oranges spread <b>at the same time</b>, so start one BFS from all of them together and count the rings.</p>
+{{ cases("PDF_OR", ["grid", "minutes"], [
+    ([[2, 1, 1], [1, 1, 0], [0, 1, 1]], 4, "LeetCode example 1"),
+    ([[2, 1, 1], [0, 1, 1], [1, 0, 1]], -1, "LeetCode example 2: bottom-left is cut off"),
+    ([[0, 2]], 0, "LeetCode example 3: nothing fresh"),
+    ([[2, 1, 1, 1, 2]], 2, "two sources meet in the middle"),
+], widths=["40%", "12%", "43%"]) }}
+<h2>C09-C · Is Graph Bipartite? (medium)</h2>
+<p>Colour the vertices with two colours so that every edge joins different colours. BFS: the start gets colour 0, each new neighbour the other colour; an edge between two vertices of the same colour ends it. The graph may be disconnected.</p>
+{{ cases("PDF_BP", ["graph", "bipartite?"], [
+    ([[1, 2, 3], [0, 2], [0, 1, 3], [0, 2]], False, "LeetCode example 1: triangle 0-1-2"),
+    ([[1, 3], [0, 2], [1, 3], [0, 2]], True, "LeetCode example 2: a square"),
+    ([[], [2], [1], [4], [3, 5], [4]], True, "disconnected: three pieces"),
+    ([[1], [0], [3, 4], [2, 4], [2, 3]], False, "the triangle is in the second piece"),
+], widths=["40%", "12%", "43%"]) }}
+<p>Every problem also runs 200 random inputs against a slow but simple reference.</p>
+
+{{ banner("önce her soruyla en az 25 dakika uğraş") }}
+<h2>İpuçları</h2>
+<div class="box q"><span class="t">C09-A</span><ol><li>Lab 34’te hangi algoritma döngüyü “sonuçta eksik köşe kalması” ile yakalıyordu? Burada sırayı değil, yalnızca sayıyı bilmen yetiyor.</li></ol></div>
+<div class="box q"><span class="t">C09-B</span><ol><li>Bütün çürük portakalları başta kuyruğa koy. Dakikayı saymak için her turda kuyruğun o anki boyutu kadar eleman işle. Bu, BFS’in halka halka ilerleyişi.</li></ol></div>
+<div class="box q"><span class="t">C09-C</span><ol><li>Bir köşenin rengini neden ilk boyamada kalıcı yapabiliriz? Grafta tek uzunlukta bir döngü varsa ne olur?</li></ol></div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+{{ code("sol:challenge09.cpp", "canFinish", title="C09-A — Kahn") }}
+<p>Lab 34’teki Kahn aynen kullanılıyor. Tek fark, sıra yerine alınan ders sayısının tutulması. DFS renkleriyle döngü aramak (L34-M3) da aynı <code>O(V + E)</code> sürede çalışır.</p>
+{{ code("sol:challenge09.cpp", "orangesRotting", title="C09-B — multi-source BFS") }}
+<p>Çok kaynaklı BFS: bütün başlangıç noktaları ilk halkayı oluşturur. <code>ring = q.size()</code> ile bir dakikada çürüyenler ayrılıyor. Taze portakal kalmayınca döngü duruyor, böylece fazladan bir dakika sayılmıyor. Süre <code>O(satır·sütun)</code>. Her hücre için ayrı ayrı BFS yapmak çok daha yavaş olurdu.</p>
+{{ code("sol:challenge09.cpp", "isBipartite", title="C09-C — two colours with BFS") }}
+<p>Bir köşenin rengi, başlangıca olan uzaklığının tek ya da çift olmasıyla belirleniyor. Aynı renkte iki komşu, tek uzunlukta bir döngü demek. İki parçalı graf tam olarak tek döngüsü olmayan graftır. Dış döngü, bağlantısız grafın her parçasını ayrı ayrı boyuyor.</p>

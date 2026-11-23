@@ -1,0 +1,47 @@
+{{ header(9, 0, "Metro Route Planner", "90–120 minutes (about 90 lines of your own code)",
+  "a graph whose vertices have names (<code>std::map</code> name → number), edges that carry data, BFS with a <code>parent</code> array to rebuild the path, distances",
+  related=lc(815, "bus-routes", "Bus Routes") + " (the hard version: fewest buses instead of fewest stops)",
+  slides="<code>12-graphs.pptx</code> slides 18–20 (adjacency list), 29–30 (breadth-first traversal)",
+  archive="2021 Assignment 3 (<code>pathExists</code>, every path from src to dest) · Labwork 6",
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 9 · Mini project (after C09)", one="B") }}
+
+<h2>1. What you build</h2>
+<p>A route planner for a small metro. <code>metro.txt</code> lists the lines; consecutive stations of a line are connected. The planner finds the route with the <b>fewest stops</b> (BFS), prints it, and counts how many times the passenger changes lines. It can also list every station within <code>k</code> stops.</p>
+<div class="fig">{{ graph(["Gar", "Carsi", "Kampus", "Kutuphane", "Stadyum", "Liman", "Muze", "Park", "Hastane"], [("Gar", "Carsi"), ("Carsi", "Kampus"), ("Kampus", "Kutuphane"), ("Kutuphane", "Stadyum"), ("Liman", "Carsi"), ("Carsi", "Muze"), ("Muze", "Park"), ("Kampus", "Hastane"), ("Hastane", "Park")], weights={("Gar", "Carsi"): "M1", ("Carsi", "Kampus"): "M1", ("Kampus", "Kutuphane"): "M1", ("Kutuphane", "Stadyum"): "M1", ("Liman", "Carsi"): "M2", ("Carsi", "Muze"): "M2", ("Muze", "Park"): "M2", ("Kampus", "Hastane"): "M3", ("Hastane", "Park"): "M3"}, pos={"Gar": (0.0, 0.3), "Carsi": (0.25, 0.3), "Kampus": (0.5, 0.3), "Kutuphane": (0.75, 0.3), "Stadyum": (1.0, 0.3), "Liman": (0.25, 0.0), "Muze": (0.25, 0.75), "Park": (0.5, 1.0), "Hastane": (0.6, 0.65)}, size=230, width=440, r=27, font_size=10) }}<div class="cap">metro.txt: M1 Gar–Carsi–Kampus–Kutuphane–Stadyum, M2 Liman–Carsi–Muze–Park, M3 Kampus–Hastane–Park.</div></div>
+{{ snippet('''
+9 stations loaded
+> route Gar Park
+Gar -> Carsi -> Muze -> Park
+3 stops, 1 transfer(s)
+> route Liman Hastane
+Liman -> Carsi -> Kampus -> Hastane
+3 stops, 2 transfer(s)
+> near Park 2
+Carsi Hastane Kampus Muze
+''', title="main_demo.cpp after your tests pass", lang="text") }}
+{{ code("lab:metro.h", title="metro.h — given") }}
+
+<h2>2. Tests</h2>
+<table class="grid"><tr><th style="width:10%">Part</th><th>What is checked</th></tr>
+<tr><td>A</td><td>9 stations; neighbours of Carsi in connection order <code>Gar Kampus Liman Muze</code>; a pair given again is not connected twice; a one-station line adds the station</td></tr>
+<tr><td>B</td><td>the three routes above plus <code>Stadyum → Park</code> (via Hastane, 4 stops); same station → just itself; unknown or unreachable station → <code>{}</code> / <code>-1</code></td></tr>
+<tr><td>C</td><td>transfers 1 and 2 for the two routes; 0 on one line; <code>withinStops</code> for k = 0, 1, 2 and an unknown station</td></tr></table>
+
+{{ banner("önce kendi tasarımını dene") }}
+<h2>Tasarım notları</h2>
+<ul><li><b>İsimden numaraya.</b> Graf algoritmaları 0 … n−1 numaralarıyla çalışıyor. İstasyon adlarını <code>map&lt;string, int&gt; ids</code> numaraya, <code>names</code> vektörü geri isme çeviriyor. Bütün public fonksiyonlar önce <code>idOf</code> çağırıyor.</li>
+<li><b>Kenar üstünde veri.</b> Komşu listesi yalnızca numara değil, <code>{to, line}</code> tutuyor. Aktarma sayısını bulmak için bu yeterli.</li>
+<li><b>Yolu geri kurmak.</b> BFS her köşeye ilk ulaştığı köşeyi <code>parent</code>’ta saklıyor. Hedeften <code>parent</code> zinciriyle geriye yürüyüp listeyi ters çevirince rota çıkıyor. Lab 35’teki BFS ağacının kenarları tam da bunlar.</li>
+<li><b>Bir BFS, birçok soru.</b> <code>bfs</code> yardımcısı mesafeleri ve <code>parent</code>’ı birlikte döndürüyor. <code>route</code>, <code>stops</code> ve <code>withinStops</code> bunu yeniden kullanıyor.</li></ul>
+<div class="avoid">{{ steps([
+  ("BFS Gar’dan", graph(["Gar", "Carsi", "Kampus", "Liman", "Muze", "Park"], [("Gar", "Carsi"), ("Carsi", "Kampus"), ("Liman", "Carsi"), ("Carsi", "Muze"), ("Muze", "Park")], pos={"Gar": (0.0, 0.3), "Carsi": (0.35, 0.3), "Kampus": (0.75, 0.3), "Liman": (0.35, 0.0), "Muze": (0.35, 0.75), "Park": (0.75, 1.0)}, labels={"Gar": "d 0", "Carsi": "d 1", "Kampus": "d 2", "Liman": "d 2", "Muze": "d 2", "Park": "d 3"}, edge_hl={("Gar", "Carsi"), ("Carsi", "Muze"), ("Muze", "Park")}, size=180, width=300, r=24, font_size=10), "parent[Park] = Muze, parent[Muze] = Carsi, parent[Carsi] = Gar. Geriye yürü, ters çevir."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:metro.cpp", "addLine", title="addLine") }}
+{{ code("sol:metro.cpp", "bfs", title="bfs (helper)") }}
+{{ code("sol:metro.cpp", "route", title="route") }}
+{{ code("sol:metro.cpp", "transfers", title="transfers") }}
+<h3>Genişletme fikirleri</h3>
+<ul><li><b>En az aktarma</b> (LeetCode 815’in fikri): durakları değil hatları köşe yap. İki hat ortak bir durağı varsa komşu olsun.</li><li><b>Süreli rota</b>: kenarlara dakika ekle. En kısa süreyi bulmak için BFS yetmez, Dijkstra gerekir (12. haftada heap’le).</li><li>Bir hattı geçici olarak kapat (bakım) ve rotayı yeniden hesapla.</li></ul>

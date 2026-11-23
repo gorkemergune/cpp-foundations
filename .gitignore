@@ -1,7 +1,21 @@
-.DS_Store
-node_modules/
+# Eski / ilgisiz dosyalar: diskte duruyor, repoya girmiyor
+_arsiv/
+
+# Derleme çıktıları
+*.exe
 *.out
 *.o
-~$*
-settings.json
+*.obj
+*.pdb
+*.ilk
+a.out
+build/
+lab-camp/_tools/out/
+__pycache__/
+
+# Editör ve işletim sistemi
 .vscode
+settings.json
+.DS_Store
+~$*
+node_modules/

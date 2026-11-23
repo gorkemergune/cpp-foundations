@@ -1,0 +1,45 @@
+{{ header(10, 0, "Thinking Problems on Binary Trees", "60–100 minutes in total",
+  "returning information upward from subtrees, carrying information downward (prefix sums), the difference between “the best answer” and “what the parent may use”",
+  related=lc(236, "lowest-common-ancestor-of-a-binary-tree", "Lowest Common Ancestor of a Binary Tree") + " · " + lc(437, "path-sum-iii", "Path Sum III") + " · " + lc(124, "binary-tree-maximum-path-sum", "Binary Tree Maximum Path Sum"),
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 10 · Challenge set (after Lab 39)", one="C") }}
+{{ code("lab:challenge10.h", title="challenge10.h — given") }}
+<h2>C10-A · Lowest Common Ancestor (medium)</h2>
+<p>The deepest node that has both <code>p</code> and <code>q</code> in its subtree. The tree is <b>not</b> a BST, so you cannot steer by comparing keys.</p>
+{{ cases("PDF_LCA", ["tree", "p", "q", "LCA"], [
+    ("[3,5,1,6,2,0,8,null,null,7,4]", 5, 1, 3, "LeetCode example 1"),
+    ("[3,5,1,6,2,0,8,null,null,7,4]", 5, 4, 5, "LeetCode example 2: p is an ancestor of q"),
+    ("[3,5,1,6,2,0,8,null,null,7,4]", 7, 8, 3, "deep on both sides"),
+    ("[1,2]", 1, 2, 1, "LeetCode example 3"),
+], widths=["38%", "7%", "7%", "8%", "35%"]) }}
+<h2>C10-B · Path Sum III (medium)</h2>
+<p>Count the downward paths (they may start and end anywhere, but only go from parent to child) whose values add up to <code>target</code>.</p>
+{{ cases("PDF_PS", ["tree", "target", "paths"], [
+    ("[10,5,-3,3,2,null,11,3,-2,null,1]", 8, 3, "LeetCode example 1"),
+    ("[5,4,8,11,null,13,4,7,2,null,null,5,1]", 22, 3, "LeetCode example 2"),
+    ("[0,0,0]", 0, 5, "zeros: every one-node and two-node path"),
+    ("[]", 0, 0, "empty tree"),
+], widths=["45%", "9%", "8%", "33%"]) }}
+<h2>C10-C · Binary Tree Maximum Path Sum (hard)</h2>
+<p>A path may bend once at its highest node: it goes up from one end and down to the other. Values can be negative.</p>
+{{ cases("PDF_MPS", ["tree", "max path sum"], [
+    ("[1,2,3]", 6, "LeetCode example 1: 2 → 1 → 3"),
+    ("[-10,9,20,null,null,15,7]", 42, "LeetCode example 2: 15 → 20 → 7"),
+    ("[-3]", -3, "one negative node: the path cannot be empty"),
+    ("[2,-1,-2]", 2, "the root alone"),
+], widths=["40%", "15%", "40%"]) }}
+<p>B and C also run 200 random trees each against slow brute-force references.</p>
+
+{{ banner("önce her soruyla en az 25 dakika uğraş") }}
+<h2>İpuçları</h2>
+<div class="box q"><span class="t">C10-A</span><ol><li>Bir fonksiyon “bu alt ağaçta p ya da q var mı?” sorusunu cevaplarsa, kök hangi durumda cevabın kendisi olur?</li></ol></div>
+<div class="box q"><span class="t">C10-B</span><ol><li>Kökten bir düğüme kadar olan toplamlar (prefix sum) biliniyorsa, bir ata ile düğüm arasındaki yolun toplamı nedir? Dizilerdeki “toplamı k olan alt dizi” sorusunu hatırla (C11’de tekrar gelecek).</li></ol></div>
+<div class="box q"><span class="t">C10-C</span><ol><li>Bir düğümde iki ayrı soru var: “yol tam burada kıvrılırsa en iyi toplam ne?” ve “ebeveyne aşağı doğru uzanan en iyi kolu nasıl veririm?”. Hangisini döndürmeli, hangisini bir değişkende tutmalısın?</li></ol></div>
+
+<div class="page-break"></div>
+<h2>Çözümler</h2>
+{{ code("sol:challenge10.cpp", "lowestCommonAncestor", title="C10-A") }}
+<p>Fonksiyon, alt ağaçta p ya da q bulursa onu (ya da ortak atalarını) döndürüyor. İki taraftan da bir şey geliyorsa p ile q ayrı kollarda demektir ve kök cevaptır. p, q’nun atasıysa arama p’de durur ve p yukarı taşınır. <code>O(n)</code>. BST olsaydı anahtarlar karşılaştırılarak <code>O(h)</code>’de çözülürdü (LeetCode 235).</p>
+{{ code("sol:challenge10.cpp", "countFrom", title="C10-B — prefix sums on the root-to-node path") }}
+<p>Kökten p’ye kadar olan toplam <code>sum</code> ise, p’de biten ve toplamı <code>target</code> olan yol sayısı, yol üstündeki <code>sum − target</code> değerli önek sayısına eşit. Düğümden çıkarken önek <code>seen</code>’den siliniyor. Kardeş dallar birbirinin ata yolunu görmemeli. <code>O(n)</code>. Her düğümden aşağı ayrı ayrı yürümek (testteki referans çözüm) <code>O(n·h)</code> sürer.</p>
+{{ code("sol:challenge10.cpp", "bestDown", title="C10-C") }}
+<p>Dönüş değeri ebeveynin kullanabileceği tek kollu yol. <code>best</code>, düğümde kıvrılan iki kollu yolun en iyisi. Negatif kollar 0’a çekiliyor, yani alınmıyor. Ama düğümün kendisi her zaman yolda, bu yüzden tek düğümlü <code>[-3]</code> doğru olarak −3 veriyor. <code>best</code>’in <code>INT_MIN</code> ile başlaması bunu sağlıyor.</p>

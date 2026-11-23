@@ -1,0 +1,46 @@
+{{ header(10, 0, "Phone Book on a Binary Search Tree", "90–120 minutes (about 90 lines of your own code)",
+  "a BST class with string keys and a value, private recursive helpers, <code>Entry**</code> links, deletion by copying, a pruned range query, saving in preorder, the rule of three",
+  related=lc(208, "implement-trie-prefix-tree", "Implement Trie") + " (the structure made for prefix searches)",
+  slides="<code>13-trees.pptx</code> slides 42–47 (BinarySearchTree class, KeyedItem), 48–62 (search, insert, delete), 33–34 (copy constructor, destructor)",
+  archive="2017 Assignment 1 (grades in a linked list → here in a tree) · term project (open/save) · Labwork 7",
+  course_line="CSE 211 · Data Structures · Lab Camp — Week 10 · Mini project (after C10)", one="B") }}
+
+<h2>1. What you build</h2>
+<p>A phone book whose entries live in a BST ordered by name. It loads <code>contacts.txt</code>, answers lookups in <code>O(h)</code>, lists every name with a given prefix in alphabetical order, deletes entries and saves itself. Saving in <b>preorder</b> means that loading the file inserts every parent before its children, so the same tree comes back — saving in inorder would load a sorted list and turn the tree into a “linked list”.</p>
+<div class="fig">{{ tree(("Mert", ("Ayse", ("Ali", None, None), ("Can", None, None)), ("Zeynep", ("Selin", None, None), None)), dx=56, r=25, font_size=10) }}<div class="cap">contacts.txt (Mert, Ayse, Zeynep, Ali, Can, Selin) → height 3. After <code>del Mert</code>, Selin (the successor) moves to the root.</div></div>
+{{ snippet('''
+6 contacts, tree height 3
+> find Can
+0536-555
+> add Asli 0539-888
+added
+> list A
+Ali Asli Ayse
+> del Mert
+removed
+> save
+saved 6 contacts
+''', title="main_demo.cpp after your tests pass", lang="text") }}
+{{ code("lab:phonebook.h", title="phonebook.h — given") }}
+
+<h2>2. Tests</h2>
+<table class="grid"><tr><th style="width:10%">Part</th><th>What is checked</th></tr>
+<tr><td>A</td><td>the six contacts; <code>find</code> leaves <code>phone</code> untouched for a missing name; <code>add</code> refuses an existing name; <code>update</code> works only on existing names; <code>size</code></td></tr>
+<tr><td>B</td><td>prefixes <code>A</code>, <code>As</code>, <code>Q</code> and the empty prefix; removing the root (two children), a leaf and a node with one child; removing twice</td></tr>
+<tr><td>C</td><td>the exact preorder text of <code>save</code>; <code>load(save())</code> gives the same text; the text after removing the root; height 3; the empty book</td></tr></table>
+
+{{ banner("önce kendi tasarımını dene") }}
+<h2>Tasarım notları</h2>
+<ul><li><b>Bir arama, üç kullanım.</b> <code>findLink</code>, ismin bulunduğu ya da ekleneceği pointer’ı döndürüyor. <code>add</code> boşsa oraya yazıyor, <code>update</code> doluysa değiştiriyor, <code>remove</code> oradan siliyor (L37 ve L38’deki <code>Node**</code> kalıbı).</li>
+<li><b>Özel yardımcılar.</b> Özyinelemeli fonksiyonlar bir <code>Entry*</code> parametresi istiyor, ama kullanıcı ağacın içini görmemeli. Bu yüzden public fonksiyon yalnızca <code>root</code> ile private yardımcıyı çağırıyor (slayt 29–30’daki BinaryTree sınıfı da böyle).</li>
+<li><b>Önek araması = aralık araması.</b> İsmin ilk <code>|prefix|</code> harfi önekten küçükse eşleşmeler yalnızca sağda olabilir, büyükse yalnızca solda. Eşitse her iki tarafta da olabilir.</li>
+<li><b>Üçlü kural.</b> Sınıf <code>new</code> ile düğüm aldığı için yıkıcı yazıldı. Kopya kurucu ve atama ise silindi (<code>= delete</code>). Silinmeselerdi varsayılan kopya iki rehberin aynı düğümleri paylaşmasına ve çift <code>delete</code>’e yol açardı (2021 A1’deki hata).</li></ul>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:phonebook.cpp", "findLink", title="findLink") }}
+{{ code("sol:phonebook.cpp", "remove", title="remove") }}
+{{ code("sol:phonebook.cpp", "prefixInto", title="prefixInto") }}
+{{ code("sol:phonebook.cpp", "saveFrom", title="saveFrom") }}
+<h3>Genişletme fikirleri</h3>
+<ul><li>Bir kişiye birden fazla numara: <code>phone</code> yerine <code>std::vector&lt;std::string&gt;</code>.</li><li>Ağaç fazla uzarsa yeniden dengele (L39-X <code>balanceBST</code>). <code>height() &gt; 2·log2(size)</code> olduğunda otomatik yap.</li><li>Soyadına göre ikinci bir ağaç. Aynı veriyi iki farklı sırayla gösteren iki indeks.</li></ul>

@@ -1,0 +1,51 @@
+{{ header(10, 3, "Deleting From a Binary Search Tree", "45 minutes · A–B 8 · M1 15 · M2 12 · testing 10",
+  "the three cases of deletion (leaf, one child, two children), the inorder successor and predecessor, deletion by copying vs. by merging, pointer-to-pointer links",
+  related=lc(450, "delete-node-in-a-bst", "Delete Node in a BST") + " · " + lc(669, "trim-a-binary-search-tree", "Trim a BST") + " (L38-X)",
+  slides="<code>materials/slides/13-trees.pptx</code> slides 52–58 (deletion: leaf, one child, two children), 59–62 (the code)",
+  archive="Labwork 7 <code>genBST.h</code> (<code>deleteByMerging</code>, <code>deleteByCopying</code> with the predecessor) · 2017 Assignment 5 Q2 (delete 26 and 10 = L38-V)", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>Deleting from a BST has three cases (slides 53–58). A <b>leaf</b> is simply removed. A node with <b>one child</b> is replaced by that child. A node with <b>two children</b> cannot be removed directly, because its parent has room for only one subtree:</p>
+<ul><li><b>by copying</b> (slides, M1): copy the key of the inorder <b>successor</b> — the smallest key of the right subtree — into the node, then delete the successor node, which has no left child;</li>
+<li><b>by merging</b> (Labwork 7's <code>genBST.h</code>, M2): hang the right subtree under the <b>rightmost</b> node of the left subtree, then let the left subtree take the node's place.</li></ul>
+<p>Both return <code>false</code> if the key is not in the tree, and must <code>delete</code> exactly one node. A (<code>removeMin</code>) and B (<code>successorKey</code>) are the two pieces M1 needs.</p>
+<div class="fig">{{ row(tree(bst_from([50, 30, 70, 20, 40, 60, 80]), hl={50: "red"}), tree((60, (30, (20, None, None), (40, None, None)), (70, None, (80, None, None))), hl={60: "green"}), tree((30, (20, None, None), (40, None, (70, (60, None, None), (80, None, None)))), hl={40: "green"})) }}<div class="cap">Delete 50 — the tree · by copying (60 moves up) · by merging (70’s subtree hangs under 40).</div></div>
+{{ code("lab:lab38.h", title="lab38.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_DEL", ["tree", "key", "return", "after copying (M1)", "after merging (M2)"], [
+    ("[50,30,70,20,40,60,80]", 20, True, "[50,30,70,null,40,60,80]", "[50,30,70,null,40,60,80]", "leaf"),
+    ("[50,30,70,20,40,60,80]", 30, True, "[50,40,70,20,null,60,80]", "[50,20,70,null,40,60,80]", "two children"),
+    ("[50,30,70,20,40,60,80]", 50, True, "[60,30,70,20,40,null,80]", "[30,20,40,null,null,null,70,60,80]", "the root"),
+    ("[50,30,80,null,null,70]", 80, True, "[50,30,70]", "[50,30,70]", "one child"),
+    ("[5,3,5,null,null,null,5]", 5, True, "[5,3,5]", "[3,null,5,null,5]", "equal keys: the root goes"),
+    ("[7]", 7, True, "[]", "[]", "the only node"),
+    ("[50,30,70]", 99, False, "[50,30,70]", "[50,30,70]", "missing key"),
+    ("[]", 5, False, "[]", "[]", "empty tree"),
+], widths=["21%", "6%", "8%", "20%", "25%", "15%"]) }}
+<p>M1 and M2 also delete a random key from 200 random trees each and compare the shape with a reference; every case checks that exactly one node was freed.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Silmede önce düğümü bulmak gerekiyor, ama düğümün kendisi yetmiyor: onu gösteren pointer’ı (ebeveynin <code>left</code>/<code>right</code> alanını ya da <code>root</code>’u) değiştireceğiz. Bu yüzden arama <code>Node** link</code> ile yapılıyor (L37’deki ekleme gibi). İki çocuklu durumda iki yol var. Kopyalama ağacın şeklini fazla bozmaz. Birleştirme daha basit ama ağacın yüksekliğini artırabilir (yukarıdaki üçüncü çizim).</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>Halef (successor) neden hiçbir zaman sol çocuğa sahip olamaz? Bu, onu silmeyi neden kolaylaştırır?</li><li>Birleştirmede sağ alt ağaç neden tam olarak sol alt ağacın <b>en sağındaki</b> düğüme asılıyor?</li><li>Kök silinirse <code>root</code> değişmeli. Fonksiyon bunu nasıl yapabiliyor?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("bul", tree(bst_from([50, 30, 70, 20, 40, 60, 80]), hl={50: "red", 60: "yellow"}, notes={50: "silinecek", 60: "halef"}), "50’nin iki çocuğu var. Halef, sağ alt ağacın en solundaki 60."),
+  ("kopyala", tree((60, (30, (20, None, None), (40, None, None)), (70, (60, None, None), (80, None, None))), hl={60: "yellow"}), "60 köke kopyalandı. Alttaki eski 60 düğümü artık fazla."),
+  ("sil", tree((60, (30, (20, None, None), (40, None, None)), (70, None, (80, None, None))), hl={60: "green"}), "<code>removeMin(node-&gt;right)</code> eski 60’ı silip yerine sağ çocuğunu (burada boş) koydu."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab38.cpp", "removeMin", title="A — removeMin") }}
+{{ code("sol:lab38.cpp", "deleteByCopying", title="M1 — deleteByCopying") }}
+{{ code("sol:lab38.cpp", "deleteByMerging", title="M2 — deleteByMerging") }}
+<ul><li><b>M1.</b> Yaprak ve tek çocuklu durum tek satırda birleşiyor. Yaprakta iki çocuk da <code>nullptr</code> olduğu için <code>*link</code> boşalıyor. İki çocuklu durumda A’daki <code>removeMin</code>, sağ alt ağaçtan halefi hem bulup hem siliyor.</li>
+<li><b>M2.</b> Sol alt ağacın en sağındaki düğüm, sol taraftaki en büyük anahtar. Sağ alt ağaçtaki her anahtar ondan büyük ya da eşit olduğu için onun sağına asılabilir.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Her iki silme de tek bir kökten aşağı yolu izliyor: <code>O(h)</code>. <code>Node**</code> sayesinde “kök mü, sol çocuk mu, sağ çocuk mu?” diye ayrı durum yazmak gerekmiyor. Slaytlar aynı şeyi <code>TreeNode*&amp;</code> parametreli özyinelemeyle yapıyor.</li></ul>
+<h3>Alternatif</h3>
+<p>Halef yerine <b>öncül</b> (predecessor: sol alt ağacın en büyüğü) ile kopyalamak da doğru. genBST.h ve 2017 AS5 bu yolu kullanıyor (L38-V). Eşit anahtarlar sağa gittiği için, öncülle kopyalama tekrarlı anahtarlarda BST kuralını bozabilir. Bu yüzden L38-V yalnızca farklı anahtarlarla çalışıyor. Sınavda hangi yolun istendiğine bak: soru “inorder successor” diyorsa M1’i yaz.</p>
+{{ code("sol:lab38.cpp", "trimBST", title="L38-X — trimBST") }}
+<h2>Ezberden varyant · L38-V</h2>
+<div class="box tip"><span class="t">7 dakikada yaz</span><p><span class="tag opt">L38-V</span> <code>bool deleteByCopyingPred(Node*&amp; root, int key)</code>: M1’in öncül kullanan hâli. AS5 Q2 ağacından önce 26’yı, sonra 10’u sil. Sonuç: <code>9(8(1(,2(,4(,7))),),21(11,35(30,)))</code>.</p></div>

@@ -1,0 +1,56 @@
+{{ header(10, 2, "Binary Search Trees", "45 minutes · A–B 10 · M1 5 · M2 10 · M3 8 · M4 5 · testing 7",
+  "the BST property, insert and search along one path (<code>O(h)</code>), min/max, checking the property with ranges, treesort, printing a tree's shape",
+  related=lc(98, "validate-binary-search-tree", "Validate Binary Search Tree") + " · " + lc(700, "search-in-a-binary-search-tree", "Search in a BST") + " · " + lc(108, "convert-sorted-array-to-binary-search-tree", "Sorted Array to BST") + " (L37-X)",
+  slides="<code>materials/slides/13-trees.pptx</code> slides 39–41 (BST), 43–47 (KeyedItem, TreeNode, the class), 48 (search), 49–51 (insert), 63–64 (minimum height, cost), 65–66 (treesort)",
+  archive="2021 Assignment 4 (<code>insertBST</code>, <code>isThisaBST</code> = M2) · 2017 Assignment 5 Q2 (= M4) and Q5-b (= L37-V) · Labwork 7 <code>genBST.h</code>", one="M2") }}
+
+<h2>1. Problem statement</h2>
+<p>In a <b>binary search tree</b> every key in the left subtree of a node is smaller than the node's key and every key in its right subtree is greater or equal (this lab sends equal keys to the right, as <code>insertBST</code> in 2021 Assignment 4). Because of this order, search and insertion walk <b>one</b> path from the root, comparing at every node.</p>
+<p>Write insertion (A) and search (B), the smallest and largest key (M1), a check whether an arbitrary binary tree is a BST (M2), treesort (M3) and the shape text from 2017 Assignment 5, Q2 (M4): a node is printed as <code>key(left,right)</code>, a leaf as <code>key</code>, a missing child as nothing.</p>
+<div class="fig">{{ tree(bst_from([9, 10, 8, 1, 2, 26, 35, 30, 4, 11, 7, 21])) }}<div class="cap">Assignment 5, Q2: insert 9 10 8 1 2 26 35 30 4 11 7 21 → <code>9(8(1(,2(,4(,7))),),10(,26(11(,21),35(30,))))</code>.</div></div>
+{{ code("lab:lab37.h", title="lab37.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_INS", ["keys inserted", "tree (level order)", "shape"], [
+    ([50, 30, 70, 20, 40, 60, 80], "[50,30,70,20,40,60,80]", "50(30(20,40),70(60,80))", "balanced"),
+    ([5, 5, 3, 5], "[5,3,5,null,null,null,5]", "5(3,5(,5))", "equal keys go right"),
+    ([1, 2, 3, 4], "[1,null,2,null,3,null,4]", "1(,2(,3(,4)))", "sorted input: a 'list'"),
+    ([], "[]", "", "nothing"),
+], widths=["22%", "33%", "30%", "15%"]) }}
+{{ cases("PDF_ISBST", ["tree", "BST?"], [
+    ("[2,1,3]", True, "LeetCode 98 example 1"),
+    ("[5,1,4,null,null,3,6]", False, "LeetCode 98 example 2: 4 < 5 on the right"),
+    ("[10,5,15,null,null,6,20]", False, "6 is fine for 15, but it is on the right of 10"),
+    ("[5,3,5]", True, "equal key on the right: allowed"),
+    ("[5,5,7]", False, "equal key on the left: not allowed"),
+    ("[]", True, "empty tree"),
+], widths=["35%", "10%", "50%"]) }}
+<p>M4 also checks the Assignment 5 tree from the drawing above. A runs 200 random insert sequences, M1 and M3 200 random arrays, M2 200 random trees (half of them real BSTs). B also checks that the search follows <b>one</b> path: in the fake tree <code>[50,99,70]</code> a BST search must not find 99.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>BST, ikili ağaca bir düzen kuralı ekliyor ve bu kural sayesinde arama yaparken her düğümde sağa ya da sola karar verilebiliyor. Ekleme de aynı yolu izleyip <code>nullptr</code> bulduğu yere yeni bir yaprak koyuyor. En küçük anahtar en soldaki, en büyük anahtar en sağdaki düğümde. Ödev 4’ün tuzağı M2’de: bir düğümü yalnızca ebeveyniyle karşılaştırmak yetmez.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li><code>[10,5,15,null,null,6,20]</code> ağacında her düğüm çocuklarıyla doğru sırada. Yine de neden BST değil?</li><li><code>insert</code> neden <code>Node*&amp;</code> alıyor? Boş ağaca ilk eklemede ne değişiyor?</li><li>Sıralı bir dizi eklenirse ağaç nasıl bir şekle girer? Arama kaç adım sürer?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("insert 45", tree(bst_from([50, 30, 70, 20, 40, 60, 80]), hl={50: "yellow", 30: "yellow", 40: "yellow"}, notes={50: "45 < 50", 30: "45 ≥ 30", 40: "45 ≥ 40"}), "Yol: 50 → sol, 30 → sağ, 40 → sağ. 40’ın sağı boş, yeni yaprak oraya."),
+  ("sonra", tree(bst_from([50, 30, 70, 20, 40, 60, 80, 45]), hl={45: "green"}), "<code>link</code>, 40’ın <code>right</code> alanını gösteriyordu. <code>*link = new Node(45)</code>."),
+  ("M2 tuzağı", tree((10, (5, None, None), (15, (6, None, None), (20, None, None))), hl={6: "red"}, notes={6: "6 < 10!"}), "6, ebeveyni 15 için doğru tarafta. Ama 10’un sağ alt ağacında ve 10’dan küçük. Aralık [10, ∞) bunu yakalar."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab37.cpp", "insert", title="A — insert") }}
+{{ code("sol:lab37.cpp", "search", title="B — search") }}
+{{ code("sol:lab37.cpp", "inRange", title="M2 — inRange (helper)") }}
+{{ code("sol:lab37.cpp", "treeSort", title="M3 — treeSort") }}
+{{ code("sol:lab37.cpp", "shape", title="M4 — shape") }}
+<ul><li><b>A.</b> <code>Node** link</code>, “yeni yaprağın yazılacağı pointer”ı tutuyor. Boş ağaçta bu <code>root</code>’un kendisi, sonra bir düğümün <code>left</code> ya da <code>right</code> alanı. Böylece özel durum gerekmiyor. Slaytlardaki özyinelemeli <code>insertItem(TreeNode*&amp; treePtr, …)</code> aynı fikri referansla yapıyor.</li>
+<li><b>M2.</b> Her düğüm, üstündeki bütün atalarının belirlediği aralığa (<code>lo ≤ key &lt; hi</code>) düşmeli. Sola inerken üst sınır düğümün anahtarı oluyor, sağa inerken alt sınır. <code>long long</code> sınırları, <code>INT_MIN</code>/<code>INT_MAX</code> anahtarlarında taşmayı önlüyor.</li>
+<li><b>M3.</b> Inorder sırasında okumak ve silmek aynı geçişte yapılabiliyor: düğüm, iki alt ağacı da bittikten sonra siliniyor.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Ekleme, arama, min ve max <code>O(h)</code>. Dengeli ağaçta <code>h ≈ log n</code>, sıralı veriyle <code>h = n</code> (testteki <code>1(,2(,3(,4)))</code>). Treesort ortalamada <code>O(n log n)</code>, en kötü durumda <code>O(n<sup>2</sup>)</code> (slayt 66).</li></ul>
+<h3>Alternatif</h3>
+<p><b>M2</b> için inorder gezinip dizinin sıralı olduğunu kontrol etmek de işe yarar, ama eşit anahtarların sağda olma kuralını ayrıca kontrol etmek gerekir (<code>[5,5,7]</code>’nin inorder’ı 5 5 7, yani sıralı görünür). Testlerdeki referans çözüm bu yolu izliyor. <code>std::set</code> ile sıralamak ise ağacı derste değil kütüphanede yazmak olur. Treesort sorusunda labın amacını <b>ihlal eder</b>.</p>
+{{ code("sol:lab37.cpp", "build", title="L37-X — build (helper of sortedArrayToBST)") }}
+<h2>Ezberden varyant · L37-V</h2>
+<div class="box tip"><span class="t">3 dakikada yaz</span><p><span class="tag opt">L37-V</span> <code>int minPlusMax(const Node* root)</code>: en küçük ve en büyük anahtarın toplamı (2017 AS5, Q5-b). Özyineleme kullanmadan, iki <code>while</code> döngüsüyle yaz.</p></div>

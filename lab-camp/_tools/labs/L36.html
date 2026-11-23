@@ -1,0 +1,56 @@
+{{ header(10, 1, "Binary Trees: Counting, Traversals, Height", "45 minutes · A–B 8 · M1 10 · M2 5 · M3 10 · M4 5 · testing 7",
+  "binary tree terminology, recursion on trees (base case = empty tree), preorder/inorder/postorder, height, level order with a queue, freeing a tree in postorder",
+  related=lc(102, "binary-tree-level-order-traversal", "Binary Tree Level Order Traversal") + " · " + lc(104, "maximum-depth-of-binary-tree", "Maximum Depth of Binary Tree") + " · " + lc(226, "invert-binary-tree", "Invert Binary Tree") + " (L36-X)",
+  slides="<code>materials/slides/13-trees.pptx</code> slides 2–12 (terminology, level, height), 13–20 (full and complete trees, height theorems), 24–25 (pointer-based node), 34 (destructor), 35–38 (traversals)",
+  archive="2021 Assignment 4 (<code>findHeight</code> = M2, <code>inOrder</code>) · 2017 Assignment 5 Q5-a (= L36-V) · Labwork 7 <code>genBST.h</code> (<code>preorder</code>, <code>breadthFirst</code>)", one="M1") }}
+
+<h2>1. Problem statement</h2>
+<p>A binary tree is either empty or a node with a value, a left subtree and a right subtree. Almost every tree function follows the same pattern: <b>handle the empty tree, then combine the answers of the two subtrees</b>. Write the counting functions (A, B), the three depth-first traversals (M1), the height as defined in 2021 Assignment 4 — the number of <b>nodes</b> on the longest root-to-leaf path, 0 for an empty tree (M2) — the level-order traversal with a queue (M3) and a function that frees the whole tree (M4).</p>
+<p>Trees in the tests are written in LeetCode's level order: <code>[1,2,3,4,5,null,6]</code> lists the levels left to right, <code>null</code> marks a missing child.</p>
+<div class="fig">{{ tree((1, (2, (4, None, None), (5, None, None)), (3, None, (6, None, None)))) }}<div class="cap"><code>[1,2,3,4,5,null,6]</code>: preorder 1 2 4 5 3 6 · inorder 4 2 5 1 3 6 · postorder 4 5 2 6 3 1 · height 3.</div></div>
+{{ code("lab:lab36.h", title="lab36.h — given") }}
+
+<h2>2. Tests</h2>
+{{ cases("PDF_TRAV", ["tree", "preorder", "inorder", "postorder"], [
+    ("[1,2,3,4,5,null,6]", [1, 2, 4, 5, 3, 6], [4, 2, 5, 1, 3, 6], [4, 5, 2, 6, 3, 1], "the drawing"),
+    ("[3,9,20,null,null,15,7]", [3, 9, 20, 15, 7], [9, 3, 15, 20, 7], [9, 15, 7, 20, 3], "LeetCode 102 example"),
+    ("[1,null,2,null,3]", [1, 2, 3], [1, 2, 3], [3, 2, 1], "only right children"),
+    ("[]", [], [], [], "empty tree"),
+], widths=["22%", "19%", "19%", "19%", "16%"]) }}
+{{ cases("PDF_SHAPE", ["tree", "nodes", "leaves", "height", "levels"], [
+    ("[1,2,3,4,5,null,6]", 6, 3, 3, [[1], [2, 3], [4, 5, 6]], "the drawing"),
+    ("[3,9,20,null,null,15,7]", 5, 3, 3, [[3], [9, 20], [15, 7]], "LeetCode 102 example"),
+    ("[1,null,2,null,3]", 3, 1, 3, [[1], [2], [3]], "a 'linked list'"),
+    ("[7]", 1, 1, 1, [[7]], "one node: root = leaf"),
+    ("[]", 0, 0, 0, [], "empty"),
+], widths=["24%", "8%", "8%", "8%", "28%", "19%"]) }}
+<p>Every required question also runs 200 random trees (0–12 nodes). M4 checks that no node is left alive and that <code>root</code> is <code>nullptr</code> afterwards.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Ağaç sorularının neredeyse hepsi aynı kalıpla çözülüyor. Boş ağaç için cevap ne? Sol ve sağ alt ağacın cevabı biliniyorsa düğümün cevabı ne? Düğüm sayısı <code>1 + sol + sağ</code>, yükseklik <code>1 + max(sol, sağ)</code>. Gezintilerde tek fark kökün ne zaman yazıldığı: önce (pre), ortada (in), sonda (post). Seviye sırası ise özyinelemeyle değil, 9. haftadaki BFS gibi bir kuyrukla yapılıyor.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>Yaprak sayarken tek çocuklu bir düğüm neden yaprak değil? <code>[1,null,2]</code> ağacında kaç yaprak var?</li><li>Ağacı silerken neden postorder? Önce kökü silersem çocuklarına nasıl ulaşırım?</li><li><code>levelOrder</code>’da bir seviyenin nerede bittiğini nasıl anlarım?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("seviye 1", row(tree((1, (2, (4, None, None), (5, None, None)), (3, None, (6, None, None))), hl={1: "green"}), vec([2, 3], name="q", ptr={"front": 0}, show_size=False)), "1 çıktı, çocukları 2 ve 3 kuyrukta. Döngü başında <code>q.size()</code> = 2: ikinci seviyenin genişliği."),
+  ("seviye 2", row(tree((1, (2, (4, None, None), (5, None, None)), (3, None, (6, None, None))), hl={1: "green", 2: "green", 3: "green"}), vec([4, 5, 6], name="q", ptr={"front": 0}, show_size=False)), "2 ve 3 çıktı, kuyrukta tam olarak üçüncü seviye var."),
+  ("silme", tree((1, (2, (4, None, None), (5, None, None)), (3, None, (6, None, None))), hl={4: "red", 5: "red", 2: "red"}, notes={4: "1.", 5: "2.", 2: "3.", 6: "4.", 3: "5.", 1: "6."}), "Postorder sırası: 4, 5, 2, 6, 3, 1. Her düğüm çocukları silindikten sonra silinir."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab36.cpp", "countLeaves", title="B — countLeaves") }}
+{{ code("sol:lab36.cpp", "inorderInto", title="M1 — inorderInto (helper)") }}
+{{ code("sol:lab36.cpp", "inorder", title="M1 — inorder") }}
+{{ code("sol:lab36.cpp", "height", title="M2 — height") }}
+{{ code("sol:lab36.cpp", "levelOrder", title="M3 — levelOrder") }}
+{{ code("sol:lab36.cpp", "destroyTree", title="M4 — destroyTree") }}
+<ul><li><b>M1.</b> Gezintiler sonucu yardımcı fonksiyonda referansla geçilen bir vektöre ekliyor. Her çağrıda yeni vektör döndürüp birleştirmek <code>O(n<sup>2</sup>)</code> kopyaya yol açabilirdi. Pre ve post sürümleri, <code>push_back</code> satırının yeri dışında aynı.</li>
+<li><b>M2.</b> Boş ağaç 0 olduğu için tek düğüm 1 çıkıyor. Bazı kitaplar yüksekliği kenar sayısıyla tanımlar (boş = −1, tek düğüm = 0). Sınavda hangi tanımın istendiğine bak. Ödev 4 ve slaytlar düğüm sayısını kullanıyor.</li>
+<li><b>M4.</b> <code>Node*&amp;</code> sayesinde çağıranın <code>root</code>’u da <code>nullptr</code> oluyor. Silinmiş düğümü gösteren bir pointer kalmıyor.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Her fonksiyon her düğüme bir kez uğruyor: <code>O(n)</code>. Özyinelemeli çözümler yükseklik kadar (<code>O(h)</code>) çağrı yığını kullanıyor. Dengeli ağaçta bu <code>O(log n)</code>, tek kollu ağaçta <code>O(n)</code>.</li></ul>
+<h3>Alternatif</h3>
+<p>Özyinelemesiz inorder: bir <code>std::stack</code> ile sola gidebildiğin kadar git, sonra pop edip yaz ve sağa dön (genBST’deki <code>iterativeInorder</code>). Aynı <code>O(n)</code> süreyi verir, derin ağaçta çağrı yığını taşmaz. Labwork 7 dosyasındaki Morris gezintileri ise stack bile kullanmıyor, ama ağacı geçici olarak değiştiriyor ve ders kapsamı dışında.</p>
+{{ code("sol:lab36.cpp", "invertTree", title="L36-X — invertTree") }}
+<h2>Ezberden varyant · L36-V</h2>
+<div class="box tip"><span class="t">3 dakikada yaz</span><p><span class="tag opt">L36-V</span> <code>int twoChildren(const Node* root)</code>: iki çocuğu olan düğüm sayısı (2017 AS5, Q5-a). Bir n düğümlü ikili ağaçta yaprak sayısı her zaman <code>twoChildren + 1</code>. Neden?</p></div>

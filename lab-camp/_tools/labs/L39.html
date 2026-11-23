@@ -1,0 +1,64 @@
+{{ header(10, 4, "Tree Questions From the Course Archive", "50 minutes · A–B 10 · M1 10 · M2 8 · M3 15 · testing 7",
+  "inorder with a counter, pruning a BST search, height-balance in one pass, sibling checks, rebuilding a tree from two traversals",
+  related=lc(230, "kth-smallest-element-in-a-bst", "Kth Smallest Element in a BST") + " · " + lc(110, "balanced-binary-tree", "Balanced Binary Tree") + " · " + lc(105, "construct-binary-tree-from-preorder-and-inorder-traversal", "Construct Binary Tree from Preorder and Inorder") + " · " + lc(1382, "balance-a-binary-search-tree", "Balance a BST") + " (L39-X)",
+  slides="<code>13-trees.pptx</code> slides 11–20 (height, height theorems), 35–38 (traversals), 63–64 (minimum height)",
+  archive="<code>materials/labworks/lw7-bst-queries</code> (A, B, M1) · <code>2021-fall/a4-tree-functions</code> (M2, 30 pts) · <code>2017-spring/as5-trees-graphs-heaps</code> Q1 (M3)", one="M3") }}
+
+<h2>1. Problem statement</h2>
+<p>This lab collects the tree questions that were actually given in the course: the three functions of <b>Labwork 7</b> (n-th smallest key, the keys smaller than <code>x</code>, height-balance), the 30-point question of <b>2021 Assignment 4</b> (nodes without a sibling) and <b>2017 Assignment 5, Q1</b> (draw the tree whose preorder is <code>CBADEFG</code> and inorder <code>ABDCEFG</code>) — here with numbers, A=1, B=2, …</p>
+<ul><li><b>A, B</b>: in a BST, inorder visits the keys in ascending order. A counts down while visiting; B stops as soon as a key is <code>≥ x</code>.</li>
+<li><b>M1</b>: a tree is balanced if <b>every</b> node's subtrees differ in height by at most 1 — checking only the root is not enough.</li>
+<li><b>M2</b>: a node has no sibling if its parent has exactly one child; report these nodes in preorder.</li>
+<li><b>M3</b>: the first preorder value is the root; its position in the inorder sequence splits the rest into the left and the right subtree.</li></ul>
+<div class="fig">{{ row(tree((3, (2, (1, None, None), (4, None, None)), (5, None, (6, None, (7, None, None))))), tree((1, (2, (4, (6, None, None), None), None), (3, None, (5, None, None))), hl={4: "yellow", 6: "yellow", 5: "yellow"})) }}<div class="cap">Left: AS5 Q1 (pre 3 2 1 4 5 6 7, in 1 2 4 3 5 6 7). Right: <code>[1,2,3,4,null,null,5,6]</code> — its only children 4, 6, 5 (preorder); not balanced (at 2: heights 2 and 0).</div></div>
+{{ code("lab:lab39.h", title="lab39.h — given") }}
+
+<h2>2. Tests</h2>
+<p>A and B use the BST built from 6 2 8 1 4 7 9 3 5 (Labwork 7's test with numbers): <code>nthSmallest(7) = 7</code>, <code>n = 10</code> and <code>n = 0</code> give <code>false</code>; <code>smallerThan(4) = {1, 2, 3}</code>, <code>smallerThan(1) = {}</code>. B is also run on the fake tree <code>[5,null,1]</code>: a pruned search with <code>x = 3</code> must not find the 1.</p>
+{{ cases("PDF_BAL", ["tree", "balanced? (M1)", "only children (M2)"], [
+    ("[1,2,3,4,null,null,5,6]", False, [4, 6, 5], "the drawing"),
+    ("[3,9,20,null,null,15,7]", True, [], "LeetCode 110 example 1"),
+    ("[1,2,2,3,3,null,null,4,4]", False, [], "LeetCode 110 example 2"),
+    ("[1,2,3,4,5,6,null,8]", True, [8, 6], "deep but balanced at every node"),
+    ("[1,null,2,null,3]", False, [2, 3], "a 'list'"),
+    ("[]", True, [], "empty"),
+], widths=["35%", "15%", "18%", "27%"]) }}
+{{ cases("PDF_PI", ["preorder", "inorder", "tree"], [
+    ([3, 2, 1, 4, 5, 6, 7], [1, 2, 4, 3, 5, 6, 7], "[3,2,5,1,4,null,6,null,null,null,null,null,7]", "AS5 Q1 (C=3, B=2 …)"),
+    ([3, 9, 20, 15, 7], [9, 3, 15, 20, 7], "[3,9,20,null,null,15,7]", "LeetCode 105 example 1"),
+    ([-1], [-1], "[-1]", "LeetCode 105 example 2"),
+    ([], [], "[]", "empty"),
+], widths=["22%", "22%", "36%", "15%"]) }}
+<p>A, M1 and M3 also run 200 random cases each.</p>
+
+{{ banner() }}
+<h2>Soru ne istiyor?</h2>
+<p>Hepsi L36–L37’deki özyineleme kalıbının üzerine bir fikir ekliyor. A’da inorder gezintisine bir geri sayım ekleniyor. B’de BST düzeni sayesinde gereksiz dallara hiç girilmiyor. M1’de her düğümde yükseklik ayrı ayrı hesaplanırsa <code>O(n<sup>2</sup>)</code> olur. Tek geçişte hem yüksekliği döndürüp hem de dengesizliği bildirmek gerekiyor. M3 bir kâğıt sorusunun koda dökülmüş hâli.</p>
+<div class="box q"><span class="t">Çözmeden önce kendine sor</span><ol><li>A’da sayaç neden referansla (<code>int&amp;</code>) geçiliyor? Değerle geçilseydi ne olurdu?</li><li>M1’de alt ağacın dengesiz olduğunu üst düğüme nasıl bildirebilirim? Yükseklik hiçbir zaman negatif olmaz…</li><li>M3’te kök inorder dizisinde 4. sıradaysa sol alt ağaçta kaç düğüm var? Preorder dizisinin hangi kısmı sol alt ağaca ait?</li></ol></div>
+<div class="avoid">{{ steps([
+  ("kök", vec([3, 2, 1, 4, 5, 6, 7], name="pre", hl={0: "yellow"}, show_size=False) + "<br>" + vec([1, 2, 4, 3, 5, 6, 7], name="in", hl={3: "yellow"}, groups=[(0, 2, "sol", "green"), (4, 6, "sağ", "accent")], show_size=False), "Preorder’ın ilki 3 kök. Inorder’da 3’ün solunda 1 2 4 (sol alt ağaç), sağında 5 6 7 var."),
+  ("sol", vec([3, 2, 1, 4, 5, 6, 7], name="pre", hl={1: "yellow"}, show_size=False) + "<br>" + vec([1, 2, 4], name="in", hl={1: "yellow"}, show_size=False), "Sıradaki preorder değeri 2, sol alt ağacın kökü. 1 onun solunda, 4 sağında."),
+  ("sonuç", tree((3, (2, (1, None, None), (4, None, None)), (5, None, (6, None, (7, None, None))))), "Postorder kontrolü: 1 4 2 7 6 5 3 (AS5’te ADBGFEC)."),
+]) }}</div>
+
+<div class="page-break"></div>
+<h2>Referans çözüm</h2>
+{{ code("sol:lab39.cpp", "nthFrom", title="A — nthFrom (helper)") }}
+{{ code("sol:lab39.cpp", "smallerInto", title="B — smallerInto (helper)") }}
+{{ code("sol:lab39.cpp", "checkedHeight", title="M1 — checkedHeight (helper)") }}
+{{ code("sol:lab39.cpp", "onlyInto", title="M2 — onlyInto (helper)") }}
+{{ code("sol:lab39.cpp", "buildRange", title="M3 — buildRange (helper)") }}
+<ul><li><b>A.</b> <code>remaining</code> bütün çağrılar arasında paylaşılıyor. Bir düğüm “ziyaret edildiğinde” bir azalıyor, sıfıra inen düğüm aradığımız düğüm. Labwork 7’nin arşiv çözümü <code>n &gt; size</code> için dizinin dışına okuyordu. Burada <code>false</code> dönüyor.</li>
+<li><b>B.</b> <code>p-&gt;data &gt;= x</code> ise p ve bütün sağ alt ağacı en az x. Sol alt ağaç zaten önce işlendiği için orada durulabilir.</li>
+<li><b>M1.</b> −1 “dengesiz” işareti olarak kullanılıyor. Gerçek bir yükseklik hiçbir zaman negatif olmaz. Her düğüme bir kez uğrandığı için süre <code>O(n)</code>.</li>
+<li><b>M3.</b> <code>next</code>, preorder dizisinde sıradaki kökü gösteriyor. Önce sol alt ağaç kurulduğu için preorder sırası kendiliğinden izleniyor. Kökü inorder’da aramak her düğümde <code>O(n)</code> sürer, toplam <code>O(n<sup>2</sup>)</code>. Bir <code>unordered_map</code> (11. hafta) ile <code>O(n)</code>’e iner.</li></ul>
+<h3>Neden bu yolu seçtik?</h3>
+<ul><li>Yardımcı fonksiyonlar, sonuç vektörünü ve sayaçları referansla taşıyor. Labwork ve ödevlerdeki <code>print…</code> fonksiyonları ekrana yazıyordu. Burada sonuç döndürüldüğü için test edilebiliyor.</li></ul>
+<h3>Alternatif</h3>
+<p>M1 için her düğümde L36’daki <code>height</code>’i çağırmak (testlerdeki referans çözüm böyle) doğru sonuç verir, ama <code>O(n<sup>2</sup>)</code>. Başlık dosyası <code>O(n)</code> istediği için bu labın kuralını <b>ihlal eder</b>. A için ağacı bir vektöre okuyup <code>v[n-1]</code>’i döndürmek de doğru, ama <code>O(n)</code> ek bellek kullanır ve n’inci düğümde durmaz.</p>
+{{ code("sol:lab39.cpp", "balanceBST", title="L39-X — balanceBST") }}
+<h2>Ezberden varyant · L39-V</h2>
+<div class="box tip"><span class="t">5 dakikada yaz</span><p><span class="tag opt">L39-V</span> <code>int countInRange(const Node* root, int lo, int hi)</code>: <code>[lo, hi]</code> aralığındaki anahtar sayısı. Kök <code>lo</code>’dan küçükse yalnızca sağa, <code>hi</code>’dan büyükse yalnızca sola in.</p></div>
+<h2>10. hafta kontrol listesi</h2>
+<div class="box"><ul><li>Pre/in/post/seviye sırasını kâğıtta bir ağaçtan okuyabiliyor ve iki gezintiden ağacı geri çizebiliyor musun?</li><li>BST ekleme, arama ve silmenin üç durumunu (halef ile kopyalama, birleştirme) yazabiliyor musun?</li><li><code>isBST</code>’de neden aralık gerektiğini, <code>isBalanced</code>’ı tek geçişte nasıl yapacağını açıklayabiliyor musun?</li></ul>
+<p>Sonra <b>C10</b>, ardından <b>P05</b> (BST ile telefon rehberi). AVL ve 2-3 ağaçları (<code>14-avl-trees.pptx</code>, <code>15-2-3-trees-red-black.pptx</code>) okuma konusu: rotasyonları kâğıtta çizerek çalış.</p></div>

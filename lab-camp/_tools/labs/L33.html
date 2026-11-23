@@ -2,7 +2,7 @@
   "BFS with a queue, DFS recursively and with a stack, the visited array, shortest paths in edges, connected components",
   related=lc(1971, "find-if-path-exists-in-graph", "Find if Path Exists in Graph") + " (L33-X) · " + gfg("bfs-traversal-of-graph/1", "BFS of graph") + " · " + gfg("depth-first-traversal-for-a-graph/1", "DFS of Graph"),
   slides="<code>materials/slides/12-graphs.pptx</code> slides 24–30 (depth-first: recursive 27, iterative 28; breadth-first 29–30)",
-  archive="2021 Assignment 3 (<code>performBFS</code>, <code>pathExists</code>, all paths) · <code>materials/assignments/2021-fall/a3-directed-graph/solution/intDrGraph.h</code>", one="M1") }}
+  archive="2021 Assignment 3 (<code>performBFS</code>, <code>pathExists</code>, all paths) · Practice Lab 4 Campus Friends (<code>materials/practice-labs/pl4-campus-friends</code>: BFS, DFS, number of groups = M3)", one="M1") }}
 
 <h2>1. Problem statement</h2>
 <p>A traversal visits every vertex reachable from <code>start</code> exactly once. <b>BFS</b> uses a queue and visits the graph in rings: first <code>start</code>, then all its neighbours, then their neighbours. <b>DFS</b> goes as deep as possible before it backs up; it is naturally recursive, and the recursion can be replaced by an explicit stack. Neighbours are taken in list order (ascending), so every order is unique.</p>

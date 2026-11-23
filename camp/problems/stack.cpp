@@ -11,7 +11,13 @@
 // Example: top → 5, 2, 9  ⇒  3
 template <typename T>
 int LLStack<T>::size() {
-    TODO();
+    stackNode<T>* p = top;
+    int count = 0;
+    while (p != NULL) {
+        count++;
+        p = p->next;
+    }
+    return count;
 }
 
 // ST-2 · Easy · Peek at the top
@@ -19,7 +25,10 @@ int LLStack<T>::size() {
 // Example: top → 5, 2  ⇒  5 (stack unchanged)
 template <typename T>
 T LLStack<T>::peek() {
-    TODO();
+    if (isEmpty()) {
+        throw runtime_error("peek: stack is empty");
+    }
+    return top->info;
 }
 
 // ST-3 · Easy · Contains
@@ -27,21 +36,49 @@ T LLStack<T>::peek() {
 // Example: top → 4, 7, 1, v = 7  ⇒  true
 template <typename T>
 bool LLStack<T>::contains(const T& v) {
-    TODO();
+    stackNode<T>* p = top;
+    while (p != NULL) {
+        if (p->info == v) return true;  
+        p = p->next;
+    } return false;
 }
 
 // ST-4 · Easy · Reverse a string with a stack
 // Reverse s using an LLStack<char>.
 // Example: "abc"  ⇒  "cba"
 string reverseString(const string& s) {
-    TODO();
+    LLStack<char> st;
+    for (size_t i = 0; i < s.length(); i++) {
+        st.pushToStack(s[i]);
+    }
+    string res = "";
+    while (!st.isEmpty()) {
+        res += st.popFromStack();
+    }
+    return res;
+
 }
 
 // ST-5 · Medium · Balanced brackets
 // Is a string containing ( ) [ ] { } balanced? Ignore all other characters.
 // Example: "{[()]}" ⇒ true | "([)]" ⇒ false | "((" ⇒ false
 bool isBalanced(const string& s) {
-    TODO();
+    LLStack<char> br;
+    for (size_t i = 0; i < s.length(); i++) {
+        char c = s[i];
+        if (c == '(' || c == '{' || c == '[') {
+            br.pushToStack(c);
+        } else if (c == ')' || c == ']' || c == '}') {
+            if (br.isEmpty()) {
+                return false;
+            }
+            char t = br.popFromStack();
+            if ((c == ')' && t != '(') || (c == ']' && t != '[') || (c == '}' && t != '{' )) {
+                return false;
+            }
+        }
+    }
+    return br.isEmpty();
 }
 
 // ST-6 · Medium · Reverse the stack

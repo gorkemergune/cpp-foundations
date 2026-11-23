@@ -1,0 +1,17 @@
+iki stackte push pop fonksiyonu yazma
+
+!st.empty()
+st.empty()
+farkı ve kullanımı
+
+iki stringin birbirnin reverse olup olmadığı 2 stack ile kontrol etme
+
+sayıları döndürme
+1 2 3 4 5 6 7 8 9
+3 2 1 4 5 6 9 8 7
+
+stringdeki minimum sayıyı bulma, temp’e atıp tekrar kontrol
+
+stringdeki ortanva elementi node’dan silip yeni queue’de yazdırma
+
+circular bir node’da last diye atanan node’u silip tekrar bağlama

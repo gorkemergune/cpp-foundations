@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Friends Solutions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Same look as the Assignment 1 page: one column, each question has a step-through panel (explanation + graph | highlighted code). */
+:root {
+  --bg: #ffffff;
+  --fg: #16181c;
+  --muted: #5d636d;
+  --line: #d3d7dd;
+  --panel: #f6f7f8;
+  --accent: #1f4e8c;
+  --visited: #e3e5e8;
+  --pick: #d6e3f3;
+  --code-hl: #e9edf3;
+  --font-body: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+  --font-mono: "IBM Plex Mono", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.55; margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 16px 64px; }
+h1 { font-size: 2rem; margin: 4px 0 8px; }
+h2 { font-size: 1.45rem; margin: 0 0 6px; }
+h3 { font-size: 1.05rem; margin: 28px 0 8px; }
+p { margin: 0 0 10px; max-width: 78ch; }
+code { font-family: var(--font-mono); font-size: 0.9em; background: var(--panel); padding: 1px 4px; border-radius: 3px; }
+
+nav.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 26px; border-bottom: 1px solid var(--line); }
+nav.tabs a { text-decoration: none; color: var(--muted); padding: 10px 14px; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; font-weight: 600; margin-bottom: -1px; }
+nav.tabs a span { font-weight: 400; }
+nav.tabs a[aria-current="page"] { color: var(--fg); border-color: var(--line); background: var(--bg); }
+a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.sig { font-family: var(--font-mono); font-size: 0.95rem; background: var(--panel); border: 1px solid var(--line); padding: 8px 12px; border-radius: 4px; overflow-x: auto; white-space: pre; margin: 10px 0 14px; }
+.sig b { font-weight: 600; }
+
+.stepper { border: 1px solid var(--line); border-radius: 6px; margin: 18px 0 8px; }
+.inputs { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; padding: 12px 14px; border-bottom: 1px solid var(--line); background: var(--panel); border-radius: 6px 6px 0 0; }
+.inputs label { display: flex; flex-direction: column; font-size: 0.8rem; color: var(--muted); gap: 3px; font-weight: 600; }
+.inputs select { font-family: var(--font-mono); font-size: 0.92rem; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--fg); }
+.inputs .hint { font-size: 0.88rem; color: var(--muted); align-self: center; }
+button { font: 600 0.88rem var(--font-body); padding: 7px 12px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+button:disabled { opacity: 0.45; cursor: default; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.controls .count { margin-left: auto; color: var(--muted); font-family: var(--font-mono); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 545px); gap: 18px; padding: 14px; }
+@media (max-width: 900px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+.explain { min-height: 4.6em; margin-bottom: 8px; }
+.state { font-family: var(--font-mono); font-size: 0.88rem; background: var(--panel); border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; white-space: pre-wrap; }
+.diagram svg { display: block; width: 100%; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+.legend i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: -2px; margin-right: 5px; border: 2px solid var(--fg); }
+.code { font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.6; border: 1px solid var(--line); border-radius: 4px; padding: 8px 0; overflow-x: auto; align-self: start; }
+.code .ln { display: flex; white-space: pre; padding-right: 10px; }
+.code .ln .no { width: 2.6em; flex: none; text-align: right; padding-right: 12px; color: var(--muted); user-select: none; }
+.code .ln.hl { background: var(--code-hl); box-shadow: inset 3px 0 0 var(--accent); }
+
+table.tests { border-collapse: collapse; font-size: 0.92rem; min-width: 480px; }
+.tablewrap { overflow-x: auto; }
+table.tests th, table.tests td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: middle; }
+table.tests th { background: var(--panel); font-weight: 600; }
+table.tests td.mono { font-family: var(--font-mono); font-size: 0.86rem; }
+table.tests button { padding: 4px 10px; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Campus friends solutions</h1>
+    <p>Every vertex is a student and every edge is a friendship. Pick a question, choose the input and press <b>Next</b> (or the arrow keys) to follow the code step by step.</p>
+  </header>
+
+  <nav class="tabs" aria-label="Questions">
+    <a href="#bfs" data-tab="bfs">Q1 <span>bfs</span></a>
+    <a href="#dfs" data-tab="dfs">Q1 <span>dfs</span></a>
+    <a href="#pop" data-tab="pop">Q2 <span>mostPopular</span></a>
+    <a href="#mut" data-tab="mut">Q3 <span>mutualFriends</span></a>
+    <a href="#grp" data-tab="grp">Q4 <span>countGroups</span></a>
+    <a href="#sug" data-tab="sug">Q5 <span>suggestFriends</span></a>
+  </nav>
+
+  <section data-sec="bfs">
+    <h2>Q1. BFS traversal</h2>
+    <div class="sig">vector&lt;int&gt; Graph::<b>bfs</b>(int startId) const;</div>
+    <p>Return the IDs in the order breadth-first search visits them, starting from <code>startId</code>. BFS visits the start, then everyone 1 step away, then everyone 2 steps away. The result vector <code>order</code> is also the visited list.</p>
+    <h3>Example</h3>
+    <div class="tablewrap"><table class="tests" id="tests-bfs"></table></div>
+    <h3>Solution</h3>
+    <div class="stepper" id="st-bfs"></div>
+  </section>
+
+  <section data-sec="dfs" hidden>
+    <h2>Q1. DFS traversal</h2>
+    <div class="sig">vector&lt;int&gt; Graph::<b>dfs</b>(int startId) const;
+void Graph::<b>dfsVisit</b>(int id, vector&lt;int&gt;&amp; order) const;</div>
+    <p>Return the IDs in the order depth-first search visits them. DFS follows the first unvisited friend as deep as it can, and only comes back when a student has no unvisited friends left. The recursion keeps track of where to come back to.</p>
+    <h3>Example</h3>
+    <div class="tablewrap"><table class="tests" id="tests-dfs"></table></div>
+    <h3>Solution</h3>
+    <div class="stepper" id="st-dfs"></div>
+  </section>
+
+  <section data-sec="pop" hidden>
+    <h2>Q2. Most popular student</h2>
+    <div class="sig">int Graph::<b>mostPopular</b>() const;</div>
+    <p>Return the ID of the student with the most friends (the vertex with the highest <b>degree</b>). On a tie, the student that comes first in <code>STUDENTS</code> wins, because the comparison is <code>&gt;</code> and not <code>&gt;=</code>.</p>
+    <h3>Example</h3>
+    <div class="tablewrap"><table class="tests" id="tests-pop"></table></div>
+    <h3>Solution</h3>
+    <div class="stepper" id="st-pop"></div>
+  </section>
+
+  <section data-sec="mut" hidden>
+    <h2>Q3. Mutual friends</h2>
+    <div class="sig">vector&lt;int&gt; Graph::<b>mutualFriends</b>(int id1, int id2) const;</div>
+    <p>Return the students who are friends with both <code>id1</code> and <code>id2</code> (their <b>common neighbors</b>), in the order of id1's friend list.</p>
+    <h3>Example</h3>
+    <div class="tablewrap"><table class="tests" id="tests-mut"></table></div>
+    <h3>Solution</h3>
+    <div class="stepper" id="st-mut"></div>
+  </section>
+
+  <section data-sec="grp" hidden>
+    <h2>Q4. Friend groups</h2>
+    <div class="sig">int Graph::<b>countGroups</b>() const;</div>
+    <p>Return the number of friend groups (<b>connected components</b>). One call to <code>bfs</code> returns a whole group, so every student who is not seen yet starts a new group.</p>
+    <h3>Example</h3>
+    <div class="tablewrap"><table class="tests" id="tests-grp"></table></div>
+    <h3>Solution</h3>
+    <div class="stepper" id="st-grp"></div>
+  </section>
+
+  <section data-sec="sug" hidden>
+    <h2>Q5. Suggest friends</h2>
+    <div class="sig">vector&lt;int&gt; Graph::<b>suggestFriends</b>(int id) const;</div>
+    <p>Return every friend of a friend who is not the student and not already a friend, each once (the vertices at <b>distance exactly 2</b>).</p>
+    <h3>Example</h3>
+    <div class="tablewrap"><table class="tests" id="tests-sug"></table></div>
+    <h3>Solution</h3>
+    <div class="stepper" id="st-sug"></div>
+  </section>
+</div>
+
+<script>
+/* ---------- The campus network (same as buildNetwork in main.cpp) ---------- */
+const IDS = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110];
+const NAME = { 101: 'Ayşe', 102: 'Burak', 103: 'Can', 104: 'Deniz', 105: 'Elif', 106: 'Emre', 107: 'Selin', 108: 'Kerem', 109: 'Zeynep', 110: 'Mert' };
+const FRIENDS = { 101: [102, 103], 102: [101, 104], 103: [101, 104], 104: [102, 103, 105, 106], 105: [104, 106], 106: [104, 105, 107], 107: [106], 108: [109], 109: [108], 110: [] };
+const POS = { 101: [0, 2], 102: [1.6, 3.1], 103: [1.6, 0.9], 104: [3.2, 2], 105: [4.8, 3.1], 106: [4.8, 0.9], 107: [6.4, 0.9], 108: [7.4, 3.1], 109: [9, 3.1], 110: [8.2, 0.9] };
+const EDGES = [];
+IDS.forEach(a => FRIENDS[a].forEach(b => { if (a < b) EDGES.push([a, b]); }));
+
+const nm = id => NAME[id];
+const names = list => '[' + list.map(nm).join(', ') + ']';
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/* ---------- Code listings (reference solution) ---------- */
+const CODE = {
+  bfs: [
+    'vector<int> Graph::bfs(int startId) const {',
+    '    vector<int> order;',
+    '    if (getStudent(startId) == nullptr) {',
+    '        return order;',
+    '    }',
+    '    queue<int> q;',
+    '    order.push_back(startId);',
+    '    q.push(startId);',
+    '    while (!q.empty()) {',
+    '        int id = q.front();',
+    '        q.pop();',
+    '        for (int f : getStudent(id)->getFriends()) {',
+    '            if (!contains(order, f)) {',
+    '                order.push_back(f);',
+    '                q.push(f);',
+    '            }',
+    '        }',
+    '    }',
+    '    return order;',
+    '}'
+  ],
+  dfs: [
+    'vector<int> Graph::dfs(int startId) const {',
+    '    vector<int> order;',
+    '    if (getStudent(startId) == nullptr) {',
+    '        return order;',
+    '    }',
+    '    dfsVisit(startId, order);',
+    '    return order;',
+    '}',
+    '',
+    'void Graph::dfsVisit(int id, vector<int>& order) const {',
+    '    order.push_back(id);',
+    '    for (int f : getStudent(id)->getFriends()) {',
+    '        if (!contains(order, f)) {',
+    '            dfsVisit(f, order);',
+    '        }',
+    '    }',
+    '}'
+  ],
+  pop: [
+    'int Graph::mostPopular() const {',
+    '    int best = -1;',
+    '    int bestCount = -1;',
+    '    for (int i = 0; i < SIZE; i++) {',
+    '        int count = STUDENTS[i].second.getFriends().size();',
+    '        if (count > bestCount) {',
+    '            bestCount = count;',
+    '            best = STUDENTS[i].first;',
+    '        }',
+    '    }',
+    '    return best;',
+    '}'
+  ],
+  mut: [
+    'vector<int> Graph::mutualFriends(int id1, int id2) const {',
+    '    vector<int> result;',
+    '    const Student* a = getStudent(id1);',
+    '    const Student* b = getStudent(id2);',
+    '    if (a == nullptr || b == nullptr) {',
+    '        return result;',
+    '    }',
+    '    const vector<int>& friends = a->getFriends();',
+    '    for (size_t k = 0; k < friends.size(); k++) {',
+    '        if (b->isFriend(friends[k])) {',
+    '            result.push_back(friends[k]);',
+    '        }',
+    '    }',
+    '    return result;',
+    '}'
+  ],
+  grp: [
+    'int Graph::countGroups() const {',
+    '    vector<int> seen;',
+    '    int groups = 0;',
+    '    for (int i = 0; i < SIZE; i++) {',
+    '        int id = STUDENTS[i].first;',
+    '        if (!contains(seen, id)) {',
+    '            groups++;',
+    '            vector<int> group = bfs(id);',
+    '            for (int g : group) {',
+    '                seen.push_back(g);',
+    '            }',
+    '        }',
+    '    }',
+    '    return groups;',
+    '}'
+  ],
+  sug: [
+    'vector<int> Graph::suggestFriends(int id) const {',
+    '    vector<int> result;',
+    '    const Student* s = getStudent(id);',
+    '    if (s == nullptr) {',
+    '        return result;',
+    '    }',
+    '    for (int f : s->getFriends()) {',
+    '        for (int candidate : getStudent(f)->getFriends()) {',
+    '            if (candidate != id && !s->isFriend(candidate)',
+    '                && !contains(result, candidate)) {',
+    '                result.push_back(candidate);',
+    '            }',
+    '        }',
+    '    }',
+    '    return result;',
+    '}'
+  ]
+};
+
+/* ---------- Graph drawing ----------
+   A view says how to draw each node and edge:
+     node kinds: 'visited' (grey fill), 'pick' (blue fill: result), 'cur' (thick blue ring),
+                 'check' (dashed blue ring), 'dim' (faded)
+     lab: small text under a node;  bold: edges drawn thick blue */
+const VW = 800, VH = 290, R = 27;
+const PX = id => 50 + POS[id][0] * 78, PY = id => 30 + (3.4 - POS[id][1]) * 80;
+
+function view() { return { kind: {}, ring: {}, lab: {}, bold: [] }; }
+function edgeKey(a, b) { return a < b ? a + '-' + b : b + '-' + a; }
+
+function svgFor(v) {
+  const boldSet = new Set(v.bold.map(([a, b]) => edgeKey(a, b)));
+  let s = `<svg viewBox="0 0 ${VW} ${VH}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Friendship network">`;
+  EDGES.forEach(([a, b]) => {
+    const bold = boldSet.has(edgeKey(a, b));
+    const dim = v.kind[a] === 'dim' || v.kind[b] === 'dim';
+    const x1 = PX(a), y1 = PY(a), x2 = PX(b), y2 = PY(b);
+    const d = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / d, uy = (y2 - y1) / d;
+    s += `<line x1="${x1 + ux * R}" y1="${y1 + uy * R}" x2="${x2 - ux * R}" y2="${y2 - uy * R}" stroke="${bold ? '#1f4e8c' : dim ? '#d3d7dd' : '#16181c'}" stroke-width="${bold ? 4 : 1.8}"/>`;
+  });
+  IDS.forEach(id => {
+    const k = v.kind[id], ring = v.ring[id], x = PX(id), y = PY(id);
+    const fill = k === 'pick' ? '#d6e3f3' : k === 'visited' ? '#e3e5e8' : '#ffffff';
+    const dim = k === 'dim';
+    const stroke = dim ? '#b4b8be' : '#16181c';
+    s += `<circle cx="${x}" cy="${y}" r="${R}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+    if (ring === 'cur') s += `<circle cx="${x}" cy="${y}" r="${R + 5}" fill="none" stroke="#1f4e8c" stroke-width="4"/>`;
+    if (ring === 'check') s += `<circle cx="${x}" cy="${y}" r="${R + 5}" fill="none" stroke="#1f4e8c" stroke-width="2.5" stroke-dasharray="5 4"/>`;
+    s += `<text x="${x}" y="${y + 1}" text-anchor="middle" font-family="IBM Plex Sans, Arial, sans-serif" font-size="13" font-weight="700" fill="${dim ? '#b4b8be' : '#16181c'}">${esc(nm(id))}</text>`;
+    s += `<text x="${x}" y="${y + 15}" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace" font-size="10.5" fill="${dim ? '#b4b8be' : '#5d636d'}">${id}</text>`;
+    if (v.lab[id]) s += `<text x="${x}" y="${y + R + 20}" text-anchor="middle" font-family="IBM Plex Sans, Arial, sans-serif" font-size="12.5" font-weight="600" fill="#1f4e8c">${esc(v.lab[id])}</text>`;
+  });
+  return s + '</svg>';
+}
+
+const LEGEND = {
+  bfs: [['cur', 'current (front of queue)'], ['check', 'friend being checked'], ['visited', 'in order (visited)']],
+  dfs: [['cur', 'current dfsVisit call'], ['check', 'friend being checked'], ['visited', 'in order (visited)']],
+  pop: [['cur', 'student being counted'], ['pick', 'best so far']],
+  mut: [['cur', 'id1 and id2'], ['check', 'friend being checked'], ['pick', 'in result']],
+  grp: [['cur', 'student being checked'], ['visited', 'in seen']],
+  sug: [['cur', 'the student'], ['check', 'friend / candidate'], ['visited', 'current friend'], ['pick', 'in result']]
+};
+function legendFor(q) {
+  return '<div class="legend">' + LEGEND[q].map(([k, t]) => {
+    const st = k === 'cur' ? 'border:4px solid #1f4e8c' : k === 'check' ? 'border:2px dashed #1f4e8c' : k === 'pick' ? 'background:#d6e3f3' : 'background:#e3e5e8';
+    return `<span><i style="${st}"></i>${t}</span>`;
+  }).join('') + '</div>';
+}
+
+/* ---------- Traces: each step = { lines, text, state, v } ---------- */
+
+function traceBfs(start) {
+  const steps = [], order = [], queue = [];
+  const mk = (cur, check, edge) => {
+    const v = view();
+    order.forEach((id, i) => { v.kind[id] = 'visited'; v.lab[id] = '#' + (i + 1); });
+    if (cur) v.ring[cur] = 'cur';
+    if (check) v.ring[check] = 'check';
+    if (edge) v.bold.push(edge);
+    return v;
+  };
+  const state = () => `queue = ${names(queue)}\norder = ${names(order)}`;
+  const snap = (lines, text, cur, check, edge) => steps.push({ lines, text, state: state(), v: mk(cur, check, edge) });
+
+  order.push(start); queue.push(start);
+  snap([6, 7, 8], `${nm(start)} is added to <code>order</code> (it is visited now) and to the queue.`, null);
+  while (queue.length) {
+    const id = queue.shift();
+    snap([9, 10, 11], `The queue is not empty. <code>id</code> = ${nm(id)}, taken from the front of the queue. Now we go through ${nm(id)}'s friends in list order: ${names(FRIENDS[id])}.`, id);
+    if (!FRIENDS[id].length) snap([12], `${nm(id)} has no friends, so the for loop does nothing.`, id);
+    FRIENDS[id].forEach(f => {
+      if (order.includes(f)) {
+        snap([12, 13], `Friend ${nm(f)} is already in <code>order</code>, so it was visited before. Skip.`, id, f, [id, f]);
+      } else {
+        order.push(f); queue.push(f);
+        snap([12, 13, 14, 15], `Friend ${nm(f)} is not in <code>order</code> yet. Add ${nm(f)} to <code>order</code> and to the back of the queue.`, id, f, [id, f]);
+      }
+    });
+  }
+  snap([9, 19], `The queue is empty, so the loop ends. BFS returns <code>${names(order)}</code>.` +
+       (order.length < IDS.length ? ' Students in other groups were never reached.' : ''), null);
+  return steps;
+}
+
+function traceDfs(start) {
+  const steps = [], order = [], stack = [];
+  const mk = (check, edge) => {
+    const v = view();
+    order.forEach((id, i) => { v.kind[id] = 'visited'; v.lab[id] = '#' + (i + 1); });
+    if (stack.length) v.ring[stack[stack.length - 1]] = 'cur';
+    if (check) v.ring[check] = 'check';
+    if (edge) v.bold.push(edge);
+    return v;
+  };
+  const state = () => `call stack = ${stack.length ? stack.map(id => 'dfsVisit(' + nm(id) + ')').join(' → ') : '(only dfs)'}\norder      = ${names(order)}`;
+  const snap = (lines, text, check, edge) => steps.push({ lines, text, state: state(), v: mk(check, edge) });
+
+  snap([6], `<code>dfs</code> checks the ID and calls <code>dfsVisit(${start}, order)</code> for ${nm(start)}.`);
+  const visit = (id) => {
+    stack.push(id);
+    order.push(id);
+    snap([10, 11], `<code>dfsVisit(${nm(id)})</code> starts and adds ${nm(id)} to <code>order</code>. Its friends in list order: ${names(FRIENDS[id])}.`);
+    FRIENDS[id].forEach(f => {
+      if (order.includes(f)) {
+        snap([12, 13], `Friend ${nm(f)} is already in <code>order</code>. Skip.`, f, [id, f]);
+      } else {
+        snap([12, 13, 14], `Friend ${nm(f)} is not visited, so we go deeper right away: call <code>dfsVisit(${nm(f)})</code>. The rest of ${nm(id)}'s friends must wait.`, f, [id, f]);
+        visit(f);
+      }
+    });
+    const caller = stack.length > 1 ? stack[stack.length - 2] : null;
+    snap([16, 17], `All friends of ${nm(id)} are checked. <code>dfsVisit(${nm(id)})</code> returns` +
+         (caller ? ` and we are back in <code>dfsVisit(${nm(caller)})</code>, at the next friend of ${nm(caller)}.` : ' to <code>dfs</code>.'));
+    stack.pop();
+  };
+  visit(start);
+  snap([7], `The first call has returned. DFS returns <code>${names(order)}</code>.`);
+  return steps;
+}
+
+function tracePop() {
+  const steps = [];
+  let best = -1, bestCount = -1;
+  const mk = (cur) => {
+    const v = view();
+    IDS.forEach(id => { v.lab[id] = FRIENDS[id].length + (FRIENDS[id].length === 1 ? ' friend' : ' friends'); });
+    if (best !== -1) v.kind[best] = 'pick';
+    if (cur) { v.ring[cur] = 'cur'; FRIENDS[cur].forEach(f => v.bold.push([cur, f])); }
+    return v;
+  };
+  const state = () => `best = ${best === -1 ? -1 : best + ' (' + nm(best) + ')'}   bestCount = ${bestCount}`;
+  const snap = (lines, text, cur) => steps.push({ lines, text, state: state(), v: mk(cur) });
+
+  snap([2, 3], '<code>best</code> and <code>bestCount</code> start at -1, so the first student always becomes the best. The label under each student is the size of their friend list (the degree).');
+  IDS.forEach((id, i) => {
+    const count = FRIENDS[id].length;
+    if (count > bestCount) {
+      const old = bestCount;
+      bestCount = count; best = id;
+      snap([4, 5, 6, 7, 8], `i = ${i}: ${nm(id)} has ${count} friends. ${count} &gt; ${old}, so ${nm(id)} is the new best.`, id);
+    } else {
+      snap([4, 5, 6], `i = ${i}: ${nm(id)} has ${count} friends. ${count} is not more than ${bestCount}, so <code>best</code> stays ${nm(best)}` +
+           (count === bestCount ? ' (a tie keeps the first one).' : '.'), id);
+    }
+  });
+  snap([11], `The loop is done. The function returns ${best} (${nm(best)}).`);
+  return steps;
+}
+
+function traceMut(id1, id2) {
+  const steps = [], result = [];
+  const mk = (check, edges) => {
+    const v = view();
+    v.ring[id1] = 'cur'; v.ring[id2] = 'cur';
+    v.lab[id1] = 'id1'; v.lab[id2] = 'id2';
+    result.forEach(r => { v.kind[r] = 'pick'; v.lab[r] = 'result'; });
+    if (check) v.ring[check] = 'check';
+    (edges || []).forEach(e => v.bold.push(e));
+    return v;
+  };
+  const state = () => `friends of ${nm(id1)} = ${names(FRIENDS[id1])}\nresult = ${names(result)}`;
+  const snap = (lines, text, check, edges) => steps.push({ lines, text, state: state(), v: mk(check, edges) });
+
+  if (id1 === id2) {
+    snap([2, 3, 4, 8], `id1 and id2 are the same student. Every friend of ${nm(id1)} is a friend of ${nm(id1)}, so all of them will be in the result.`);
+  } else {
+    snap([2, 3, 4, 8], `Both IDs are valid. We go through the friends of ${nm(id1)} and check each one against ${nm(id2)}'s friend list ${names(FRIENDS[id2])}.`);
+  }
+  FRIENDS[id1].forEach((f, k) => {
+    if (FRIENDS[id2].includes(f)) {
+      result.push(f);
+      snap([9, 10, 11], `k = ${k}: ${nm(f)} is a friend of ${nm(id1)} and also of ${nm(id2)} (<code>isFriend</code> is true). Add ${nm(f)} to the result.`, f, [[id1, f], [f, id2]]);
+    } else {
+      snap([9, 10], `k = ${k}: ${nm(f)} is a friend of ${nm(id1)}, but not of ${nm(id2)}. Skip.`, f, [[id1, f]]);
+    }
+  });
+  snap([14], `All friends of ${nm(id1)} are checked. The function returns <code>${names(result)}</code>.`);
+  return steps;
+}
+
+function traceGrp() {
+  const steps = [], seen = [], groupOf = {};
+  let groups = 0;
+  const mk = (cur, newGroup) => {
+    const v = view();
+    seen.forEach(id => { v.kind[id] = 'visited'; v.lab[id] = 'group ' + groupOf[id]; });
+    if (cur) v.ring[cur] = 'cur';
+    if (newGroup) newGroup.forEach(a => FRIENDS[a].forEach(b => v.bold.push([a, b])));
+    return v;
+  };
+  const state = () => `groups = ${groups}\nseen = ${names(seen)}`;
+  const snap = (lines, text, cur, newGroup) => steps.push({ lines, text, state: state(), v: mk(cur, newGroup) });
+
+  snap([2, 3], '<code>seen</code> is empty and <code>groups</code> is 0. We go through the students in STUDENTS order.');
+  IDS.forEach((id, i) => {
+    if (seen.includes(id)) {
+      snap([4, 5, 6], `i = ${i}: ${nm(id)} is already in <code>seen</code> (group ${groupOf[id]}). Skip.`, id);
+    } else {
+      groups++;
+      const group = bfsOrder(id);
+      group.forEach(g => { seen.push(g); groupOf[g] = groups; });
+      snap([4, 5, 6, 7, 8, 9, 10], `i = ${i}: ${nm(id)} is not in <code>seen</code>, so a new group starts: <code>groups</code> = ${groups}. <code>bfs(${id})</code> returns ${names(group)}, and all of them are added to <code>seen</code>.`, id, group);
+    }
+  });
+  snap([14], `Every student is checked. The function returns ${groups}.`);
+  return steps;
+}
+
+function traceSug(id) {
+  const steps = [], result = [];
+  const mk = (friend, cand, edges) => {
+    const v = view();
+    v.ring[id] = 'cur'; v.lab[id] = 'student';
+    FRIENDS[id].forEach(f => { v.lab[f] = 'friend'; });
+    result.forEach(r => { v.kind[r] = 'pick'; v.lab[r] = 'suggested'; });
+    if (friend) v.kind[friend] = 'visited';
+    if (cand) v.ring[cand] = 'check';
+    (edges || []).forEach(e => v.bold.push(e));
+    return v;
+  };
+  const state = () => `friends of ${nm(id)} = ${names(FRIENDS[id])}\nresult = ${names(result)}`;
+  const snap = (lines, text, friend, cand, edges) => steps.push({ lines, text, state: state(), v: mk(friend, cand, edges) });
+
+  snap([2, 3], `<code>s</code> is ${nm(id)}. We look at each friend of ${nm(id)}, and then at each friend of that friend.`);
+  if (!FRIENDS[id].length) snap([7], `${nm(id)} has no friends, so the outer loop does nothing.`);
+  FRIENDS[id].forEach(f => {
+    snap([7], `Friend <code>f</code> = ${nm(f)}. Its friends are ${names(FRIENDS[f])}.`, f, null, [[id, f]]);
+    FRIENDS[f].forEach(c => {
+      const edges = [[id, f], [f, c]];
+      if (c === id) {
+        snap([8, 9, 10], `Candidate ${nm(c)} is the student itself (<code>candidate == id</code>). Skip.`, f, c, edges);
+      } else if (FRIENDS[id].includes(c)) {
+        snap([8, 9, 10], `Candidate ${nm(c)} is already a friend of ${nm(id)} (<code>isFriend</code>). Skip.`, f, c, edges);
+      } else if (result.includes(c)) {
+        snap([8, 9, 10], `Candidate ${nm(c)} is already in the result (reached through another friend). Skip, so it is not added twice.`, f, c, edges);
+      } else {
+        result.push(c);
+        snap([8, 9, 10, 11], `Candidate ${nm(c)} is 2 steps away, not a friend and not suggested yet. Add ${nm(c)} to the result.`, f, c, edges);
+      }
+    });
+  });
+  snap([15], `All friends of friends are checked. The function returns <code>${names(result)}</code>.`);
+  return steps;
+}
+
+// Plain BFS used to compute answers for tables and for countGroups.
+function bfsOrder(start) {
+  const order = [start], q = [start];
+  while (q.length) { const id = q.shift(); FRIENDS[id].forEach(f => { if (!order.includes(f)) { order.push(f); q.push(f); } }); }
+  return order;
+}
+function dfsOrder(start) {
+  const order = [];
+  const go = id => { order.push(id); FRIENDS[id].forEach(f => { if (!order.includes(f)) go(f); }); };
+  go(start);
+  return order;
+}
+
+/* ---------- Questions: inputs, examples, trace ---------- */
+const studentField = (id, label, value) => ({ id, label, value });
+const CONFIG = {
+  bfs: { fields: [studentField('bfs-start', 'startId', 106)], run: f => traceBfs(f[0]),
+         head: ['Call', 'Returned order'], rows: [[101], [106], [108], [110]].map(a => [a, `bfs(${a[0]})`, names(bfsOrder(a[0]))]) },
+  dfs: { fields: [studentField('dfs-start', 'startId', 106)], run: f => traceDfs(f[0]),
+         head: ['Call', 'Returned order'], rows: [[101], [106], [109]].map(a => [a, `dfs(${a[0]})`, names(dfsOrder(a[0]))]) },
+  pop: { fields: [], run: () => tracePop(),
+         head: ['Call', 'Returned value'], rows: [[[], 'mostPopular()', '104 (Deniz, 4 friends)']] },
+  mut: { fields: [studentField('mut-a', 'id1', 101), studentField('mut-b', 'id2', 104)], run: f => traceMut(f[0], f[1]),
+         head: ['Call', 'Returned value'], rows: [[101, 104], [104, 106], [101, 107]].map(a => [a, `mutualFriends(${a[0]}, ${a[1]})`, names(FRIENDS[a[0]].filter(x => FRIENDS[a[1]].includes(x)))]) },
+  grp: { fields: [], run: () => traceGrp(),
+         head: ['Call', 'Returned value'], rows: [[[], 'countGroups()', '3']] },
+  sug: { fields: [studentField('sug-id', 'id', 104)], run: f => traceSug(f[0]),
+         head: ['Call', 'Returned value'], rows: [[101], [104], [107], [110]].map(a => [a, `suggestFriends(${a[0]})`, '']) }
+};
+// Fill in suggestFriends answers from the trace itself.
+CONFIG.sug.rows.forEach(r => { const st = traceSug(r[0][0]); r[2] = st[st.length - 1].state.split('result = ')[1]; });
+
+const STATE = {};
+function buildStepper(q) {
+  const cfg = CONFIG[q], root = document.getElementById('st-' + q);
+  const options = sel => IDS.map(id => `<option value="${id}"${id === sel ? ' selected' : ''}>${id} ${NAME[id]}</option>`).join('');
+  root.innerHTML = `
+    <form class="inputs" novalidate>
+      ${cfg.fields.map(f => `<label for="${f.id}">${f.label}<select id="${f.id}">${options(f.value)}</select></label>`).join('')}
+      ${cfg.fields.length ? '' : '<span class="hint">No input: the function looks at the whole network.</span>'}
+      <button type="submit" class="primary">Load</button>
+    </form>
+    <div class="controls">
+      <button type="button" id="${q}-reset">Start</button>
+      <button type="button" id="${q}-prev">Back</button>
+      <button type="button" id="${q}-next" class="primary">Next</button>
+      <span class="count" id="${q}-count"></span>
+    </div>
+    <div class="stage">
+      <div style="min-width:0">
+        <p class="explain" id="${q}-text" aria-live="polite"></p>
+        <div class="state" id="${q}-state"></div>
+        <div class="diagram" id="${q}-diagram"></div>
+        ${legendFor(q)}
+      </div>
+      <div class="code" id="${q}-code">${CODE[q].map((l, i) => `<div class="ln" data-l="${i + 1}"><span class="no">${i + 1}</span><span>${esc(l) || ' '}</span></div>`).join('')}</div>
+    </div>`;
+  root.querySelector('form').addEventListener('submit', e => { e.preventDefault(); load(q); });
+  document.getElementById(q + '-next').onclick = () => go(q, STATE[q].i + 1);
+  document.getElementById(q + '-prev').onclick = () => go(q, STATE[q].i - 1);
+  document.getElementById(q + '-reset').onclick = () => go(q, 0);
+
+  const t = document.getElementById('tests-' + q);
+  t.innerHTML = '<tr>' + cfg.head.map(h => `<th>${h}</th>`).join('') + '<th></th></tr>' +
+    cfg.rows.map((r, i) => `<tr><td class="mono">${esc(r[1])}</td><td class="mono">${esc(r[2])}</td>` +
+      `<td><button type="button" data-row="${i}">Trace</button></td></tr>`).join('');
+  t.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const args = cfg.rows[+b.dataset.row][0];
+    cfg.fields.forEach((f, k) => document.getElementById(f.id).value = args[k]);
+    load(q);
+    root.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  });
+  load(q);
+}
+function load(q) {
+  const cfg = CONFIG[q];
+  const args = cfg.fields.map(f => +document.getElementById(f.id).value);
+  STATE[q] = { steps: cfg.run(args), i: 0 };
+  go(q, 0);
+}
+function go(q, i) {
+  const st = STATE[q]; st.i = Math.max(0, Math.min(st.steps.length - 1, i));
+  const s = st.steps[st.i];
+  document.getElementById(q + '-text').innerHTML = s.text;
+  document.getElementById(q + '-state').textContent = s.state;
+  document.getElementById(q + '-diagram').innerHTML = svgFor(s.v);
+  document.querySelectorAll(`#${q}-code .ln`).forEach(el => el.classList.toggle('hl', s.lines.includes(+el.dataset.l)));
+  document.getElementById(q + '-count').textContent = `Step ${st.i + 1} / ${st.steps.length}`;
+  document.getElementById(q + '-prev').disabled = st.i === 0;
+  document.getElementById(q + '-reset').disabled = st.i === 0;
+  document.getElementById(q + '-next').disabled = st.i === st.steps.length - 1;
+}
+
+/* ---------- Tabs ---------- */
+let currentTab = 'bfs';
+function showTab(q) {
+  if (!CONFIG[q]) q = 'bfs';
+  currentTab = q;
+  document.querySelectorAll('section[data-sec]').forEach(s => s.hidden = s.dataset.sec !== q);
+  document.querySelectorAll('nav.tabs a').forEach(a => a.setAttribute('aria-current', a.dataset.tab === q ? 'page' : 'false'));
+}
+Object.keys(CONFIG).forEach(buildStepper);
+document.querySelectorAll('nav.tabs a').forEach(a => a.addEventListener('click', e => {
+  e.preventDefault();
+  showTab(a.dataset.tab);
+  try { history.replaceState(null, '', '#' + a.dataset.tab); } catch (err) {}
+}));
+window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+let startTab = 'bfs';
+try { startTab = location.hash.slice(1) || 'bfs'; } catch (err) {}
+showTab(startTab);
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'SELECT') return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); go(currentTab, STATE[currentTab].i + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); go(currentTab, STATE[currentTab].i - 1); }
+});
+</script>
+
+</body>
+</html>
